@@ -3,18 +3,19 @@ import { Link } from "react-router-dom";
 
 const AppointmentTable = ({ appointments_data, addAppointment }) => {
   return (
+    
     <div className="w-full">
   <div className="flex justify-between items-center mb-6">
   <h1 className="text-2xl font-bold">Appointments</h1>
   <button
     onClick={addAppointment}
-    className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg hover:bg-blue-700"
+    className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg hover:bg-blue-700 mr-48"
   >
     Add Appointment
   </button>
 </div>
       <div style={{ overflowX: 'auto' }}>
-      <table style={{ minWidth: '1300px' }} className="bg-white border border-gray-200">
+      <table style={{ minWidth: '1275px' }} className="bg-white border border-gray-200">
         <thead>
           <tr className="bg-gray-200">
             <th className="px-4 py-2">ID</th>

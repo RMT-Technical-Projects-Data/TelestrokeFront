@@ -57,102 +57,135 @@ const PatientForm = ({ savePatient, close }) => {
 
   return (
     <>
-      <div className="flex flex-row justify-between mb-8">
-        <p className="text-2xl font-semibold">Patients</p>
-        <div className="flex flex-row gap-3">
-          <Button onClick={() => back()}>Back</Button>
-          <Button onClick={handleSavePatient}>Save Patient</Button>
+      <div className="flex flex-row justify-between mb-6">
+        <h1 className="text-2xl font-bold">Patients</h1>
+        <div className="flex flex-row gap-3 mr-52">
+          <button
+            onClick={() => back()}
+            className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+          >
+            Back
+          </button>
+          <button
+            onClick={handleSavePatient}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Save Patient
+          </button>
         </div>
       </div>
-      <div className="flex flex-col gap-5 p-3 bg-[#F6F6F6]">
+      <div className="flex flex-col gap-5 p-6 bg-white rounded shadow-md mr-52">
         <div>
           <p className="font-bold text-lg">Add Patient's Information</p>
-          <p>Fill the Information with patient data</p>
+          <p>Fill in the information with patient data</p>
         </div>
-        <div className="flex flex-row">
-          <form className="flex flex-col gap-8" onSubmit={handleSavePatient}>
-            <div>
-              <p className="mb-2 text-sm">Name:</p>
-              <input
-                type="text"
-                className="border"
-                onChange={(event) => {
-                  setPatientData({ ...patientData, Name: event.target.value });
-                }}
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-sm">Appointments Date:</p>
-              {/* Date picker component for selecting date */}
-              <DatePicker
-                selected={patientData.Appointments_Date}
-                onChange={(date) => setPatientData({ ...patientData, Appointments_Date: date })}
-                dateFormat="dd/MM/yyyy"
-                className="border"
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-sm">Appointments Time:</p>
-              <div className="flex flex-row gap-2">
-                {/* Hour Selector */}
-                <select
-                  value={patientData.Appointments_Hours}
-                  onChange={(e) => setPatientData({ ...patientData, Appointments_Hours: e.target.value })}
-                  className="border"
-                >
-                  {hourOptions}
-                </select>
-                {/* Minute Selector */}
-                <select
-                  value={patientData.Appointments_Minutes}
-                  onChange={(e) => setPatientData({ ...patientData, Appointments_Minutes: e.target.value })}
-                  className="border"
-                >
-                  {minuteOptions}
-                </select>
-                {/* AM/PM Selector */}
-                <select
-                  value={patientData.Appointments_AMPM}
-                  onChange={(e) => setPatientData({ ...patientData, Appointments_AMPM: e.target.value })}
-                  className="border"
-                >
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <p className="mb-2 text-sm">Duration:</p>
-              <input
-                type="text"
-                className="border"
-                onChange={(event) => {
-                  setPatientData({
-                    ...patientData,
-                    Duration: event.target.value,
-                  });
-                }}
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-sm">Checkup Status:</p>
+        <form className="flex flex-col gap-8" onSubmit={handleSavePatient}>
+        <div>
+  <label className="block text-gray-700">Name:</label>
+  <input
+    type="text"
+    className="w-half p-2 border rounded"
+    onChange={(event) => {
+      // Use a regular expression to allow only letters and spaces
+      const value = event.target.value.replace(/[^a-zA-Z\s]/g, '');
+      setPatientData({ ...patientData, Name: value });
+    }}
+    onKeyPress={(event) => {
+      // Prevent numbers and special characters from being typed
+      if (!/^[a-zA-Z\s]*$/.test(event.key)) {
+        event.preventDefault();
+      }
+    }}
+    required
+  />
+</div>
+
+          <div>
+            <label className="block text-gray-700">Appointment Date:</label>
+            <DatePicker
+              selected={patientData.Appointments_Date}
+              onChange={(date) => setPatientData({ ...patientData, Appointments_Date: date })}
+              dateFormat="dd/MM/yyyy"
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700">Appointment Time:</label>
+            <div className="flex flex-row gap-2">
+              {/* Hour Selector */}
               <select
-                onChange={(event) => {
-                  setPatientData({
-                    ...patientData,
-                    Checkup_Status: event.target.value,
-                  });
-                }}
+                value={patientData.Appointments_Hours}
+                onChange={(e) => setPatientData({ ...patientData, Appointments_Hours: e.target.value })}
+                className="border rounded p-2"
               >
-                <option value="Pending">Pending</option>
-                <option value="Complete">Complete</option>
+                {hourOptions}
+              </select>
+              {/* Minute Selector */}
+              <select
+                value={patientData.Appointments_Minutes}
+                onChange={(e) => setPatientData({ ...patientData, Appointments_Minutes: e.target.value })}
+                className="border rounded p-2"
+              >
+                {minuteOptions}
+              </select>
+              {/* AM/PM Selector */}
+              <select
+                value={patientData.Appointments_AMPM}
+                onChange={(e) => setPatientData({ ...patientData, Appointments_AMPM: e.target.value })}
+                className="border rounded p-2"
+              >
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
               </select>
             </div>
-          </form>
-        </div>
+          </div>
+          <div>
+            <label className="block text-gray-700">Duration:</label>
+            <input
+  type="number"
+  className="w-half p-2 border rounded"
+  onChange={(event) => {
+    // Ensure that only integers are set in the state
+    const value = parseInt(event.target.value, 10);
+    if (!isNaN(value)) {
+      setPatientData({
+        ...patientData,
+        Duration: value,
+      });
+    } else {
+      setPatientData({
+        ...patientData,
+        Duration: "", // Optionally reset if the input is invalid
+      });
+    }
+  }}
+  required
+  min="0" // Prevent negative numbers
+  step="1" // Only allow whole numbers
+/>
+
+          </div>
+          <div>
+            <label className="block text-gray-700">Checkup Status:</label>
+            <select
+              onChange={(event) => {
+                setPatientData({
+                  ...patientData,
+                  Checkup_Status: event.target.value,
+                });
+              }}
+              className="w-half p-2 border rounded"
+            >
+              <option value="Pending">Pending</option>
+              <option value="Complete">Complete</option>
+            </select>
+          </div>
+        </form>
       </div>
     </>
-  );
+);
+
 };
 
 export default PatientForm;

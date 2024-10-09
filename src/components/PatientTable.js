@@ -5,7 +5,7 @@ import Button from "./Button";
 const PatientTable = ({ patients_data, addPatient }) => {
   return (
     <>
-      <div className="flex flex-row justify-between mb-8">
+      <div className="flex flex-row justify-between mb-2 mr-48">
         <p className="text-2xl font-semibold">Patients</p>
         <Button onClick={addPatient}>Add Patient</Button>
       </div>
@@ -21,7 +21,7 @@ const PatientTable = ({ patients_data, addPatient }) => {
 
 
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ minWidth: '1300px' }} className="bg-white border border-gray-200">
+        <table style={{ minWidth: '1270px' }} className="bg-white border border-gray-200">
           <thead>
             <tr className="bg-gray-100 text-left">
               <th className="py-2 px-4 border-b font-bold">ID</th>

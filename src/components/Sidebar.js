@@ -9,7 +9,7 @@ import patient from "../assets/btn_patients.svg";
 import patient_selected from "../assets/btn_patients_selected.svg";
 import settings from "../assets/btn_settings.svg";
 import settings_selected from "../assets/btn_settings_selected.svg";
-import LogoutIcon from "../assets/btn_Logout.png"; // Import Logout image
+import LogoutIcon from "../assets/btn_Logout.png"; 
 // Import useAuth0 hook for logout
 import { useAuth0 } from "@auth0/auth0-react";
 import { Link } from "react-router-dom";
@@ -85,7 +85,7 @@ const Sidebar = ({ page }) => {
         </div>
       </Link>
 
-      <Link to="/settings">
+      <Link to="/dashboard">
         <div
           className={
             page === "SETTINGS"

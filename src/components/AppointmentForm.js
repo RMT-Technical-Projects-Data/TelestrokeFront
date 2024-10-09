@@ -95,7 +95,7 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md">
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md mr-52 mt-8"> 
       <div className="mb-4">
         <label className="block text-gray-700">Patient Name</label>
         <input
@@ -156,7 +156,7 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
           ))}
         </select>
       </div>
-      <div className="flex justify-between">
+      <div className="flex justify">
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
