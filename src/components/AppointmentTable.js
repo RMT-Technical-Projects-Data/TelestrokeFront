@@ -18,18 +18,18 @@ const AppointmentTable = ({ appointments_data, addAppointment }) => {
         <thead>
           <tr className="bg-gray-200">
             <th className="px-4 py-2">ID</th>
-            {/* <th className="px-4 py-2">Patient Name</th> */}
+            <th className="px-4 py-2">Patient Name</th> 
             <th className="px-4 py-2">Appointment Date</th>
             <th className="px-4 py-2">Appointment Time</th>
             <th className="px-4 py-2">Duration</th>
-            <th className="px-4 py-2">Join</th>
+            <th className="px-4 py-2">Join</th> 
           </tr>
         </thead>
         <tbody>
           {appointments_data.map((appointment) => (
             <tr key={appointment.ID}>
               <td className="border px-4 py-2 text-center">{appointment.ID}</td>
-              {/* <td className="border px-4 py-2 text-center">{appointment.Name}</td> */}
+              <td className="border px-4 py-2 text-center">{appointment.Patient_Name}</td> 
               <td className="border px-4 py-2 text-center">{appointment.Appointments_Date}</td>
               <td className="border px-4 py-2 text-center">{appointment.Appointments_Time}</td>
               <td className="border px-4 py-2 text-center">{appointment.Duration}</td>

@@ -8,7 +8,7 @@ const AppointmentsPage = () => {
   const [appointments_data, setAppointmentsData] = useState([
     {
       ID: "1",
-      Name: "Mr Collins",
+      Patient_Name: "Mr Collins",
       Appointments_Date: "08/07/2024",
       Appointments_Time: "4:05",
       Duration: "30 mins",
@@ -16,7 +16,7 @@ const AppointmentsPage = () => {
     },
     {
       ID: "2",
-      Name: "Mr. Daniel",
+      Patient_Name: "Mr. Daniel",
       Appointments_Date: "08/07/2024",
       Appointments_Time: "4:40",
       Duration: "15 mins",

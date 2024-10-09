@@ -1,5 +1,5 @@
 import React from "react";
-import diagnosis from "../assets/diagnosis.svg";
+import diagnosis from "../assets/btn_diagnosis.svg";
 import Button from "./Button";
 
 const PatientTable = ({ patients_data, addPatient }) => {

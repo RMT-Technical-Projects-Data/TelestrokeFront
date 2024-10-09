@@ -66,14 +66,16 @@ const EMRpage = () => {
         {!pateintid ? (
           //Patient Id is not present in the address
           <div className="basis-[80%] flex flex-row gap-5 h-2/6 ">
-            <input
-              type="text"
-              className="shadow-sm rounded-lg  w-2/3 mx-auto h-2/4 p-1 pl-4"
-              placeholder=" Search for a patient "
-            />
-            <Button onClick={() => {}} className="mx-auto h-2/4">
-              Search
-            </Button>
+           <input
+          type="text"
+          className="shadow-sm rounded-lg w-2/3 mx-auto h-2/4 p-1 pl-4 mt-6" // Input with top margin
+          placeholder=" Search for a patient "
+        />
+
+        <Button onClick={() => {}} className="mx-auto h-2/4 mt-4"> {/* Added mt-4 for top margin */}
+          Search
+        </Button>
+
           </div>
         ) : (
           <div className="flex flex-col h-fit basis-[85%] mt-6 gap-6 p-2">

@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Assuming you're using React Router for navigation
 
 const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
-  console.log("Patient data in prop ..........", appointments_data);
+  const navigate = useNavigate(); // Hook for navigation
+
   const [newAppointment, setNewAppointment] = useState({
+    Patient_Name: "", // New field for patient name
     ID: "",
     Appointments_Time: "",
     Appointments_Date: "",
@@ -12,7 +15,7 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
   const handleChange = (e) => {
     const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
     const { name, value } = e.target;
-    if (name == "Appointments_Date") {
+    if (name === "Appointments_Date") {
       if (value < today) {
         alert("Select Today or later Dates!");
       } else {
@@ -21,21 +24,7 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
           [name]: value,
         });
       }
-    }
-    // } else if (name == "Appointments_Time") {
-    //   let time = e.target.value;
-    //   // Convert 24-hour time to 12-hour format with AM/PM
-    //   let [hours, minutes] = time.split(":");
-    //   let suffix = hours >= 12 ? "PM" : "AM";
-    //   hours = hours % 12 || 12; // Convert to 12-hour format
-
-    //   let formattedTime = `${hours}:${minutes}`;
-    //   setNewAppointment({
-    //     ...newAppointment,
-    //     [name]: formattedTime,
-    //   });
-    // }
-    else {
+    } else {
       setNewAppointment({
         ...newAppointment,
         [name]: value,
@@ -44,33 +33,28 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
   };
 
   const checkAppointmentCollision = () => {
-    // Convert new appointment time and date into Date objects
     const newAppDate = new Date(
       `${newAppointment.Appointments_Date}T${newAppointment.Appointments_Time}`
     );
 
-    // Iterate through existing appointments
     for (let appointment of appointments_data) {
       const appDate = new Date(
         `${appointment.Appointments_Date}T${appointment.Appointments_Time}`
       );
 
-      // Calculate appointment end time based on duration
       const appEndTime = new Date(
         appDate.getTime() + parseDuration(appointment.Duration)
       );
 
-      // Calculate new appointment end time
       const newAppEndTime = new Date(
         newAppDate.getTime() + parseDuration(newAppointment.Duration)
       );
 
-      // Check if the appointments overlap
       if (
-        newAppointment.Appointments_Date === appointment.Appointments_Date && // same date
-        ((newAppDate >= appDate && newAppDate < appEndTime) || // starts within the existing appointment
-          (newAppEndTime > appDate && newAppEndTime <= appEndTime) || // ends within the existing appointment
-          (newAppDate <= appDate && newAppEndTime >= appEndTime)) // overlaps the entire existing appointment
+        newAppointment.Appointments_Date === appointment.Appointments_Date &&
+        ((newAppDate >= appDate && newAppDate < appEndTime) ||
+          (newAppEndTime > appDate && newAppEndTime <= appEndTime) ||
+          (newAppDate <= appDate && newAppEndTime >= appEndTime))
       ) {
         return true; // Collision detected
       }
@@ -79,9 +63,7 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
   };
 
   const checkPatientIDCollision = () => {
-    // Iterate through existing appointments
     for (let appointment of appointments_data) {
-      // Check if the new patient ID already exists
       if (appointment.ID === newAppointment.ID) {
         return true; // Collision detected
       }
@@ -89,7 +71,6 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
     return false; // No collision
   };
 
-  // Helper function to convert "Duration" (e.g., "30 mins") into milliseconds
   const parseDuration = (duration) => {
     const [value, unit] = duration.split(" ");
     if (unit === "mins") {
@@ -103,14 +84,29 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
     if (!checkAppointmentCollision() && !checkPatientIDCollision()) {
       saveAppointment(newAppointment);
     } else if (checkAppointmentCollision()) {
-      alert("Appointment already exsist on the Selected Date & Time.");
+      alert("Appointment already exists on the Selected Date & Time.");
     } else if (checkPatientIDCollision()) {
-      alert("Patient with this Id Already Exsist.");
+      alert("Patient with this Id Already Exists.");
     }
+  };
+
+  const handleAddPatient = () => {
+    navigate("/Patient"); // Change this path to your actual patient form route
   };
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md">
+      <div className="mb-4">
+        <label className="block text-gray-700">Patient Name</label>
+        <input
+          type="text"
+          name="Patient_Name"
+          value={newAppointment.Patient_Name}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+          required
+        />
+      </div>
       <div className="mb-4">
         <label className="block text-gray-700">Patient Id</label>
         <input
@@ -166,6 +162,13 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Save Appointment
+        </button>
+        <button
+          type="button"
+          onClick={handleAddPatient}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        >
+          Add Patient
         </button>
         <button
           type="button"

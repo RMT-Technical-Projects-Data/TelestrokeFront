@@ -10,7 +10,7 @@ import { authToken } from "../API";
 import { useNavigate, useParams } from 'react-router-dom';
 import ReactPlayer from "react-player";
 import Button from "./Button";
-import loading from "../assets/loading.gif";
+import loading from "../assets/btn_loading.gif";
 
 function JoinScreen({ getMeetingAndToken }) {
   const { meetingid } = useParams();
