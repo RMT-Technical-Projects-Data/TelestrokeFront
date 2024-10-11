@@ -1,45 +1,40 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Assuming you're using React Router for navigation
+import { AppointmentFormSubmit } from "../utils/auth"; // Import the function from utils
 
-const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
+const AppointmentForm = ({ close, appointments_data }) => {
   const navigate = useNavigate(); // Hook for navigation
 
   const [newAppointment, setNewAppointment] = useState({
-    Patient_Name: "", // New field for patient name
-    ID: "",
-    Appointments_Time: "",
-    Appointments_Date: "",
-    Duration: "",
+    PatientName: "",
+    PatientID: "", // Keep as string, will validate on submit
+    AppointmentTime: "",
+    AppointmentDate: "",
+    Duration: 0, // Store duration as a number (in minutes)
   });
 
   const handleChange = (e) => {
-    const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split("T")[0];
     const { name, value } = e.target;
-    if (name === "Appointments_Date") {
-      if (value < today) {
-        alert("Select Today or later Dates!");
-      } else {
-        setNewAppointment({
-          ...newAppointment,
-          [name]: value,
-        });
-      }
+
+    if (name === "AppointmentDate" && value < today) {
+      alert("Select today or later dates!");
     } else {
-      setNewAppointment({
-        ...newAppointment,
+      setNewAppointment((prev) => ({
+        ...prev,
         [name]: value,
-      });
+      }));
     }
   };
 
   const checkAppointmentCollision = () => {
     const newAppDate = new Date(
-      `${newAppointment.Appointments_Date}T${newAppointment.Appointments_Time}`
+      `${newAppointment.AppointmentDate}T${newAppointment.AppointmentTime}`
     );
 
-    for (let appointment of appointments_data) {
+    return appointments_data.some((appointment) => {
       const appDate = new Date(
-        `${appointment.Appointments_Date}T${appointment.Appointments_Time}`
+        `${appointment.AppointmentDate}T${appointment.AppointmentTime}`
       );
 
       const appEndTime = new Date(
@@ -50,69 +45,77 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
         newAppDate.getTime() + parseDuration(newAppointment.Duration)
       );
 
-      if (
-        newAppointment.Appointments_Date === appointment.Appointments_Date &&
+      return (
+        newAppointment.AppointmentDate === appointment.AppointmentDate &&
         ((newAppDate >= appDate && newAppDate < appEndTime) ||
           (newAppEndTime > appDate && newAppEndTime <= appEndTime) ||
           (newAppDate <= appDate && newAppEndTime >= appEndTime))
-      ) {
-        return true; // Collision detected
-      }
-    }
-    return false; // No collision
+      );
+    });
   };
 
   const checkPatientIDCollision = () => {
-    for (let appointment of appointments_data) {
-      if (appointment.ID === newAppointment.ID) {
-        return true; // Collision detected
-      }
-    }
-    return false; // No collision
+    return appointments_data.some(
+      (appointment) => appointment.PatientID === newAppointment.PatientID
+    );
   };
 
   const parseDuration = (duration) => {
-    const [value, unit] = duration.split(" ");
-    if (unit === "mins") {
-      return value * 60000; // Convert minutes to milliseconds
-    }
-    return 0;
+    // Assuming duration is stored in minutes (number)
+    return duration * 60000; // Convert minutes to milliseconds
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate PatientID format (24-character hex string)
+    const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
+
+    if (!isValidObjectId(newAppointment.PatientID)) {
+      alert("Invalid Patient ID format. Please enter a valid Patient ID.");
+      return;
+    }
+
     if (!checkAppointmentCollision() && !checkPatientIDCollision()) {
-      saveAppointment(newAppointment);
+      const response = await AppointmentFormSubmit(newAppointment);
+      console.log(response?.status);
+      
+      if (response) {
+        // close(); // Close the form if needed
+        alert("Appointment saved successfully!");
+      } else {
+        alert("Appointment post request error!");
+      }
     } else if (checkAppointmentCollision()) {
-      alert("Appointment already exists on the Selected Date & Time.");
+      alert("Appointment already exists on the selected date & time.");
     } else if (checkPatientIDCollision()) {
-      alert("Patient with this Id Already Exists.");
+      alert("Patient with this ID already exists.");
     }
   };
 
   const handleAddPatient = () => {
-    navigate("/Patient"); // Change this path to your actual patient form route
+    navigate("/Patient");
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md mr-52 mt-8"> 
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md mr-52 mt-8">
       <div className="mb-4">
         <label className="block text-gray-700">Patient Name</label>
         <input
           type="text"
-          name="Patient_Name"
-          value={newAppointment.Patient_Name}
+          name="PatientName"
+          value={newAppointment.PatientName}
           onChange={handleChange}
           className="w-full p-2 border rounded"
           required
         />
       </div>
       <div className="mb-4">
-        <label className="block text-gray-700">Patient Id</label>
+        <label className="block text-gray-700">Patient ID</label>
         <input
           type="text"
-          name="ID"
-          value={newAppointment.ID}
+          name="PatientID"
+          value={newAppointment.PatientID}
           onChange={handleChange}
           className="w-full p-2 border rounded"
           required
@@ -122,8 +125,8 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
         <label className="block text-gray-700">Appointment Date</label>
         <input
           type="date"
-          name="Appointments_Date"
-          value={newAppointment.Appointments_Date}
+          name="AppointmentDate"
+          value={newAppointment.AppointmentDate}
           onChange={handleChange}
           className="w-full p-2 border rounded"
           required
@@ -133,8 +136,8 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
         <label className="block text-gray-700 required">Appointment Time</label>
         <input
           type="time"
-          name="Appointments_Time"
-          value={newAppointment.Appointments_Time}
+          name="AppointmentTime"
+          value={newAppointment.AppointmentTime}
           onChange={handleChange}
           className="w-full p-2 border rounded"
           required
@@ -145,7 +148,7 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
         <select
           name="Duration"
           value={newAppointment.Duration}
-          onChange={handleChange}
+          onChange={(e) => setNewAppointment({ ...newAppointment, Duration: Number(e.target.value) })} // Update to store as number
           className="w-full p-2 border rounded"
           required
         >
@@ -182,4 +185,5 @@ const AppointmentForm = ({ saveAppointment, close, appointments_data }) => {
   );
 };
 
+// Export the AppointmentForm component
 export default AppointmentForm;
