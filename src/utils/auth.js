@@ -12,3 +12,11 @@ export const AppointmentFormSubmit = async (values) => {
     return catchError(error);
   }
 };
+export const PatientFormSubmit = async (values) => {
+  try {
+    const { data } = await client.post('/api/patients', { ...values });
+    return data;
+  } catch (error) {
+    return catchError(error);
+  }
+};

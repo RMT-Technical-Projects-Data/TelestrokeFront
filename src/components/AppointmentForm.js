@@ -68,11 +68,11 @@ const AppointmentForm = ({ close, appointments_data }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate PatientID format (24-character hex string)
-    const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
+    // Validate PatientID to ensure it's exactly a 5-digit number
+    const isValidPatientID = (id) => /^[0-9]{5}$/.test(id);
 
-    if (!isValidObjectId(newAppointment.PatientID)) {
-      alert("Invalid Patient ID format. Please enter a valid Patient ID.");
+    if (!isValidPatientID(newAppointment.PatientID)) {
+      alert("Invalid Patient ID format. Please enter a 5-digit Patient ID.");
       return;
     }
 

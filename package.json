@@ -15,6 +15,7 @@
     "flowbite-react": "^0.10.1",
     "formik": "^2.4.6",
     "react": "^18.3.1",
+    "react-autosuggest": "^10.1.0",
     "react-chartjs-2": "^5.2.0",
     "react-datepicker": "^7.4.0",
     "react-dom": "^18.3.1",
