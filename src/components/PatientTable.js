@@ -4,12 +4,12 @@ import Button from "./Button";
 import client from "../api/client"; // Import your axios client
 
 const PatientTable = ({ addPatient }) => {
-  const [patientsData, setPatientsData] = useState([]); // State to hold patient data
+  const [appointments_data, setPatientsData] = useState([]); // State to hold patient data
 
   useEffect(() => {
     const fetchPatientsData = async () => {
       try {
-        const response = await client.get('/api/patients'); // Adjust the URL according to your API
+        const response = await client.get('/api/appointments'); // Adjust the URL according to your API
         setPatientsData(response.data); // Update state with fetched data
       } catch (error) {
         console.error("Error fetching patients data:", error);
@@ -40,16 +40,15 @@ const PatientTable = ({ addPatient }) => {
             </tr>
           </thead>
           <tbody>
-            {patientsData.map((patient) => (
-              <tr key={patient.ID} className="hover:bg-gray-50">
-                <td className="py-2 px-4 border-b">{patient.ID}</td>
-                <td className="py-2 px-4 border-b">{patient.Name}</td>
-                <td className="py-2 px-4 border-b">{patient.Appointments_Time}</td>
-                <td className="py-2 px-4 border-b">{patient.Appointments_Date}</td>
-                <td className="py-2 px-4 border-b">{patient.Duration} Minutes</td>
-                <td className={`py-2 px-4 border-b ${patient.Checkup_Status === "Pending" ? "text-yellow-600" : "text-green-600"}`}>
-                  {patient.Checkup_Status}
-                </td>
+            {appointments_data.map((appointments) => (
+              <tr key={appointments.ID} className="hover:bg-gray-50">
+                <td className="py-2 px-4 border-b">{appointments.PatientID}</td>
+                <td className="py-2 px-4 border-b">{appointments.PatientName}</td>
+                <td className="py-2 px-4 border-b">{appointments.AppointmentTime}</td>
+                <td className="py-2 px-4 border-b">{appointments.AppointmentDate}</td>
+                <td className="py-2 px-4 border-b">{appointments.Duration} Minutes</td>
+                <td className="py-2 px-4 border-b">{appointments.Checkup_Status}</td>
+                
                 {/* <td className="py-2 px-4 border-b">
                   {patient.Diagnosis ? <img className="w-8 h-8" src={diagnosis} alt="Diagnosis Icon" /> : <div></div>}
                 </td> */}

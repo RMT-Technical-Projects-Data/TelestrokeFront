@@ -7,10 +7,10 @@ const AppointmentForm = ({ close, appointments_data }) => {
 
   const [newAppointment, setNewAppointment] = useState({
     PatientName: "",
-    PatientID: "", // Keep as string, will validate on submit
     AppointmentTime: "",
     AppointmentDate: "",
     Duration: 0, // Store duration as a number (in minutes)
+    Checkup_Status: "Pending", // Default status
   });
 
   const handleChange = (e) => {
@@ -25,6 +25,21 @@ const AppointmentForm = ({ close, appointments_data }) => {
         [name]: value,
       }));
     }
+  };
+
+  // Generate a random 5-digit ID
+  const generatePatientID = () => {
+    let newID;
+    let isUnique = false;
+
+    while (!isUnique) {
+      newID = Math.floor(10000 + Math.random() * 90000); // Generate a 5-digit number
+      isUnique = !appointments_data.some(
+        (appointment) => appointment.PatientID === newID
+      );
+    }
+
+    return newID;
   };
 
   const checkAppointmentCollision = () => {
@@ -54,12 +69,6 @@ const AppointmentForm = ({ close, appointments_data }) => {
     });
   };
 
-  const checkPatientIDCollision = () => {
-    return appointments_data.some(
-      (appointment) => appointment.PatientID === newAppointment.PatientID
-    );
-  };
-
   const parseDuration = (duration) => {
     // Assuming duration is stored in minutes (number)
     return duration * 60000; // Convert minutes to milliseconds
@@ -68,30 +77,28 @@ const AppointmentForm = ({ close, appointments_data }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate PatientID to ensure it's exactly a 5-digit number
-    const isValidPatientID = (id) => /^[0-9]{5}$/.test(id);
+    if (!checkAppointmentCollision()) {
+      // Generate the unique PatientID
+      const uniquePatientID = generatePatientID();
 
-    if (!isValidPatientID(newAppointment.PatientID)) {
-      alert("Invalid Patient ID format. Please enter a 5-digit Patient ID.");
-      return;
-    }
+      const newAppointmentData = {
+        ...newAppointment,
+        PatientID: uniquePatientID, // Add the generated ID
+      };
 
-    if (!checkAppointmentCollision() && !checkPatientIDCollision()) {
-      const response = await AppointmentFormSubmit(newAppointment);
-      console.log(response?.status);
-      
+      const response = await AppointmentFormSubmit(newAppointmentData);
+
       if (response) {
         // close(); // Close the form if needed
         alert("Appointment saved successfully!");
       } else {
         alert("Appointment post request error!");
       }
-    } else if (checkAppointmentCollision()) {
+    } else {
       alert("Appointment already exists on the selected date & time.");
-    } else if (checkPatientIDCollision()) {
-      alert("Patient with this ID already exists.");
     }
-  };
+};
+
 
   const handleAddPatient = () => {
     navigate("/Patient");
@@ -105,17 +112,6 @@ const AppointmentForm = ({ close, appointments_data }) => {
           type="text"
           name="PatientName"
           value={newAppointment.PatientName}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700">Patient ID</label>
-        <input
-          type="text"
-          name="PatientID"
-          value={newAppointment.PatientID}
           onChange={handleChange}
           className="w-full p-2 border rounded"
           required
@@ -148,7 +144,9 @@ const AppointmentForm = ({ close, appointments_data }) => {
         <select
           name="Duration"
           value={newAppointment.Duration}
-          onChange={(e) => setNewAppointment({ ...newAppointment, Duration: Number(e.target.value) })} // Update to store as number
+          onChange={(e) =>
+            setNewAppointment({ ...newAppointment, Duration: Number(e.target.value) })
+          } // Update to store as number
           className="w-full p-2 border rounded"
           required
         >
@@ -157,6 +155,22 @@ const AppointmentForm = ({ close, appointments_data }) => {
               {minutes} mins
             </option>
           ))}
+        </select>
+      </div>
+      {/* Checkup Status */}
+      <div className="mb-4">
+        <label className="block text-gray-700">Checkup Status</label>
+        <select
+          name="Checkup_Status"
+          value={newAppointment.Checkup_Status}
+          onChange={(e) =>
+            setNewAppointment({ ...newAppointment, Checkup_Status: e.target.value })
+          }
+          className="w-full p-2 border rounded"
+          required
+        >
+          <option value="Pending"> Pending</option>
+          <option value="Complete">Complete</option>
         </select>
       </div>
       <div className="flex justify">

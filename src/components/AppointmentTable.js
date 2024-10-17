@@ -18,6 +18,13 @@ const AppointmentTable = ({ addAppointment }) => {
     fetchAppointments(); // Call the fetch function
   }, []); // Empty dependency array to run only on mount
 
+  // Helper function to format date
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, options); // Adjust options as needed
+  };
+
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-6">
@@ -46,9 +53,9 @@ const AppointmentTable = ({ addAppointment }) => {
               <tr key={appointment.PatientID}> {/* Use PatientID as the key */}
                 <td className="border px-4 py-2 text-center">{appointment.PatientID}</td>
                 <td className="border px-4 py-2 text-center">{appointment.PatientName}</td>
-                <td className="border px-4 py-2 text-center">{appointment.AppointmentDate}</td>
+                <td className="border px-4 py-2 text-center">{formatDate(appointment.AppointmentDate)}</td>
                 <td className="border px-4 py-2 text-center">{appointment.AppointmentTime}</td>
-                <td className="border px-4 py-2 text-center">{appointment.Duration}</td>
+                <td className="border px-4 py-2 text-center">{appointment.Duration} Minutes</td>
                 <td className="border px-4 py-2 text-center">
                   <Link to={`/emr/${appointment.PatientID}/${"l036-n7zl-6txr"}`}>
                     <div className="bg-[#234ee8] text-white px-4 py-2 w-20 rounded-md shadow-lg mx-auto">

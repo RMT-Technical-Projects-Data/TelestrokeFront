@@ -12,7 +12,6 @@ const PatientForm = ({ savePatient, close }) => {
     Duration: "",
     Checkup_Status: "Pending",
     ID: "",
-    // Diagnosis: "",
   });
 
   const [existingIDs, setExistingIDs] = useState([]); // State to hold existing IDs
@@ -81,7 +80,6 @@ const PatientForm = ({ savePatient, close }) => {
       Duration: "",
       Checkup_Status: "Pending",
       ID: "",
-      // Diagnosis: "",
     });
     close();
   };
