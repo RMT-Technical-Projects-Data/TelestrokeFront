@@ -5,14 +5,17 @@ const catchError = (error) => {
 };
 
 // Function to submit the appointment form data
-export const AppointmentFormSubmit = async (values) => {
+
+export const AppointmentFormSubmit = async (appointmentData) => {
   try {
-    const { data } = await client.post('/api/appointments', { ...values });
-    return data;
+    const response = await client.post("/api/appointments", appointmentData);
+    return response.data; // Return the response data
   } catch (error) {
-    return catchError(error);
+    console.error("Error saving appointment:", error);
+    throw error; // Rethrow the error for handling in the calling function
   }
 };
+
 
 // Function to submit the patient form data
 export const PatientFormSubmit = async (values) => {
