@@ -1,38 +1,39 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // Assuming you're using React Router for navigation
 import { AppointmentFormSubmit, getAllAppointments } from "../utils/auth"; // Import the function from utils
+import { getToken, createMeeting } from "../API"; // Import createMeeting
 
 const AppointmentForm = ({ close, appointments_data }) => {
   const navigate = useNavigate(); // Hook for navigation
 
   const [newAppointment, setNewAppointment] = useState({
     PatientName: "",
-    PatientID: "", // Add PatientID to state
+    PatientID: "",
     AppointmentTime: "",
     AppointmentDate: "",
-    Duration: 0, // Store duration as a number (in minutes)
-    Checkup_Status: "Pending", // Default status
+    Duration: 0,
+    Checkup_Status: "Pending",
+    token: "",
+    meetingId: "", // Added to store the generated meeting ID
   });
 
-  const [patients, setPatients] = useState([]); // To hold fetched patients
-  const [suggestions, setSuggestions] = useState([]); // To hold search suggestions
-  const [autofilledDate, setAutofilledDate] = useState(""); // Track autofilled date
+  const [patients, setPatients] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [autofilledDate, setAutofilledDate] = useState("");
 
-  // Fetch patients on component mount
   useEffect(() => {
     const fetchPatients = async () => {
-      const allAppointments = await getAllAppointments(); // Fetch all appointments
-      setPatients(allAppointments.map(formatPatientDate)); // Format dates when setting patients data
+      const allAppointments = await getAllAppointments();
+      setPatients(allAppointments.map(formatPatientDate));
     };
 
     fetchPatients();
   }, []);
 
-  // Function to format the appointment date from DB format
   const formatPatientDate = (patient) => {
     if (patient.AppointmentDate) {
-      const date = new Date(patient.AppointmentDate); // Convert to Date object
-      patient.AppointmentDate = date.toISOString().split("T")[0]; // Format to YYYY-MM-DD
+      const date = new Date(patient.AppointmentDate);
+      patient.AppointmentDate = date.toISOString().split("T")[0];
     }
     return patient;
   };
@@ -51,45 +52,35 @@ const AppointmentForm = ({ close, appointments_data }) => {
     }
   };
 
-  // Handle patient search input
   const handleSearchChange = (e) => {
-    const value = e.target.value.toLowerCase(); // Make search case insensitive
+    const value = e.target.value.toLowerCase();
 
-    // Search for matching patients by name or ID
     const matchedPatients = patients.filter(
       (patient) =>
-        patient.PatientName.toLowerCase().startsWith(value) || // Match by name
-        patient.PatientID.toString().startsWith(value) // Match by ID
+        patient.PatientName.toLowerCase().startsWith(value) ||
+        patient.PatientID.toString().startsWith(value)
     );
 
-    setSuggestions(matchedPatients); // Set suggestions based on search
-    setNewAppointment((prev) => ({ ...prev, PatientName: e.target.value })); // Update PatientName field
+    setSuggestions(matchedPatients);
+    setNewAppointment((prev) => ({ ...prev, PatientName: e.target.value }));
   };
 
   const handleSuggestionClick = (patient) => {
-    // Set selected patient data, including autofilling AppointmentDate
     setNewAppointment({
       ...newAppointment,
       PatientName: patient.PatientName,
       PatientID: patient.PatientID,
-      AppointmentDate: patient.AppointmentDate || newAppointment.AppointmentDate, // Autofill AppointmentDate if available
+      AppointmentDate: patient.AppointmentDate || newAppointment.AppointmentDate,
     });
-    setAutofilledDate(patient.AppointmentDate); // Track the autofilled date
-    setSuggestions([]); // Clear suggestions after selection
+    setAutofilledDate(patient.AppointmentDate);
+    setSuggestions([]);
   };
 
   const checkAppointmentCollision = () => {
-    // Check for collision based on PatientID, PatientName, and AppointmentDate
     return appointments_data.some((appointment) => {
       const isSamePatient = newAppointment.PatientID === appointment.PatientID;
       const isSameName = newAppointment.PatientName === appointment.PatientName;
       const isSameDate = newAppointment.AppointmentDate === appointment.AppointmentDate;
-
-      // Debugging logs to see what values are being compared
-      console.log(`Checking collision: 
-        PatientID: ${isSamePatient}, 
-        PatientName: ${isSameName}, 
-        AppointmentDate: ${isSameDate}`);
 
       return isSamePatient && isSameName && isSameDate;
     });
@@ -98,33 +89,48 @@ const AppointmentForm = ({ close, appointments_data }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if patient exists based on ID
-    const patientExists = patients.some(
-      (patient) => patient.PatientID === newAppointment.PatientID
-    );
-
-    if (!patientExists) {
-      alert("Patient not found, please use Add Patient for making a new patient");
-      return;
-    }
-
-    // Collision check for existing appointments
-    if (checkAppointmentCollision()) {
-      alert("Patient already has an appointment on the same date.");
-      return; // Prevent further execution if appointment exists
-    }
-
-    // Proceed to save the appointment if no collision is found
-    const newAppointmentData = {
-      ...newAppointment,
-    };
-
     try {
+      const token = await getToken();
+      if (!token) {
+        alert("Failed to generate token. Please try again.");
+        return;
+      }
+
+      // Check if patient exists based on ID
+      const patientExists = patients.some(
+        (patient) => patient.PatientID === newAppointment.PatientID
+      );
+
+      if (!patientExists) {
+        alert("Patient not found, please use Add Patient for making a new patient");
+        return;
+      }
+
+      // Collision check for existing appointments
+      if (checkAppointmentCollision()) {
+        alert("Patient already has an appointment on the same date.");
+        return; // Prevent further execution if appointment exists
+      }
+
+      // Call createMeeting and pass the region (you can change this if needed)
+      const meetingId = await createMeeting();
+      if (!meetingId) {
+        alert("Failed to create meeting. Please try again.");
+        return;
+      }
+
+      // Proceed to save the appointment if no collision is found
+      const newAppointmentData = {
+        ...newAppointment,
+        token: token, // Add the token to the appointment data
+        meetingId: meetingId, // Add the meeting ID to the appointment data
+      };
+
       const response = await AppointmentFormSubmit(newAppointmentData);
 
       if (response) {
         alert("Appointment saved successfully!");
-        close(); // Close the form if needed
+        close();
       } else {
         alert("Appointment post request error!");
       }
@@ -138,7 +144,6 @@ const AppointmentForm = ({ close, appointments_data }) => {
     navigate("/Patient");
   };
 
-  // Disable the save button if the autofilled date hasn't been changed
   const isSaveDisabled = autofilledDate && newAppointment.AppointmentDate === autofilledDate;
 
   return (
@@ -149,7 +154,7 @@ const AppointmentForm = ({ close, appointments_data }) => {
           type="text"
           name="PatientName"
           value={newAppointment.PatientName}
-          onChange={handleSearchChange} // Handle search input
+          onChange={handleSearchChange}
           className="w-full p-2 border rounded"
           required
         />
@@ -158,7 +163,7 @@ const AppointmentForm = ({ close, appointments_data }) => {
             {suggestions.map((patient) => (
               <li
                 key={patient.PatientID}
-                onClick={() => handleSuggestionClick(patient)} // Select patient on click
+                onClick={() => handleSuggestionClick(patient)}
                 className="cursor-pointer hover:bg-gray-200 p-2"
               >
                 {patient.PatientName} (ID: {patient.PatientID})
@@ -173,7 +178,7 @@ const AppointmentForm = ({ close, appointments_data }) => {
           type="text"
           name="PatientID"
           value={newAppointment.PatientID}
-          readOnly // Make ID read-only as it will be filled by selecting a patient
+          readOnly
           className="w-full p-2 border rounded"
         />
       </div>
@@ -209,7 +214,7 @@ const AppointmentForm = ({ close, appointments_data }) => {
           value={newAppointment.Duration}
           onChange={(e) =>
             setNewAppointment({ ...newAppointment, Duration: Number(e.target.value) })
-          } // Update to store as number
+          }
           className="w-full p-2 border rounded"
           required
         >
@@ -220,7 +225,6 @@ const AppointmentForm = ({ close, appointments_data }) => {
           ))}
         </select>
       </div>
-      {/* Checkup Status */}
       <div className="mb-4">
         <label className="block text-gray-700">Checkup Status</label>
         <select
@@ -239,7 +243,7 @@ const AppointmentForm = ({ close, appointments_data }) => {
       <div className="flex justify">
         <button
           type="submit"
-          disabled={isSaveDisabled} // Disable button if conditions not met
+          disabled={isSaveDisabled}
           className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 ${isSaveDisabled ? 'opacity-50 cursor-not-allowed' : ''
             }`}
         >

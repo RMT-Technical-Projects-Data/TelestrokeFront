@@ -19,12 +19,12 @@ const PatientTable = ({ addPatient }) => {
     fetchPatientsData(); // Call the fetch function
   }, []); // Empty dependency array to run once on mount
 
-    // Helper function to format date
-    const formatDate = (dateString) => {
-      const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-      const date = new Date(dateString);
-      return date.toLocaleDateString(undefined, options); // Adjust options as needed
-    };
+    // // Helper function to format date
+    // const formatDate = (dateString) => {
+    //   const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    //   const date = new Date(dateString);
+    //   return date.toLocaleDateString(undefined, options); // Adjust options as needed
+    // };
 
   return (
     <>
@@ -39,10 +39,8 @@ const PatientTable = ({ addPatient }) => {
             <tr className="bg-gray-200 text-left">
               <th className="px-4 py-2">ID</th>
               <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Appointments Time</th>
-              <th className="px-4 py-2">Date</th>
-              <th className="px-4 py-2">Duration</th>
-              <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2">Date of Birth</th>             
+              <th className="px-4 py-2">Gender</th>
               {/* <th className="py-2 px-4 border-b font-bold">Diagnosis</th> */}
             </tr>
           </thead>
@@ -51,10 +49,8 @@ const PatientTable = ({ addPatient }) => {
               <tr key={patients.ID} className="hover:bg-gray-50">
                 <td className="border px-4 py-2 text-left">{patients.ID}</td>
                 <td className="border px-4 py-2 text-left">{patients.Name}</td>
-                <td className="border px-4 py-2 text-left">{patients.Appointments_Time}</td>
-                <td className="border px-4 py-2 text-left">{formatDate(patients.Appointments_Date)}</td>
-                <td className="border px-4 py-2 text-left">{patients.Duration} Minutes</td>
-                <td className="border px-4 py-2 text-left">{patients.Checkup_Status}</td>
+                <td className="border px-4 py-2 text-left">{patients.DOB}</td>
+                <td className="border px-4 py-2 text-left">{patients.Gender}</td>
                 
                 {/* <td className="py-2 px-4 border-b">
                   {patient.Diagnosis ? <img className="w-8 h-8" src={diagnosis} alt="Diagnosis Icon" /> : <div></div>}

@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from "react";
-import DatePicker from "react-datepicker";
+import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { PatientFormSubmit } from "../utils/auth"; // Import the PatientFormSubmit function
-import { AppointmentFormSubmit } from "../utils/auth"; // Import the AppointmentFormSubmit function
+import { AppointmentFormSubmit } from "../utils/auth"; // Import the AppointmentFormSubmit and getToken functions
 import client from "../api/client"; // Import your axios client for fetching data
+import {getToken, createMeeting} from "../API";
 
 const PatientForm = ({ savePatient, close }) => {
   const [patientData, setPatientData] = useState({
     Name: "",
-    Appointments_Date: new Date(),
-    Appointments_Time: "",
-    Duration: "",
-    Checkup_Status: "Pending",
+    // Appointments_Date: new Date(),
+    // Appointments_Time: "",
+    // Duration: "",
+    // Checkup_Status: "Pending",
     ID: "",
+    Gender: "Select" ,
+    DOB: Date(),
   });
   const [existingNames, setExistingNames] = useState([]); // Store existing names
   const [duplicateName, setDuplicateName] = useState(false); // Track duplicate name
@@ -84,6 +87,12 @@ const PatientForm = ({ savePatient, close }) => {
         savePatient(updatedPatientData); // Save patient data with the generated ID
 
         // Now save the same data in the appointments table
+        const token = await getToken(); // Generate the token
+        const meetingId = await createMeeting();
+        if (!meetingId) {
+          alert("Failed to create meeting. Please try again.");
+          return;
+        }
         const appointmentData = {
           PatientID: uniqueID,
           PatientName: patientData.Name,
@@ -91,6 +100,8 @@ const PatientForm = ({ savePatient, close }) => {
           AppointmentTime: patientData.Appointments_Time,
           Duration: duration,
           Checkup_Status: patientData.Checkup_Status,
+          token: token, // Add the token to the appointment data
+          meetingId: meetingId
         };
 
         // Submit the appointment data
@@ -150,6 +161,12 @@ const PatientForm = ({ savePatient, close }) => {
         savePatient(updatedPatientData); // Save patient data with the generated ID
 
         // Now save the same data in the appointments table
+        const token = await getToken(); // Generate the token
+        const meetingId = await createMeeting();
+        if (!meetingId) {
+          alert("Failed to create meeting. Please try again.");
+          return;
+        }
         const appointmentData = {
           PatientID: uniqueID,
           PatientName: patientData.Name,
@@ -157,6 +174,8 @@ const PatientForm = ({ savePatient, close }) => {
           AppointmentTime: patientData.Appointments_Time,
           Duration: duration,
           Checkup_Status: patientData.Checkup_Status,
+          Token: token, // Add the token to the appointment data
+          meetingId: meetingId
         };
 
         // Submit the appointment data
@@ -174,6 +193,7 @@ const PatientForm = ({ savePatient, close }) => {
     } catch (error) {
       alert(`Error: ${error.message}`);
     }
+    
   };
 
   return (
@@ -218,6 +238,20 @@ const PatientForm = ({ savePatient, close }) => {
               <p className="text-red-600 mt-2">Name Already Exists, press again to continue</p>
             )}
           </div>
+                <div>
+            <label className="block text-gray-700">Date of Birth:</label>
+            <DatePicker
+              selected={patientData.DOB}
+              onChange={(date) => setPatientData({ ...patientData, DOB: date })}
+              dateFormat="dd/MM/yyyy"
+              className="w-full p-2 border rounded"
+              required
+              showYearDropdown
+              yearDropdownItemNumber={80} // Number of years to show in dropdown
+              scrollableYearDropdown
+              placeholderText="Select a date"
+            />
+          </div>
           <div>
             <label className="block text-gray-700">Appointment Date:</label>
             <DatePicker
@@ -238,33 +272,54 @@ const PatientForm = ({ savePatient, close }) => {
               required
             />
           </div>
-          <div>
-            <label className="block text-gray-700">Duration (in minutes):</label>
+          <div className="mb-4">
+          <label className="block text-gray-700">Duration</label>
+          <select
+            name="Duration"
+            value={patientData.Duration}
+            onChange={(e) =>
+              setPatientData({ ...patientData, Duration: Number(e.target.value) })
+            } // Update to store as number
+            className="w-small p-2 border rounded"
+            required
+          >
+            {Array.from({ length: 12 }, (_, i) => (i + 1) * 5).map((minutes) => (
+              <option key={minutes} value={minutes}>
+                {minutes} mins
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="mb-4">
+            <label className="block text-gray-700">Gender</label>
             <select
-              value={patientData.Duration}
-              onChange={(e) => setPatientData({ ...patientData, Duration: e.target.value })}
-              className="border rounded p-2"
+              name="Checkup_Status"
+              value={patientData.Checkup_Status}
+              onChange={(e) =>
+                setPatientData({ ...patientData, Checkup_Status: e.target.value })
+              }
+              className="w-small p-2 border rounded"
               required
             >
-              <option value="">Select Duration</option>
-              {[...Array(60).keys()].map((i) => (
-                <option key={i + 1} value={i + 1}>
-                  {i + 1}
-                </option>
-              ))}
+              <option value="">Select</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
             </select>
           </div>
-          <div>
-            <label className="block text-gray-700">Checkup Status:</label>
+            {/* Checkup Status */}
+          <div className="mb-4">
+            <label className="block text-gray-700">Checkup Status</label>
             <select
+              name="Checkup_Status"
               value={patientData.Checkup_Status}
-              onChange={(e) => setPatientData({ ...patientData, Checkup_Status: e.target.value })}
-              className="border rounded p-2"
+              onChange={(e) =>
+                setPatientData({ ...patientData, Checkup_Status: e.target.value })
+              }
+              className="w-small p-2 border rounded"
               required
             >
               <option value="Pending">Pending</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
+              <option value="Complete">Complete</option>
             </select>
           </div>
         </form>

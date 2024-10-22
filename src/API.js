@@ -1,28 +1,61 @@
-//This is the Auth token, you will use it to generate a meeting and connect to it
-
+// Function to fetch the auth token from the backend
 export const getToken = async () => {
-  // const res = await fetch(`http://localhost:9000/get-token`, {
-  //   method: "GET",
-  // });
-  // //Destructuring the roomId from the response
-  // const { token } = await res.json();
-  // console.log(token);
-  return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlrZXkiOiJiZTkyNDhjNi01MjM3LTQxZjEtOGY3NS1hZGEyNTFmY2I0MjEiLCJwZXJtaXNzaW9ucyI6WyJhbGxvd19qb2luIl0sImlhdCI6MTcyNTI1NTQ1NywiZXhwIjoxNzI3ODQ3NDU3fQ.Mwcwn4jWsK-H_eJdvGlrKqWA_Pk5ta8MAPmbOQKjFSY"
-  // return token;
+  try {
+    const res = await fetch(`http://localhost:5000/get-token`, {
+      method: "GET",
+    });
+    // Extracting the token from the response
+    const { token } = await res.json();
+    console.log("Token received:", token);
+    return token;
+  } catch (error) {
+    console.error("Error fetching token:", error);
+    return null;
+  }
 };
 
+// Fetch the token for use in other API requests
 export const authToken = await getToken();
+
 // API call to create a meeting
-export const createMeeting = async ({ token }) => {
-  const res = await fetch(`https://api.videosdk.live/v2/rooms`, {
-    method: "POST",
-    headers: {
-      authorization: `${authToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({}),
-  });
-  //Destructuring the roomId from the response
-  const { roomId } = await res.json();
-  return roomId;
+export const createMeeting = async (region = "us") => {
+  try {
+    const res = await fetch(`http://localhost:5000/create-meeting/`, {
+      method: "POST",
+      headers: {
+        Authorization: authToken, // Use the token fetched from the backend
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token: authToken, region }), // Pass the region and token
+    });
+
+    const result = await res.json();
+    const { meetingId } = result;
+    console.log("Meeting created with ID:", meetingId);
+    return meetingId;
+  } catch (error) {
+    console.error("Error creating meeting:", error);
+    return null;
+  }
+};
+
+// API call to validate a meeting
+export const validateMeeting = async (meetingId) => {
+  try {
+    const res = await fetch(`http://localhost:5000/validate-meeting/${meetingId}`, {
+      method: "POST",
+      headers: {
+        Authorization: authToken, // Use the token fetched from the backend
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token: authToken }), // Pass the token
+    });
+
+    const result = await res.json();
+    console.log("Meeting validation result:", result);
+    return result;
+  } catch (error) {
+    console.error("Error validating meeting:", error);
+    return null;
+  }
 };
