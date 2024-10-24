@@ -8,7 +8,8 @@ const AppointmentTable = ({ addAppointment }) => {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const response = await client.get('/api/appointments'); // Fetch appointments
+        // Fetch appointments including meeting ID
+        const response = await client.get('/api/appointments'); // Ensure meeting ID is included in the API response
         setAppointmentsData(response.data); // Update state with fetched data
       } catch (error) {
         console.error("Error fetching appointments:", error);
@@ -50,14 +51,15 @@ const AppointmentTable = ({ addAppointment }) => {
           </thead>
           <tbody>
             {appointments_data.map((appointment) => (
-              <tr key={appointment.PatientID}> {/* Use PatientID as the key */}
-                <td className="border px-4 py-2 text-center">{appointment.PatientID}</td>
-                <td className="border px-4 py-2 text-center">{appointment.PatientName}</td>
+              <tr key={appointment.ID}> {/* Use ID as the key */}
+                <td className="border px-4 py-2 text-center">{appointment.ID}</td>
+                <td className="border px-4 py-2 text-center">{appointment.Name}</td>
                 <td className="border px-4 py-2 text-center">{formatDate(appointment.AppointmentDate)}</td>
                 <td className="border px-4 py-2 text-center">{appointment.AppointmentTime}</td>
                 <td className="border px-4 py-2 text-center">{appointment.Duration} Minutes</td>
                 <td className="border px-4 py-2 text-center">
-                  <Link to={`/emr/${appointment.PatientID}/${"l036-n7zl-6txr"}`}>
+                  <Link to={`/emr/${appointment.ID}/${appointment.meetingId}`}>
+                    {/* Dynamically using the appointment.MeetingID */}
                     <div className="bg-[#234ee8] text-white px-4 py-2 w-20 rounded-md shadow-lg mx-auto">
                       Join
                     </div>

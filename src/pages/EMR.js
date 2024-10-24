@@ -32,7 +32,7 @@ const EMRpage = () => {
   useEffect(()=>{
     console.log(settings)
     debugger
-    axios.post("http://localhost:3000/videoController-webhook", settings)
+    axios.post("http://localhost:5000/videoController-webhook", settings)
         .then((response) => {
           console.log("Command sent:", response.data);
         })

@@ -39,7 +39,7 @@ const PatientTable = ({ addPatient }) => {
             <tr className="bg-gray-200 text-left">
               <th className="px-4 py-2">ID</th>
               <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Date of Birth</th>             
+              <th className="px-4 py-2">Age</th>             
               <th className="px-4 py-2">Gender</th>
               {/* <th className="py-2 px-4 border-b font-bold">Diagnosis</th> */}
             </tr>
@@ -49,7 +49,7 @@ const PatientTable = ({ addPatient }) => {
               <tr key={patients.ID} className="hover:bg-gray-50">
                 <td className="border px-4 py-2 text-left">{patients.ID}</td>
                 <td className="border px-4 py-2 text-left">{patients.Name}</td>
-                <td className="border px-4 py-2 text-left">{patients.DOB}</td>
+                <td className="border px-4 py-2 text-left">{patients.Age}</td>
                 <td className="border px-4 py-2 text-left">{patients.Gender}</td>
                 
                 {/* <td className="py-2 px-4 border-b">

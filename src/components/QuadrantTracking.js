@@ -10,7 +10,7 @@ function QuadrantTracking({settings, updateSetting} ) {
         
 
     //     // Send coordinates to the server via POST request
-    //     axios.post('http://localhost:3000/webhook', coordinates)
+    //     axios.post('http://localhost:5000/webhook', coordinates)
     //         .then(response => {
     //             console.log('Coordinates sent:', response.data);
     //         })
@@ -34,7 +34,7 @@ function QuadrantTracking({settings, updateSetting} ) {
         const coordinates = { x: screenX, y: screenY };
         updateSetting("coordinates", coordinates)
         // Send coordinates to the server via POST request
-        // axios.post('http://localhost:3000/webhook', coordinates)
+        // axios.post('http://localhost:5000/webhook', coordinates)
         //     .then(response => {
         //         console.log('Coordinates sent:', response.data);
         //     })

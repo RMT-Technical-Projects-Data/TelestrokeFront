@@ -37,19 +37,20 @@ function Dashboard() {
     return displayedAppointments.map((appointment) => {
       return (
         <div
-          key={appointment.patientID} // Make sure your API returns patientID
+          key={appointment.ID} // Make sure your API returns patientID
           className="bg-gray-200 p-5 rounded-md shadow-lg w-fit flex justify-between items-center gap-20 transition ease-in-out animate-fadeIn"
         >
           <div>
-            <p className="text-lg">Patient Number: {appointment.PatientID}</p>
-            <p className="text-lg">Patient Name: {appointment.PatientName}</p>
+            <p className="text-lg">Patient Number: {appointment.ID}</p>
+            <p className="text-lg">Patient Name: {appointment.Name}</p>
             <p className="text-lg">Appointment Time: {appointment.AppointmentTime}</p>
           </div>
-          <Link to={`/emr/${appointment.patientID}/${"l036-n7zl-6txr"}`}>
-            <div className="bg-[#234ee8] text-white px-4 py-2 rounded-md shadow-lg">
-              Join
-            </div>
-          </Link>
+          <Link to={`/emr/${appointment.ID}/${appointment.meetingId}`}>
+                    {/* Dynamically using the appointment.MeetingID */}
+                    <div className="bg-[#234ee8] text-white px-4 py-2 w-20 rounded-md shadow-lg mx-auto">
+                      Join
+                    </div>
+                  </Link>
         </div>
       );
     });

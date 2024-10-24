@@ -7,8 +7,8 @@ const AppointmentForm = ({ close, appointments_data }) => {
   const navigate = useNavigate(); // Hook for navigation
 
   const [newAppointment, setNewAppointment] = useState({
-    PatientName: "",
-    PatientID: "",
+    Name: "",
+    ID: "",
     AppointmentTime: "",
     AppointmentDate: "",
     Duration: 0,
@@ -57,19 +57,19 @@ const AppointmentForm = ({ close, appointments_data }) => {
 
     const matchedPatients = patients.filter(
       (patient) =>
-        patient.PatientName.toLowerCase().startsWith(value) ||
-        patient.PatientID.toString().startsWith(value)
+        patient.Name.toLowerCase().startsWith(value) ||
+        patient.ID.toString().startsWith(value)
     );
 
     setSuggestions(matchedPatients);
-    setNewAppointment((prev) => ({ ...prev, PatientName: e.target.value }));
+    setNewAppointment((prev) => ({ ...prev, Name: e.target.value }));
   };
 
   const handleSuggestionClick = (patient) => {
     setNewAppointment({
       ...newAppointment,
-      PatientName: patient.PatientName,
-      PatientID: patient.PatientID,
+      Name: patient.Name,
+      ID: patient.ID,
       AppointmentDate: patient.AppointmentDate || newAppointment.AppointmentDate,
     });
     setAutofilledDate(patient.AppointmentDate);
@@ -78,8 +78,8 @@ const AppointmentForm = ({ close, appointments_data }) => {
 
   const checkAppointmentCollision = () => {
     return appointments_data.some((appointment) => {
-      const isSamePatient = newAppointment.PatientID === appointment.PatientID;
-      const isSameName = newAppointment.PatientName === appointment.PatientName;
+      const isSamePatient = newAppointment.ID === appointment.ID;
+      const isSameName = newAppointment.Name === appointment.Name;
       const isSameDate = newAppointment.AppointmentDate === appointment.AppointmentDate;
 
       return isSamePatient && isSameName && isSameDate;
@@ -98,7 +98,7 @@ const AppointmentForm = ({ close, appointments_data }) => {
 
       // Check if patient exists based on ID
       const patientExists = patients.some(
-        (patient) => patient.PatientID === newAppointment.PatientID
+        (patient) => patient.ID === newAppointment.ID
       );
 
       if (!patientExists) {
@@ -152,8 +152,8 @@ const AppointmentForm = ({ close, appointments_data }) => {
         <label className="block text-gray-700">Patient Name</label>
         <input
           type="text"
-          name="PatientName"
-          value={newAppointment.PatientName}
+          name="Name"
+          value={newAppointment.Name}
           onChange={handleSearchChange}
           className="w-full p-2 border rounded"
           required
@@ -162,11 +162,11 @@ const AppointmentForm = ({ close, appointments_data }) => {
           <ul className="border rounded mt-1">
             {suggestions.map((patient) => (
               <li
-                key={patient.PatientID}
+                key={patient.ID}
                 onClick={() => handleSuggestionClick(patient)}
                 className="cursor-pointer hover:bg-gray-200 p-2"
               >
-                {patient.PatientName} (ID: {patient.PatientID})
+                {patient.Name} (ID: {patient.ID})
               </li>
             ))}
           </ul>
@@ -176,8 +176,8 @@ const AppointmentForm = ({ close, appointments_data }) => {
         <label className="block text-gray-700">Patient ID</label>
         <input
           type="text"
-          name="PatientID"
-          value={newAppointment.PatientID}
+          name="ID"
+          value={newAppointment.ID}
           readOnly
           className="w-full p-2 border rounded"
         />
@@ -208,23 +208,25 @@ const AppointmentForm = ({ close, appointments_data }) => {
         />
       </div>
       <div className="mb-4">
-        <label className="block text-gray-700">Duration</label>
-        <select
-          name="Duration"
-          value={newAppointment.Duration}
-          onChange={(e) =>
-            setNewAppointment({ ...newAppointment, Duration: Number(e.target.value) })
-          }
-          className="w-full p-2 border rounded"
-          required
-        >
-          {Array.from({ length: 12 }, (_, i) => (i + 1) * 5).map((minutes) => (
-            <option key={minutes} value={minutes}>
-              {minutes} mins
-            </option>
-          ))}
-        </select>
-      </div>
+  <label className="block text-gray-700">Duration</label>
+  <select
+    name="Duration"
+    value={newAppointment.Duration}
+    onChange={(e) =>
+      setNewAppointment({ ...newAppointment, Duration: Number(e.target.value) })
+    }
+    className="w-full p-2 border rounded"
+    required
+  >
+    {/* Replace 5 with 0 */}
+    {Array.from({ length: 13 }, (_, i) => i * 5).map((minutes) => (
+      <option key={minutes} value={minutes}>
+        {minutes} mins
+      </option>
+    ))}
+  </select>
+</div>
+
       <div className="mb-4">
         <label className="block text-gray-700">Checkup Status</label>
         <select

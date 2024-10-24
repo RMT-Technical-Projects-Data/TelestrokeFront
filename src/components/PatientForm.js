@@ -2,23 +2,25 @@ import React, { useState, useEffect } from "react";
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { PatientFormSubmit } from "../utils/auth"; // Import the PatientFormSubmit function
-import { AppointmentFormSubmit } from "../utils/auth"; // Import the AppointmentFormSubmit and getToken functions
 import client from "../api/client"; // Import your axios client for fetching data
-import {getToken, createMeeting} from "../API";
+import { getToken, createMeeting } from "../API"; // For meeting generation
 
 const PatientForm = ({ savePatient, close }) => {
   const [patientData, setPatientData] = useState({
     Name: "",
-    // Appointments_Date: new Date(),
-    // Appointments_Time: "",
-    // Duration: "",
-    // Checkup_Status: "Pending",
+    AppointmentDate: new Date(),
+    AppointmentTime: "",
+    Duration: "",
+    Checkup_Status: "Pending",
     ID: "",
-    Gender: "Select" ,
-    DOB: Date(),
+    Gender: "",
+    Age: "",
+    meetingId: "",
+    token: "",
   });
   const [existingNames, setExistingNames] = useState([]); // Store existing names
   const [duplicateName, setDuplicateName] = useState(false); // Track duplicate name
+  const [proceedWithDuplicate, setProceedWithDuplicate] = useState(false); // Track if proceeding with duplicate name
 
   // Function to generate a 5-digit unique ID
   const generateUniqueID = async () => {
@@ -58,8 +60,15 @@ const PatientForm = ({ savePatient, close }) => {
     event.preventDefault(); // Prevent default form submission
 
     // Check for duplicate name
-    if (existingNames.includes(patientData.Name)) {
+    if (!proceedWithDuplicate && existingNames.includes(patientData.Name)) {
       setDuplicateName(true); // Show the warning if name exists
+      return;
+    }
+
+    // Check if a valid gender is set
+    const validGenders = ["Male", "Female", "Other"]; // Adjust this array based on your application's accepted gender values
+    if (!validGenders.includes(patientData.Gender)) {
+      alert("Please select a valid gender."); // Show an alert if gender is not valid
       return;
     }
 
@@ -72,6 +81,7 @@ const PatientForm = ({ savePatient, close }) => {
       return;
     }
 
+    // Update the patient data with generated ID and validated duration
     const updatedPatientData = {
       ...patientData,
       ID: uniqueID,
@@ -79,40 +89,29 @@ const PatientForm = ({ savePatient, close }) => {
     };
 
     try {
-      const response = await PatientFormSubmit(updatedPatientData); // Call the API to save patient data
+      // Generate meeting token and ID
+      const token = await getToken(); 
+      const meetingId = await createMeeting();
+      if (!meetingId) {
+        alert("Failed to create meeting. Please try again.");
+        return;
+      }
+
+      // Include the generated meetingId and token in the data
+      updatedPatientData.meetingId = meetingId;
+      updatedPatientData.token = token;
+
+      // Send the combined patient and appointment data in one request
+      const response = await PatientFormSubmit(updatedPatientData); // Call the API to save patient and appointment data
+
       if (response) {
-        alert("Patient saved successfully!");
+        alert("Patient and appointment saved successfully!");
 
-        // Save the patient data
-        savePatient(updatedPatientData); // Save patient data with the generated ID
-
-        // Now save the same data in the appointments table
-        const token = await getToken(); // Generate the token
-        const meetingId = await createMeeting();
-        if (!meetingId) {
-          alert("Failed to create meeting. Please try again.");
-          return;
-        }
-        const appointmentData = {
-          PatientID: uniqueID,
-          PatientName: patientData.Name,
-          AppointmentDate: patientData.Appointments_Date,
-          AppointmentTime: patientData.Appointments_Time,
-          Duration: duration,
-          Checkup_Status: patientData.Checkup_Status,
-          token: token, // Add the token to the appointment data
-          meetingId: meetingId
-        };
-
-        // Submit the appointment data
-        const appointmentResponse = await AppointmentFormSubmit(appointmentData);
-        if (appointmentResponse) {
-          alert("Appointment saved successfully!");
-        } else {
-          alert("Error saving appointment.");
-        }
+        // Save the patient data in the state
+        savePatient(updatedPatientData); 
 
         setDuplicateName(false); // Reset duplicate warning after success
+        setProceedWithDuplicate(false); // Reset the proceed flag
       } else {
         alert(`Error: ${response.error}`);
       }
@@ -124,76 +123,17 @@ const PatientForm = ({ savePatient, close }) => {
   const back = () => {
     setPatientData({
       Name: "",
-      Appointments_Date: new Date(),
-      Appointments_Time: "",
+      AppointmentDate: new Date(),
+      AppointmentTime: "",
       Duration: "",
       Checkup_Status: "Pending",
       ID: "",
+      Gender: "", // Reset gender field
+      Age: "",
+      meetingId: "",
+      token: "",
     });
     close();
-  };
-
-  // Function to handle pressing "Proceed Anyway" after seeing the duplicate name warning
-  const handleProceedAfterWarning = async (event) => {
-    event.preventDefault(); // Prevent default form submission
-
-    // Proceed to save patient data, generating unique ID as well
-    const uniqueID = await generateUniqueID(); // Generate a new unique ID
-
-    const duration = parseInt(patientData.Duration, 10);
-    if (isNaN(duration) || duration < 1 || duration > 60) {
-      alert("Duration must be a number between 1 and 60.");
-      return;
-    }
-
-    const updatedPatientData = {
-      ...patientData,
-      ID: uniqueID,
-      Duration: duration, // Ensure Duration is a number
-    };
-
-    try {
-      const response = await PatientFormSubmit(updatedPatientData); // Call the API to save patient data
-      if (response) {
-        alert("Patient saved successfully!");
-
-        // Save the patient data
-        savePatient(updatedPatientData); // Save patient data with the generated ID
-
-        // Now save the same data in the appointments table
-        const token = await getToken(); // Generate the token
-        const meetingId = await createMeeting();
-        if (!meetingId) {
-          alert("Failed to create meeting. Please try again.");
-          return;
-        }
-        const appointmentData = {
-          PatientID: uniqueID,
-          PatientName: patientData.Name,
-          AppointmentDate: patientData.Appointments_Date,
-          AppointmentTime: patientData.Appointments_Time,
-          Duration: duration,
-          Checkup_Status: patientData.Checkup_Status,
-          Token: token, // Add the token to the appointment data
-          meetingId: meetingId
-        };
-
-        // Submit the appointment data
-        const appointmentResponse = await AppointmentFormSubmit(appointmentData);
-        if (appointmentResponse) {
-          alert("Appointment saved successfully!");
-        } else {
-          alert("Error saving appointment.");
-        }
-
-        setDuplicateName(false); // Reset duplicate warning after success
-      } else {
-        alert(`Error: ${response.error}`);
-      }
-    } catch (error) {
-      alert(`Error: ${error.message}`);
-    }
-    
   };
 
   return (
@@ -208,18 +148,27 @@ const PatientForm = ({ savePatient, close }) => {
             Back
           </button>
           <button
-            onClick={duplicateName ? handleProceedAfterWarning : handleSavePatient}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            onClick={handleSavePatient}
+            className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 ${duplicateName ? "hidden" : ""}`}
           >
-            {duplicateName ? "Proceed Anyway" : "Save Patient"}
+            Save Patient
           </button>
+          {duplicateName && (
+           <button
+           className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+           onClick={(e) => {
+             setProceedWithDuplicate((prev) => {
+               handleSavePatient(e); // Pass the event to handleSavePatient
+               return true; // Set proceedWithDuplicate to true
+             });
+           }}
+         >
+           Proceed Anyway
+         </button>
+          )}
         </div>
       </div>
       <div className="flex flex-col gap-5 p-6 bg-white rounded shadow-md mr-52">
-        <div>
-          <p className="font-bold text-lg">Add Patient's Information</p>
-          <p>Fill in the information with patient data</p>
-        </div>
         <form className="flex flex-col gap-8" onSubmit={handleSavePatient}>
           <div>
             <label className="block text-gray-700">Name:</label>
@@ -231,6 +180,7 @@ const PatientForm = ({ savePatient, close }) => {
                 const value = event.target.value.replace(/[^a-zA-Z\s]/g, ""); // Allow only letters and spaces
                 setPatientData({ ...patientData, Name: value });
                 setDuplicateName(false); // Reset duplicate warning on name change
+                setProceedWithDuplicate(false); // Reset the proceed flag
               }}
               required
             />
@@ -238,25 +188,26 @@ const PatientForm = ({ savePatient, close }) => {
               <p className="text-red-600 mt-2">Name Already Exists, press again to continue</p>
             )}
           </div>
-                <div>
-            <label className="block text-gray-700">Date of Birth:</label>
-            <DatePicker
-              selected={patientData.DOB}
-              onChange={(date) => setPatientData({ ...patientData, DOB: date })}
-              dateFormat="dd/MM/yyyy"
-              className="w-full p-2 border rounded"
+          <div>
+            <label className="block text-gray-700">Age:</label>
+            <input
+              type="number"
+              value={patientData.Age || ''} // Default value or empty if null
+              onChange={(e) =>
+                setPatientData({ ...patientData, Age: e.target.value })
+              }
+              className="w-small p-2 border rounded"
+              placeholder="Enter age"
               required
-              showYearDropdown
-              yearDropdownItemNumber={80} // Number of years to show in dropdown
-              scrollableYearDropdown
-              placeholderText="Select a date"
             />
           </div>
           <div>
             <label className="block text-gray-700">Appointment Date:</label>
             <DatePicker
-              selected={patientData.Appointments_Date}
-              onChange={(date) => setPatientData({ ...patientData, Appointments_Date: date })}
+              selected={patientData.AppointmentDate}
+              onChange={(date) =>
+                setPatientData({ ...patientData, AppointmentDate: date })
+              }
               dateFormat="dd/MM/yyyy"
               className="w-full p-2 border rounded"
               required
@@ -266,60 +217,54 @@ const PatientForm = ({ savePatient, close }) => {
             <label className="block text-gray-700">Appointment Time:</label>
             <input
               type="time"
-              value={patientData.Appointments_Time}
-              onChange={(e) => setPatientData({ ...patientData, Appointments_Time: e.target.value })}
+              value={patientData.AppointmentTime}
+              onChange={(e) =>
+                setPatientData({ ...patientData, AppointmentTime: e.target.value })
+              }
               className="border rounded p-2"
               required
             />
           </div>
-          <div className="mb-4">
-          <label className="block text-gray-700">Duration</label>
-          <select
-            name="Duration"
-            value={patientData.Duration}
-            onChange={(e) =>
-              setPatientData({ ...patientData, Duration: Number(e.target.value) })
-            } // Update to store as number
-            className="w-small p-2 border rounded"
-            required
-          >
-            {Array.from({ length: 12 }, (_, i) => (i + 1) * 5).map((minutes) => (
-              <option key={minutes} value={minutes}>
-                {minutes} mins
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="mb-4">
-            <label className="block text-gray-700">Gender</label>
-            <select
-              name="Checkup_Status"
-              value={patientData.Checkup_Status}
+          <div>
+            <label className="block text-gray-700">Duration:</label>
+            <input
+              type="number"
+              value={patientData.Duration}
               onChange={(e) =>
-                setPatientData({ ...patientData, Checkup_Status: e.target.value })
+                setPatientData({ ...patientData, Duration: e.target.value })
               }
-              className="w-small p-2 border rounded"
+              className="border rounded p-2"
+              placeholder="Enter duration in minutes"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700">Gender:</label>
+            <select
+              value={patientData.Gender}
+              onChange={(e) =>
+                setPatientData({ ...patientData, Gender: e.target.value })
+              }
+              className="border rounded p-2"
               required
             >
-              <option value="">Select</option>
+              <option value="">Select Gender</option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
+              <option value="Other">Other</option>
             </select>
           </div>
-            {/* Checkup Status */}
-          <div className="mb-4">
-            <label className="block text-gray-700">Checkup Status</label>
+          <div>
+            <label className="block text-gray-700">Checkup Status:</label>
             <select
-              name="Checkup_Status"
               value={patientData.Checkup_Status}
               onChange={(e) =>
                 setPatientData({ ...patientData, Checkup_Status: e.target.value })
               }
-              className="w-small p-2 border rounded"
-              required
+              className="border rounded p-2"
             >
               <option value="Pending">Pending</option>
-              <option value="Complete">Complete</option>
+              <option value="Completed">Completed</option>
             </select>
           </div>
         </form>
