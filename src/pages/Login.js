@@ -1,20 +1,74 @@
-import { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 
-export default function Login() {
-  const { loginWithRedirect, isAuthenticated } = useAuth0();
+const Login = () => {
+  const { loginWithRedirect, isAuthenticated, user } = useAuth0();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Redirect to Google login when component mounts if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      loginWithRedirect({
-        connection: "google-oauth2", // Redirect to Google login
+  // This function will handle triggering the backend to save user info
+  const triggerUserSave = async () => {
+    try {
+      // Send the user info to the backend
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: user.email,
+          name: user.name
+        })
       });
-    } else {
-      // Optionally redirect to dashboard if already authenticated
-      window.location.href = "/dashboard";
-    }
-  }, [isAuthenticated, loginWithRedirect]);
 
-  return null; // No UI, just redirecting
-}
+      if (!response.ok) {
+        throw new Error('Failed to save user info');
+      }
+
+      const data = await response.json();
+      console.log("Response from backend:", data);
+
+      // Handle the response appropriately, e.g., redirect or store user info
+
+    } catch (error) {
+      setError(error.message);
+      console.error("Error saving user info to backend:", error);
+    }
+  };
+
+  useEffect(() => {
+    const authenticateUser = async () => {
+      if (isAuthenticated) {
+        try {
+          // Directly call the function to save user info
+          await triggerUserSave();
+        } catch (error) {
+          setError(error.message);
+          console.error("Error saving user info:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    authenticateUser();
+  }, [isAuthenticated, user]);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  return (
+    <div>
+      <h1>Login Page</h1>
+      {!isAuthenticated ? (
+        <button onClick={loginWithRedirect}>Log In</button>
+      ) : (
+        <div>Welcome, {user.name}</div>
+      )}
+    </div>
+  );
+};
+
+export default Login;

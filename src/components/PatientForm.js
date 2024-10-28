@@ -119,6 +119,7 @@ const PatientForm = ({ savePatient, close }) => {
       alert(`Error: ${error.message}`);
     }
   };
+  
 
   const back = () => {
     setPatientData({
@@ -133,7 +134,11 @@ const PatientForm = ({ savePatient, close }) => {
       meetingId: "",
       token: "",
     });
+    setDuplicateName(false); // Reset duplicate name warning
+    setProceedWithDuplicate(false); // Reset proceed with duplicate flag
     close();
+
+    
   };
 
   return (
@@ -157,9 +162,10 @@ const PatientForm = ({ savePatient, close }) => {
            <button
            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
            onClick={(e) => {
-             setProceedWithDuplicate((prev) => {
-               handleSavePatient(e); // Pass the event to handleSavePatient
-               return true; // Set proceedWithDuplicate to true
+            
+              setProceedWithDuplicate((prev) => {
+              handleSavePatient(e); // Pass the event to handleSavePatient
+              return true;// Set proceedWithDuplicate to true
              });
            }}
          >

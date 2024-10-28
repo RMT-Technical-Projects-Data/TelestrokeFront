@@ -1,17 +1,13 @@
-import React, { useEffect } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import React from "react";
+import LogoutButton from "../components/Logout_button"; // Adjust the path as needed
 
 const Logout = () => {
-  const { logout } = useAuth0();
-
-  useEffect(() => {
-    // Call logout and redirect to login page
-    logout({
-      returnTo: window.location.origin + "/login", // Redirect to the login page
-    });
-  }, [logout]);
-
-  return null; // No need to render anything
+  return (
+    <div>
+      <h1>Logout</h1>
+      <LogoutButton /> {/* Render the login button */}
+    </div>
+  );
 };
 
 export default Logout;
