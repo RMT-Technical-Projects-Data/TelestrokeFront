@@ -1,71 +1,90 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"; 
 import { useAuth0 } from "@auth0/auth0-react";
 
 const Login = () => {
-  const { loginWithRedirect, isAuthenticated, user } = useAuth0();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    loginWithPopup,
+    loginWithRedirect,
+    getAccessTokenSilently,
+    isAuthenticated,
+    getIdTokenClaims,
+  } = useAuth0();
 
-  // This function will handle triggering the backend to save user info
-  const triggerUserSave = async () => {
-    try {
-      // Send the user info to the backend
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email: user.email,
-          name: user.name
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save user info');
-      }
-
-      const data = await response.json();
-      console.log("Response from backend:", data);
-
-      // Handle the response appropriately, e.g., redirect or store user info
-
-    } catch (error) {
-      setError(error.message);
-      console.error("Error saving user info to backend:", error);
-    }
-  };
+  const [accessToken, setAccessToken] = useState(null); 
+  const [idToken, setIdToken] = useState(null);
 
   useEffect(() => {
-    const authenticateUser = async () => {
+    const handleUserData = async () => {
       if (isAuthenticated) {
         try {
-          // Directly call the function to save user info
-          await triggerUserSave();
+          // Fetch the access token
+          const accessTokenResponse = await getAccessTokenSilently();
+          console.log("Access Token:", accessTokenResponse); // Log the Access token
+          setAccessToken(accessTokenResponse); // Store the Access token
+
+          // Fetch the ID token claims
+          const idTokenClaims = await getIdTokenClaims();
+          const rawIdToken = idTokenClaims.__raw; // Get the raw id_token
+          console.log("ID Token:", rawIdToken); // Log the ID token
+          setIdToken(rawIdToken); // Store the ID token
+
+          // Send the ID token to the backend
+          await sendIdTokenToBackend(rawIdToken);
+
         } catch (error) {
-          setError(error.message);
-          console.error("Error saving user info:", error);
-        } finally {
-          setLoading(false);
+          console.error("Error in handling user data:", error);
         }
-      } else {
-        setLoading(false);
       }
     };
 
-    authenticateUser();
-  }, [isAuthenticated, user]);
+    handleUserData();
+  }, [isAuthenticated, getAccessTokenSilently, getIdTokenClaims]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  const sendIdTokenToBackend = async (token) => {
+    try {
+      const response = await fetch("http://localhost:5000/receive-id-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`, // You can also send it in the Authorization header
+        },
+        body: JSON.stringify({ idToken: token }), // Send the token as JSON
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Response from backend:", data); // Log the response from the backend
+
+    } catch (error) {
+      console.error("Error sending ID token to backend:", error);
+    }
+  };
 
   return (
-    <div>
-      <h1>Login Page</h1>
-      {!isAuthenticated ? (
-        <button onClick={loginWithRedirect}>Log In</button>
-      ) : (
-        <div>Welcome, {user.name}</div>
+    <div style={{ textAlign: "center", marginTop: "20px" }}>
+      <h1>Welcome</h1>
+      <button onClick={loginWithPopup} style={{ margin: "10px", padding: "10px 20px" }}>
+        Login with Popup
+      </button>
+      <button onClick={loginWithRedirect} style={{ margin: "10px", padding: "10px 20px" }}>
+        Login with Redirect
+      </button>
+
+      {accessToken && ( 
+        <div style={{ marginTop: "20px" }}>
+          <h2>Access Token:</h2>
+          <pre>{accessToken}</pre> 
+        </div>
+      )}
+
+      {idToken && ( 
+        <div style={{ marginTop: "20px" }}>
+          <h2>ID Token:</h2>
+          <pre>{idToken}</pre> 
+        </div>
       )}
     </div>
   );
