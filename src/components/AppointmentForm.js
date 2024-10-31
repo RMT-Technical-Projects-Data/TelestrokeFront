@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Assuming you're using React Router for navigation
-import { AppointmentFormSubmit, getAllAppointments, getAllPatients } from "../utils/auth"; // Import the functions from utils
-import { getToken, createMeeting } from "../API"; // Import createMeeting
+import { useNavigate } from "react-router-dom";
+import { AppointmentFormSubmit, getAllAppointments } from "../utils/auth"; 
+import { getToken, createMeeting } from "../API"; 
+import { getAllPatients } from "../utils/auth"; // Import getAllPatients
 
-const AppointmentForm = ({ close }) => {
-  const navigate = useNavigate(); // Hook for navigation
+const AppointmentForm = ({ close, appointments_data }) => {
+  const navigate = useNavigate();
 
   const [newAppointment, setNewAppointment] = useState({
     Name: "",
@@ -14,32 +15,20 @@ const AppointmentForm = ({ close }) => {
     Duration: 0,
     Checkup_Status: "Pending",
     token: "",
-    meetingId: "", // Added to store the generated meeting ID
+    meetingId: "", 
   });
 
   const [patients, setPatients] = useState([]);
-  const [appointments, setAppointments] = useState([]); // Added for storing appointments
   const [suggestions, setSuggestions] = useState([]);
   const [autofilledDate, setAutofilledDate] = useState("");
 
-  // Fetch patients for suggestions
   useEffect(() => {
     const fetchPatients = async () => {
-      const allPatients = await getAllPatients(); // Fetch patients
-      setPatients(allPatients); // Assuming getAllPatients returns patients directly
+      const allPatients = await getAllPatients();
+      setPatients(allPatients.map(formatPatientDate));
     };
 
     fetchPatients();
-  }, []);
-
-  // Fetch appointments for collision checking
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      const allAppointments = await getAllAppointments();
-      setAppointments(allAppointments.map(formatPatientDate)); // Store appointments
-    };
-
-    fetchAppointments();
   }, []);
 
   const formatPatientDate = (patient) => {
@@ -88,8 +77,9 @@ const AppointmentForm = ({ close }) => {
     setSuggestions([]);
   };
 
-  const checkAppointmentCollision = () => {
-    return appointments.some((appointment) => {
+  const checkAppointmentCollision = async () => {
+    const allAppointments = await getAllAppointments();
+    return allAppointments.some((appointment) => {
       const isSamePatient = newAppointment.ID === appointment.ID;
       const isSameName = newAppointment.Name === appointment.Name;
       const isSameDate = newAppointment.AppointmentDate === appointment.AppointmentDate;
@@ -108,7 +98,6 @@ const AppointmentForm = ({ close }) => {
         return;
       }
 
-      // Check if patient exists based on ID
       const patientExists = patients.some(
         (patient) => patient.ID === newAppointment.ID
       );
@@ -118,24 +107,21 @@ const AppointmentForm = ({ close }) => {
         return;
       }
 
-      // Collision check for existing appointments
-      if (checkAppointmentCollision()) {
-        alert("Patient already has an appointment on the same date.");
-        return; // Prevent further execution if appointment exists
+      if (await checkAppointmentCollision()) {
+        alert("Patient already has an appointment on the selected Date.");
+        return;
       }
 
-      // Call createMeeting and pass the region (you can change this if needed)
       const meetingId = await createMeeting();
       if (!meetingId) {
         alert("Failed to create meeting. Please try again.");
         return;
       }
 
-      // Proceed to save the appointment if no collision is found
       const newAppointmentData = {
         ...newAppointment,
-        token: token, // Add the token to the appointment data
-        meetingId: meetingId, // Add the meeting ID to the appointment data
+        token: token,
+        meetingId: meetingId,
       };
 
       const response = await AppointmentFormSubmit(newAppointmentData);
@@ -237,7 +223,6 @@ const AppointmentForm = ({ close }) => {
           ))}
         </select>
       </div>
-
       <div className="mb-4">
         <label className="block text-gray-700">Checkup Status</label>
         <select
@@ -274,7 +259,7 @@ const AppointmentForm = ({ close }) => {
           onClick={close}
           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 ml-4"
         >
-          Close
+          Cancel
         </button>
       </div>
     </form>
