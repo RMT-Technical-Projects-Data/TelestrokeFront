@@ -6,22 +6,7 @@ import AppointmentForm from "../components/AppointmentForm";
 
 const AppointmentsPage = () => {
   const [appointments_data, setAppointmentsData] = useState([
-    {
-      ID: "1",
-      Patient_Name: "Mr Collins",
-      Appointments_Date: "08/07/2024",
-      Appointments_Time: "4:05",
-      Duration: "30 mins",
-      Checkup_Status: "Complete",
-    },
-    {
-      ID: "2",
-      Patient_Name: "Mr. Daniel",
-      Appointments_Date: "08/07/2024",
-      Appointments_Time: "4:40",
-      Duration: "15 mins",
-      Checkup_Status: "Pending",
-    },
+ 
   ]);
 
   const [showForm, setShowForm] = useState(false);

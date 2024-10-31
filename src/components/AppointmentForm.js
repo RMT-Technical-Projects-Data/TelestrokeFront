@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // Assuming you're using React Router for navigation
-import { AppointmentFormSubmit, getAllAppointments } from "../utils/auth"; // Import the function from utils
+import { AppointmentFormSubmit, getAllAppointments, getAllPatients } from "../utils/auth"; // Import the functions from utils
 import { getToken, createMeeting } from "../API"; // Import createMeeting
 
-const AppointmentForm = ({ close, appointments_data }) => {
+const AppointmentForm = ({ close }) => {
   const navigate = useNavigate(); // Hook for navigation
 
   const [newAppointment, setNewAppointment] = useState({
@@ -18,16 +18,28 @@ const AppointmentForm = ({ close, appointments_data }) => {
   });
 
   const [patients, setPatients] = useState([]);
+  const [appointments, setAppointments] = useState([]); // Added for storing appointments
   const [suggestions, setSuggestions] = useState([]);
   const [autofilledDate, setAutofilledDate] = useState("");
 
+  // Fetch patients for suggestions
   useEffect(() => {
     const fetchPatients = async () => {
-      const allAppointments = await getAllAppointments();
-      setPatients(allAppointments.map(formatPatientDate));
+      const allPatients = await getAllPatients(); // Fetch patients
+      setPatients(allPatients); // Assuming getAllPatients returns patients directly
     };
 
     fetchPatients();
+  }, []);
+
+  // Fetch appointments for collision checking
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      const allAppointments = await getAllAppointments();
+      setAppointments(allAppointments.map(formatPatientDate)); // Store appointments
+    };
+
+    fetchAppointments();
   }, []);
 
   const formatPatientDate = (patient) => {
@@ -77,7 +89,7 @@ const AppointmentForm = ({ close, appointments_data }) => {
   };
 
   const checkAppointmentCollision = () => {
-    return appointments_data.some((appointment) => {
+    return appointments.some((appointment) => {
       const isSamePatient = newAppointment.ID === appointment.ID;
       const isSameName = newAppointment.Name === appointment.Name;
       const isSameDate = newAppointment.AppointmentDate === appointment.AppointmentDate;
@@ -208,24 +220,23 @@ const AppointmentForm = ({ close, appointments_data }) => {
         />
       </div>
       <div className="mb-4">
-  <label className="block text-gray-700">Duration</label>
-  <select
-    name="Duration"
-    value={newAppointment.Duration}
-    onChange={(e) =>
-      setNewAppointment({ ...newAppointment, Duration: Number(e.target.value) })
-    }
-    className="w-full p-2 border rounded"
-    required
-  >
-    {/* Replace 5 with 0 */}
-    {Array.from({ length: 13 }, (_, i) => i * 5).map((minutes) => (
-      <option key={minutes} value={minutes}>
-        {minutes} mins
-      </option>
-    ))}
-  </select>
-</div>
+        <label className="block text-gray-700">Duration</label>
+        <select
+          name="Duration"
+          value={newAppointment.Duration}
+          onChange={(e) =>
+            setNewAppointment({ ...newAppointment, Duration: Number(e.target.value) })
+          }
+          className="w-full p-2 border rounded"
+          required
+        >
+          {Array.from({ length: 7 }, (_, i) => i * 10).map((minutes) => (
+            <option key={minutes} value={minutes}>
+              {minutes} mins
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div className="mb-4">
         <label className="block text-gray-700">Checkup Status</label>
@@ -263,7 +274,7 @@ const AppointmentForm = ({ close, appointments_data }) => {
           onClick={close}
           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 ml-4"
         >
-          Cancel
+          Close
         </button>
       </div>
     </form>

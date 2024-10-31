@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react"; 
 import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for redirecting
 
 const Login = () => {
   const {
@@ -12,6 +13,7 @@ const Login = () => {
 
   const [accessToken, setAccessToken] = useState(null); 
   const [idToken, setIdToken] = useState(null);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     const handleUserData = async () => {
@@ -31,6 +33,9 @@ const Login = () => {
           // Send the ID token to the backend
           await sendIdTokenToBackend(rawIdToken);
 
+          // Redirect only after the ID token has been sent successfully
+          navigate("/dashboard"); // Change this path as needed
+
         } catch (error) {
           console.error("Error in handling user data:", error);
         }
@@ -38,7 +43,7 @@ const Login = () => {
     };
 
     handleUserData();
-  }, [isAuthenticated, getAccessTokenSilently, getIdTokenClaims]);
+  }, [isAuthenticated, getAccessTokenSilently, getIdTokenClaims, navigate]);
 
   const sendIdTokenToBackend = async (token) => {
     try {

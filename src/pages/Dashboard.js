@@ -4,11 +4,17 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react"; // Import the useAuth0 hook
 
 // Register required chart components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function Dashboard() {
+  const {
+    isAuthenticated,
+    getIdTokenClaims,
+  } = useAuth0();
+
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true); // State to manage loading
 
@@ -28,8 +34,49 @@ function Dashboard() {
       }
     };
 
-    fetchAppointments();
-  }, []); // Empty dependency array means this runs once when the component mounts
+    const sendIdTokenToBackend = async (token) => {
+      try {
+        const response = await fetch("http://localhost:5000/receive-id-token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`, // Send it in the Authorization header
+          },
+          body: JSON.stringify({ idToken: token }), // Send the token as JSON
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Response from backend:", data); // Log the response from the backend
+
+      } catch (error) {
+        console.error("Error sending ID token to backend:", error);
+      }
+    };
+
+    const handleUserData = async () => {
+      if (isAuthenticated) {
+        try {
+          // Fetch the ID token claims
+          const idTokenClaims = await getIdTokenClaims();
+          const rawIdToken = idTokenClaims.__raw; // Get the raw id_token
+          console.log("ID Token:", rawIdToken); // Log the ID token
+
+          // Send the ID token to the backend
+          await sendIdTokenToBackend(rawIdToken);
+
+        } catch (error) {
+          console.error("Error in handling user data:", error);
+        }
+      }
+    };
+
+    fetchAppointments(); // Fetch appointments
+    handleUserData(); // Send ID token to backend
+  }, [isAuthenticated, getIdTokenClaims]); // Dependency array includes isAuthenticated and getIdTokenClaims
 
   const renderAppointments = () => {
     // Only render the first three appointments
@@ -46,11 +93,10 @@ function Dashboard() {
             <p className="text-lg">Appointment Time: {appointment.AppointmentTime}</p>
           </div>
           <Link to={`/emr/${appointment.ID}/${appointment.meetingId}`}>
-                    {/* Dynamically using the appointment.MeetingID */}
-                    <div className="bg-[#234ee8] text-white px-4 py-2 w-20 rounded-md shadow-lg mx-auto">
-                      Join
-                    </div>
-                  </Link>
+            <div className="bg-[#234ee8] text-white px-4 py-2 w-20 rounded-md shadow-lg mx-auto">
+              Join
+            </div>
+          </Link>
         </div>
       );
     });
@@ -104,7 +150,7 @@ function Dashboard() {
                   <h2 className="text-2xl font-bold">Upcoming Appointments:</h2>
                   {renderAppointments()}
                 </div>
-                
+
                 {/* Right Side: Pie Chart */}
                 <div className="flex justify-center w-1/2">
                   <div className="w-[500px] h-[500px]">

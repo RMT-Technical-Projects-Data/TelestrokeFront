@@ -49,6 +49,20 @@ export const getAllAppointments = async () => {
   }
 };
 
+
+
+
+export const getAllPatients = async () => {
+  try {
+    const { data } = await client.get('/api/patients'); // Adjust the endpoint as necessary
+    return data; // Return the fetched appointment data
+  } catch (error) {
+    return catchError(error); // Handle any errors
+  }
+};
+
+
+
 // utils/auth.js
 
 export const saveUserInfo = async (user) => {
@@ -68,3 +82,24 @@ export const saveUserInfo = async (user) => {
 };
 
 
+// Function to delete an appointment
+export const deleteAppointment = async ({ patientId, appointmentDate }) => {
+  try {
+    // Format the date to match the expected API format (YYYY-MM-DDTHH:mm:ss.sssZ)
+    const formattedDate = new Date(appointmentDate).toISOString(); // This will give you the required format
+
+    // Sending the patient ID and formatted appointment date in the body of the DELETE request
+    const response = await client.delete(`/api/appointments`, { 
+      data: { 
+        patientId, 
+        appointmentDate: formattedDate // Use formatted date here
+      } 
+    }); 
+
+    return response.data; // Return any relevant response data
+  } catch (error) {
+    console.error("Error deleting appointment:", error);
+    // Return a standardized error response for handling in the calling component
+    return { success: false, error: error.response ? error.response.data : "Unknown error occurred" };
+  }
+};
