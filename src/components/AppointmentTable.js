@@ -1,64 +1,90 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import client from "../api/client"; // Import your axios client
-import { FaTrash } from "react-icons/fa"; // Import a trash icon from react-icons (or use your own)
-import { deleteAppointment } from "../utils/auth"; // Import the new delete function
+import { FaTrash, FaEdit } from "react-icons/fa"; // Import a trash and edit icon from react-icons
+import { deleteAppointment, UpdateAppointment } from "../utils/auth"; // Import delete and update functions
 
 const AppointmentTable = ({ addAppointment }) => {
   const [appointments_data, setAppointmentsData] = useState([]);
-  const [errorMessage, setErrorMessage] = useState(null); // State for error messages
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentAppointment, setCurrentAppointment] = useState({}); // State to store the appointment being edited
+  const [updatedDate, setUpdatedDate] = useState('');
+  const [updatedTime, setUpdatedTime] = useState('');
+  const [updatedDuration, setUpdatedDuration] = useState('');
 
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        // Fetch appointments including meeting ID
         const response = await client.get('/api/appointments');
-        setAppointmentsData(response.data); // Update state with fetched data
+        setAppointmentsData(response.data);
       } catch (error) {
         console.error("Error fetching appointments:", error);
       }
     };
 
-    fetchAppointments(); // Call the fetch function
-  }, []); // Empty dependency array to run only on mount
+    fetchAppointments();
+  }, []);
 
-  // Helper function to format date
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
     const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, options); // Adjust options as needed
+    return date.toLocaleDateString(undefined, options);
   };
 
   const handleDelete = async (patientId, appointmentDate) => {
-    // Show confirmation dialog
     const confirmDelete = window.confirm("Are you sure you want to delete this appointment?");
   
     if (!confirmDelete) {
-      // If user cancels, exit the function
       return;
     }
   
-    // Format appointmentDate to match the format in your database
-    const formattedDate = new Date(appointmentDate).toISOString(); // Convert to ISO string
+    const formattedDate = new Date(appointmentDate).toISOString();
   
-    const result = await deleteAppointment({ patientId, appointmentDate: formattedDate }); // Call the delete function
+    const result = await deleteAppointment({ patientId, appointmentDate: formattedDate });
     if (result.success !== false) {
-      // Update state to remove the deleted appointment
       setAppointmentsData(appointments_data.filter(appointment => 
         appointment.ID !== patientId || 
-        new Date(appointment.AppointmentDate).toISOString() !== formattedDate // Ensure the date is compared correctly
+        new Date(appointment.AppointmentDate).toISOString() !== formattedDate
       ));
-      setErrorMessage(null); // Clear any previous error message
+      setErrorMessage(null);
     } else {
-      // Handle the error if deletion was not successful
-      setErrorMessage("Failed to delete appointment. Please try again."); // Update state to show error message
+      setErrorMessage("Failed to delete appointment. Please try again.");
       console.error("Failed to delete appointment:", result.error);
     }
   };
 
+  const handleUpdate = async () => {
+    const result = await UpdateAppointment({
+      patientId: currentAppointment.ID,
+      appointmentDate: updatedDate,
+      appointmentTime: updatedTime,
+      duration: updatedDuration,
+    });
+
+    if (result.success) {
+      setAppointmentsData(appointments_data.map(appointment => 
+        appointment.ID === currentAppointment.ID ? { ...appointment, AppointmentDate: updatedDate, AppointmentTime: updatedTime, Duration: updatedDuration } : appointment
+      ));
+      setIsEditing(false);
+      setErrorMessage(null);
+    } else {
+      setErrorMessage("Failed to update appointment. Please try again.");
+      console.error("Failed to update appointment:", result.error);
+    }
+  };
+
+  const openEditModal = (appointment) => {
+    setCurrentAppointment(appointment);
+    setUpdatedDate(appointment.AppointmentDate);
+    setUpdatedTime(appointment.AppointmentTime);
+    setUpdatedDuration(appointment.Duration);
+    setIsEditing(true);
+  };
+
   return (
     <div className="w-full">
-      {errorMessage && <div className="text-red-500">{errorMessage}</div>} {/* Show error message if any */}
+      {errorMessage && <div className="text-red-500">{errorMessage}</div>}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Appointments</h1>
         <button
@@ -78,12 +104,12 @@ const AppointmentTable = ({ addAppointment }) => {
               <th className="px-4 py-2">Appointment Time</th>
               <th className="px-4 py-2">Duration</th>
               <th className="px-4 py-2">Join</th>
-              <th className="px-4 py-2">Actions</th> {/* New Actions column */}
+              <th className="px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             {appointments_data.map((appointment) => (
-              <tr key={appointment.ID}> {/* Use ID as the key */}
+              <tr key={appointment.ID}>
                 <td className="border px-4 py-2 text-center">{appointment.ID}</td>
                 <td className="border px-4 py-2 text-center">{appointment.Name}</td>
                 <td className="border px-4 py-2 text-center">{formatDate(appointment.AppointmentDate)}</td>
@@ -98,10 +124,16 @@ const AppointmentTable = ({ addAppointment }) => {
                 </td>
                 <td className="border px-4 py-2 text-center">
                   <button 
-                    onClick={() => handleDelete(appointment.ID, appointment.AppointmentDate)} // Pass both ID and date
+                    onClick={() => openEditModal(appointment)}
+                    className="text-blue-600 mr-2"
+                  >
+                    <FaEdit /> {/* Edit icon */}
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(appointment.ID, appointment.AppointmentDate)}
                     className="text-red-600"
                   >
-                    <FaTrash /> {/* Trash icon */}
+                    <FaTrash />
                   </button>
                 </td>
               </tr>
@@ -109,6 +141,59 @@ const AppointmentTable = ({ addAppointment }) => {
           </tbody>
         </table>
       </div>
+
+      {isEditing && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-md shadow-lg">
+            <h2 className="text-xl mb-4">Update Appointment</h2>
+            <label className="block mb-2">Date:</label>
+            <input
+              type="date"
+              value={updatedDate.split('T')[0]} // Extract date part
+              onChange={(e) => setUpdatedDate(e.target.value)}
+              className="border border-gray-300 rounded-md p-2 mb-4 w-full"
+            />
+            <label className="block mb-2">Time:</label>
+            <input
+              type="time"
+              value={updatedTime}
+              onChange={(e) => setUpdatedTime(e.target.value)}
+              className="border border-gray-300 rounded-md p-2 mb-4 w-full"
+            />
+           <div className="mb-4">
+  <label className="block text-gray-700">Duration (Minutes):</label>
+  <select
+    name="Duration"
+    value={updatedDuration}
+    onChange={(e) => setUpdatedDuration(Number(e.target.value))}
+    className="w-full p-2 border border-gray-300 rounded-md"
+    required
+  >
+    {Array.from({ length: 7 }, (_, i) => i * 10).map((minutes) => (
+      <option key={minutes} value={minutes}>
+        {minutes} mins
+      </option>
+    ))}
+  </select>
+</div>
+
+            <div className="flex justify-end">
+              <button 
+                onClick={handleUpdate} 
+                className="bg-blue-600 text-white px-4 py-2 rounded-md mr-2"
+              >
+                Update
+              </button>
+              <button 
+                onClick={() => setIsEditing(false)} 
+                className="bg-gray-400 text-white px-4 py-2 rounded-md"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -103,3 +103,18 @@ export const deleteAppointment = async ({ patientId, appointmentDate }) => {
     return { success: false, error: error.response ? error.response.data : "Unknown error occurred" };
   }
 };
+
+// Function to update an existing appointment
+export const UpdateAppointment = async ({ patientId, appointmentDate, appointmentTime, duration }) => {
+  try {
+    const response = await client.put(`/api/appointments/${patientId}`, {
+      appointmentDate,
+      appointmentTime,
+      duration
+    });
+    return response.data; // Return the updated appointment data
+  } catch (error) {
+    console.error("Error updating appointment:", error);
+    return { success: false, error: error.message }; // Adjusted to handle errors
+  }
+};

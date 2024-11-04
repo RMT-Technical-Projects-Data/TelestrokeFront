@@ -10,7 +10,7 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 
 // Render the App wrapped with Auth0Provider for authentication
 root.render(
-    <React.StrictMode>
+    
         <Auth0Provider
             domain="dev-pze8jy5r117ncxha.us.auth0.com"         // Your Auth0 domain
             clientId="6k6KDVCo9951hHmXKUP4560xboSuHJaJ"         // Your Auth0 client ID
@@ -20,7 +20,7 @@ root.render(
         >
             <App />
         </Auth0Provider>
-    </React.StrictMode>
+    
 );
 
 // Optional: for measuring performance
