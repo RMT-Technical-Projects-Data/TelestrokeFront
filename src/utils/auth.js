@@ -105,14 +105,14 @@ export const deleteAppointment = async ({ patientId, appointmentDate }) => {
 };
 
 // Function to update an existing appointment
-export const UpdateAppointment = async ({ patientId, appointmentDate, appointmentTime, duration }) => {
+export const UpdateAppointment = async ({ _id, appointmentDate, appointmentTime, duration }) => {
   try {
-    const response = await client.put(`/api/appointments/${patientId}`, {
-      appointmentDate,
-      appointmentTime,
-      duration
+    const response = await client.put(`/api/appointments/${_id}`, {
+      AppointmentDate: appointmentDate,
+      AppointmentTime: appointmentTime,
+      Duration: duration
     });
-    return response.data; // Return the updated appointment data
+    return { success: true, data: response.data }; // Return the updated appointment data
   } catch (error) {
     console.error("Error updating appointment:", error);
     return { success: false, error: error.message }; // Adjusted to handle errors

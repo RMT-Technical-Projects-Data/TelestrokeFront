@@ -54,17 +54,31 @@ const AppointmentTable = ({ addAppointment }) => {
     }
   };
 
+
+  // Helper function to format time in 12-hour format with AM/PM
+  const formatTime = (time) => {
+    const [hour, minute] = time.split(':');
+    const hourNum = parseInt(hour, 10);
+    const isPM = hourNum >= 12;
+    const formattedHour = hourNum % 12 || 12;
+    const amPm = isPM ? 'PM' : 'AM';
+    return `${formattedHour}:${minute} ${amPm}`;
+  };
+
+
   const handleUpdate = async () => {
     const result = await UpdateAppointment({
-      patientId: currentAppointment.ID,
+      _id: currentAppointment._id, // Use _id to identify the appointment
       appointmentDate: updatedDate,
       appointmentTime: updatedTime,
       duration: updatedDuration,
     });
-
+  
     if (result.success) {
       setAppointmentsData(appointments_data.map(appointment => 
-        appointment.ID === currentAppointment.ID ? { ...appointment, AppointmentDate: updatedDate, AppointmentTime: updatedTime, Duration: updatedDuration } : appointment
+        appointment._id === currentAppointment._id 
+          ? { ...appointment, AppointmentDate: updatedDate, AppointmentTime: updatedTime, Duration: updatedDuration } 
+          : appointment
       ));
       setIsEditing(false);
       setErrorMessage(null);
@@ -73,6 +87,7 @@ const AppointmentTable = ({ addAppointment }) => {
       console.error("Failed to update appointment:", result.error);
     }
   };
+  
 
   const openEditModal = (appointment) => {
     setCurrentAppointment(appointment);
@@ -82,7 +97,7 @@ const AppointmentTable = ({ addAppointment }) => {
     setIsEditing(true);
   };
 
-  return (
+   return (
     <div className="w-full">
       {errorMessage && <div className="text-red-500">{errorMessage}</div>}
       <div className="flex justify-between items-center mb-6">
@@ -113,7 +128,7 @@ const AppointmentTable = ({ addAppointment }) => {
                 <td className="border px-4 py-2 text-center">{appointment.ID}</td>
                 <td className="border px-4 py-2 text-center">{appointment.Name}</td>
                 <td className="border px-4 py-2 text-center">{formatDate(appointment.AppointmentDate)}</td>
-                <td className="border px-4 py-2 text-center">{appointment.AppointmentTime}</td>
+                <td className="border px-4 py-2 text-center">{formatTime(appointment.AppointmentTime)}</td>
                 <td className="border px-4 py-2 text-center">{appointment.Duration} Minutes</td>
                 <td className="border px-4 py-2 text-center">
                   <Link to={`/emr/${appointment.ID}/${appointment.meetingId}`}>
@@ -149,7 +164,7 @@ const AppointmentTable = ({ addAppointment }) => {
             <label className="block mb-2">Date:</label>
             <input
               type="date"
-              value={updatedDate.split('T')[0]} // Extract date part
+              value={updatedDate.split('T')[0]}
               onChange={(e) => setUpdatedDate(e.target.value)}
               className="border border-gray-300 rounded-md p-2 mb-4 w-full"
             />
@@ -160,22 +175,22 @@ const AppointmentTable = ({ addAppointment }) => {
               onChange={(e) => setUpdatedTime(e.target.value)}
               className="border border-gray-300 rounded-md p-2 mb-4 w-full"
             />
-           <div className="mb-4">
-  <label className="block text-gray-700">Duration (Minutes):</label>
-  <select
-    name="Duration"
-    value={updatedDuration}
-    onChange={(e) => setUpdatedDuration(Number(e.target.value))}
-    className="w-full p-2 border border-gray-300 rounded-md"
-    required
-  >
-    {Array.from({ length: 7 }, (_, i) => i * 10).map((minutes) => (
-      <option key={minutes} value={minutes}>
-        {minutes} mins
-      </option>
-    ))}
-  </select>
-</div>
+            <div className="mb-4">
+              <label className="block text-gray-700">Duration (Minutes):</label>
+              <select
+                name="Duration"
+                value={updatedDuration}
+                onChange={(e) => setUpdatedDuration(Number(e.target.value))}
+                className="w-full p-2 border border-gray-300 rounded-md"
+                required
+              >
+                {Array.from({ length: 7 }, (_, i) => i * 10).map((minutes) => (
+                  <option key={minutes} value={minutes}>
+                    {minutes} mins
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="flex justify-end">
               <button 
