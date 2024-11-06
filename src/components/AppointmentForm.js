@@ -7,16 +7,19 @@ import { getAllPatients } from "../utils/auth"; // Import getAllPatients
 const AppointmentForm = ({ close, appointments_data }) => {
   const navigate = useNavigate();
 
-  const [newAppointment, setNewAppointment] = useState({
-    Name: "",
-    ID: "",
-    AppointmentTime: "",
-    AppointmentDate: "",
-    Duration: 0,
-    Checkup_Status: "Pending",
-    token: "",
-    meetingId: "", 
-  });
+const [newAppointment, setNewAppointment] = useState({
+  Name: "",
+  ID: "",
+  AppointmentTime: "",
+  AppointmentDate: "",
+  Duration: 0,
+  Checkup_Status: "Pending",
+  token: "",
+  meetingId: "",
+  Age: "",      // New field
+  Gender: "",   // New field
+});
+
 
   const [patients, setPatients] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
@@ -72,10 +75,13 @@ const AppointmentForm = ({ close, appointments_data }) => {
       Name: patient.Name,
       ID: patient.ID,
       AppointmentDate: patient.AppointmentDate || newAppointment.AppointmentDate,
+      Age: patient.Age,       // Autofill Age
+      Gender: patient.Gender, // Autofill Gender
     });
     setAutofilledDate(patient.AppointmentDate);
     setSuggestions([]);
   };
+  
 
   const checkAppointmentCollision = async () => {
     const allAppointments = await getAllAppointments();
@@ -122,7 +128,10 @@ const AppointmentForm = ({ close, appointments_data }) => {
         ...newAppointment,
         token: token,
         meetingId: meetingId,
+        Age: newAppointment.Age,       // Ensure Age is sent
+        Gender: newAppointment.Gender, // Ensure Gender is sent
       };
+      
 
       const response = await AppointmentFormSubmit(newAppointmentData);
 

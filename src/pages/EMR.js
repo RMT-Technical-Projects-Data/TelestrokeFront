@@ -9,7 +9,6 @@ import EMR_PatientInfo from "../components/EMR_PatientInfo";
 import EMR_BedSide from "../components/EMR_BedSide";
 import QuadrantTracking from "../components/QuadrantTracking";
 import StimulusVideoController from "../components/StimulusVideoController";
-
 const EMRpage = () => {
   const { pateintid, meetingid } = useParams();
   const [name, setName] = useState("");
