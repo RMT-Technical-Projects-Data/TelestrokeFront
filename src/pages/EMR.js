@@ -7,9 +7,17 @@ import VIDEOSDK from "../components/VideoSDK";
 import { useParams } from "react-router-dom";
 import EMR_PatientInfo from "../components/EMR_PatientInfo";
 import EMR_BedSide from "../components/EMR_BedSide";
+import EMR_TelestrokeExam from "../components/EMR_TelestrokeExam";
 import QuadrantTracking from "../components/QuadrantTracking";
 import StimulusVideoController from "../components/StimulusVideoController";
+import { getSavedPatientInfo } from "../components/EMR_PatientInfo";
+
+
+// Import the saveData function from utils/auth.js to send data to the backend
+import { submitExamData } from "../utils/auth";
+
 const EMRpage = () => {
+  
   const { pateintid, meetingid } = useParams();
   const [name, setName] = useState("");
   const [selectedEye, setSelectedEye] = useState("left");
@@ -26,13 +34,34 @@ const EMRpage = () => {
   const [tab, setTab] = useState(0);
   const videoSpeedArr = ["Slow", "Medium", "High"];
 
+
+  const patientData = getSavedPatientInfo();
+console.log("Retrieved Patient Data:", patientData);
+
+
   const handleRadioChange = (event) => {
     setSelectedEye(event.target.value);
     updateSetting("eye_camera_control", event.target.value);
   };
 
+
   const updateSetting = (key, value) => {
     setSettings((prevSettings) => ({ ...prevSettings, [key]: value }));
+  };
+
+  const handleSave = async () => {
+    try {
+      // Collect all the settings data from the states
+      const dataToSend = {
+        patient_id: pateintid,
+      };
+
+      // Send data to backend using the saveData function
+      const response = await submitExamData(dataToSend);
+      console.log("Data saved successfully:", response);
+    } catch (error) {
+      console.error("Error saving data:", error);
+    }
   };
 
   useEffect(() => {
@@ -69,22 +98,6 @@ const EMRpage = () => {
           </div>
         ) : (
           <div className="flex flex-col h-fit basis-[85%] mt-6 gap-6 p-2">
-            <div className="flex flex-row gap-14">
-              <p className="text-2xl font-semibold">Patient Details:</p>
-              <p>
-                <span className="text-[rgb(5,60,212)]">Patient ID:</span> 19222
-              </p>
-              <p>
-                <span className="text-[rgb(5,60,212)]">Name:</span> Mr. Ahmed Ali
-              </p>
-              <p>
-                <span className="text-[rgb(5,60,212)]">Age:</span> 52
-              </p>
-              <p>
-                <span className="text-[rgb(5,60,212)]">Gender:</span> Male
-              </p>
-            </div>
-
             {meetingid ? (
               <>
                 <div className="flex flex-row justify-between h-[720px] gap-8 py-5 px-3">
@@ -219,14 +232,14 @@ const EMRpage = () => {
 
                 {tab === 0 && <EMR_PatientInfo />}
                 {tab === 1 && <EMR_BedSide />}
-                {tab === 2 && <EMR_BedSide />}
+                {tab === 2 && <EMR_TelestrokeExam />}
               </>
             )}
 
             {/* Conditionally render buttons based on meetingJoined state */}
             {meetingJoined && (
               <div className="flex flex-row-reverse gap-8">
-                <Button onClick={() => {}}>Save</Button>
+                <Button onClick={handleSave}>Save</Button>
                 <Button onClick={() => {}}>Start New Test</Button>
                 <Button onClick={() => {}}>End Exam</Button>
               </div>

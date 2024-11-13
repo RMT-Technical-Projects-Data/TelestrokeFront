@@ -27,17 +27,7 @@ export const PatientFormSubmit = async (values) => {
   }
 };
 
-// // New function to search for patient name and ID for appointment suggestions
-// export const searchPatientByName = async (name) => {
-//   try {
-//     const { data } = await client.get(`/api/appointments/search`, {
-//       params: { name },
-//     });
-//     return data; // This will return an array of patients with name and ID
-//   } catch (error) {
-//     return catchError(error);
-//   }
-// };
+
 
 // Function to fetch all appointments
 export const getAllAppointments = async () => {
@@ -116,5 +106,16 @@ export const UpdateAppointment = async ({ _id, appointmentDate, appointmentTime,
   } catch (error) {
     console.error("Error updating appointment:", error);
     return { success: false, error: error.message }; // Adjusted to handle errors
+  }
+};
+
+// Function to submit exam data
+export const submitExamData = async (examData) => {
+  try {
+    const response = await client.post("/api/examdatas", examData); // Adjust the endpoint as necessary
+    return response.data; // Return the response data
+  } catch (error) {
+    console.error("Error submitting exam data:", error);
+    return catchError(error); // Handle any errors and return a standardized error response
   }
 };

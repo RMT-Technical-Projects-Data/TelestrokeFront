@@ -106,17 +106,18 @@ function Controls({ customTrack, handleLeave }) {
   };
 
   return (
-    <div className="controls-bar"> {/* Add a div with a class */}
-      <Button onClick={handleLeave}>End Appointment</Button>
-      <Button onClick={() => toggleMic()}>
-        <img
-          src={localMicOn ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/microphone.png" : "https://img.icons8.com/ios-glyphs/50/FFFFFF/no-microphone.png"}
-          width={25}
-          height={25}
-        />
-      </Button>
-      <Button onClick={() => handleToggleWebcam()}>Web Cam</Button>
-    </div>
+    <div className="controls-bar -mt-12"> {/* Adjust the value as needed */}
+    <Button onClick={handleLeave}>End Appointment</Button>
+    <Button onClick={() => toggleMic()}>
+      <img
+        src={localMicOn ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/microphone.png" : "https://img.icons8.com/ios-glyphs/50/FFFFFF/no-microphone.png"}
+        width={25}
+        height={25}
+      />
+    </Button>
+    <Button onClick={() => handleToggleWebcam()}>Web Cam</Button>
+  </div>
+  
   );
 }
 

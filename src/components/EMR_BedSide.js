@@ -5,8 +5,8 @@ function EMR_BedSide() {
     spas: "", // Smooth Pursuit and Saccades
     nys: null, // Has Nystagmus (boolean)
     gt: "", // Gaze Type
-    spastext:"",
-    exmtext:"",
+    spastext: "",
+    exmtext: "",
     od: { ruq: null, rlq: null, luq: null, llq: null }, // Visual Fields OD
     exm: "", // Extraocular Movement
     nyd: "", // Nystagmus Degree
@@ -14,13 +14,13 @@ function EMR_BedSide() {
     os: { ruq: null, rlq: null, luq: null, llq: null }, // Visual Fields OS
   });
 
+  const [savedData, setSavedData] = useState(null);
+
   const handleChange = (e) => {
-    debugger
     const { name, type, value, checked } = e.target;
-  
+
     if (type === "radio") {
       if (name.startsWith("od-") || name.startsWith("os-")) {
-        // Update fields for "od-" and "os-" prefixes
         const [field, region] = name.split("-");
         setFormData((prevState) => ({
           ...prevState,
@@ -30,35 +30,35 @@ function EMR_BedSide() {
           },
         }));
       } else if (name === "nys" || name === "examTolerated") {
-        // Handle boolean radio buttons
         setFormData((prevState) => ({
           ...prevState,
           [name]: checked ? value === "true" : false,
         }));
       } else {
-        // Handle other radio buttons and input changes
         setFormData((prevState) => ({
           ...prevState,
           [name]: checked ? value : "",
         }));
       }
     } else {
-      // Handle non-radio inputs
       setFormData((prevState) => ({
         ...prevState,
         [name]: value,
       }));
     }
   };
-  
+
+  const handleSet = () => {
+    setSavedData(formData);
+    alert("EMR_BedSide information.");
+    console.log("EMR_BedSide Info:", formData);
+  };
 
   return (
     <div className="flex flex-col gap-12">
       <div className="flex flex-row gap-16 justify-between">
         <div className="basis-2/4">
-          <p className="font-bold text-lg inline mr-4">
-            Smooth Pursuit and Saccades
-          </p>
+          <p className="font-bold text-lg inline mr-4">Smooth Pursuit and Saccades</p>
           <input
             className="inline m-2"
             name="spas"
@@ -158,7 +158,6 @@ function EMR_BedSide() {
                   className="mr-2"
                 />
                 <label>Fail</label>
-
                 <span className="w-16 ml-24">RLQ</span>
                 <input
                   type="radio"
@@ -199,7 +198,6 @@ function EMR_BedSide() {
                   className="mr-2"
                 />
                 <label>Fail</label>
-
                 <span className="w-16 ml-24">LLQ</span>
                 <input
                   type="radio"
@@ -337,7 +335,6 @@ function EMR_BedSide() {
                   className="mr-2"
                 />
                 <label>Fail</label>
-
                 <span className="w-16 ml-24">RLQ</span>
                 <input
                   type="radio"
@@ -378,7 +375,6 @@ function EMR_BedSide() {
                   className="mr-2"
                 />
                 <label>Fail</label>
-
                 <span className="w-16 ml-24">LLQ</span>
                 <input
                   type="radio"
@@ -403,11 +399,29 @@ function EMR_BedSide() {
           </div>
         </div>
       </div>
+      <button className="mt-4 bg-blue-500 text-white px-2 py-1 rounded w-24 text-sm" onClick={handleSet}>
+        Set
+      </button>
     </div>
   );
 }
 
 export default EMR_BedSide;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // import React from "react";
 

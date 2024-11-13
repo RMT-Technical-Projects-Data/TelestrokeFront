@@ -1,31 +1,34 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
+
+let savedPatientInfo = {}; // Variable to store saved data, accessible from other components
+
+export function getSavedPatientInfo() {
+  // Function to retrieve the saved data from the main page
+  return savedPatientInfo;
+}
 
 export default function EMR_PatientInfo() {
   const [patientEMR, setPatientEMR] = useState({
     PatientDOB: "",
-    PatientSex: "Male",
+    PatientSex: "",
     ExamDate: "",
     VisualActivityOD: "",
     VisualActivityOS: "",
     RelNeurologicalFinds: "",
-    HasAphasia: true, // Initialize as a boolean
+    HasAphasia: true,
     AphasiaText: "",
   });
 
   const handleChange = (e) => {
-    debugger;
-    const { name, value, type, checked } = e.target;
-    const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+    const { name, value, type } = e.target;
+    const today = new Date().toISOString().split('T')[0];
 
-    // Handle radio buttons differently for boolean values
     if (type === "radio" && name === "HasAphasia") {
-      // Convert the string value to boolean
       setPatientEMR((prevState) => ({
         ...prevState,
-        [name]: value === "true", // Convert "true" and "false" to boolean
+        [name]: value === "true",
       }));
-    }else if (name === "PatientDOB") {
+    } else if (name === "PatientDOB") {
       if (value > today) {
         alert("Date of birth must be today or earlier.");
         return;
@@ -51,29 +54,33 @@ export default function EMR_PatientInfo() {
     }
   };
 
+  const savePatientInfo = () => {
+    savedPatientInfo = { ...patientEMR };
+    alert("Patient information set.");
+    console.log("Patient Info:", savedPatientInfo); // For debugging, you can see saved data in the console.
+  };
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-row gap-20 ">
+      <div className="flex flex-row gap-20">
         <div>
-          <p className="font-bold text-lg my-3 ">Patient D.O.B</p>
+          <p className="font-bold text-lg my-3">Patient D.O.B</p>
           <input
             className="border-t-0 border-x-0 border-b-2"
             type="date"
-            name="PatientDOB" ///new fields for the data
+            name="PatientDOB"
             value={patientEMR.PatientDOB}
             onChange={handleChange}
           />
         </div>
         <div>
-          <p
-            className="font-bold text-lg my-3"
+          <p className="font-bold text-lg my-3">Patient Sex</p>
+          <select
+            className="border-t-0 border-x-0 border-b-2"
             name="PatientSex"
             value={patientEMR.PatientSex}
             onChange={handleChange}
           >
-            Patient Sex
-          </p>
-          <select className="border-t-0 border-x-0 border-b-2">
             <option>Male</option>
             <option>Female</option>
             <option>Other</option>
@@ -111,7 +118,7 @@ export default function EMR_PatientInfo() {
       </div>
       <div className="flex flex-row gap-20 mt-10">
         <div>
-          <p className="font-bold text-lg">Relevent Neurological Findings</p>
+          <p className="font-bold text-lg">Relevant Neurological Findings</p>
           <textarea
             className="h-20 w-60"
             name="RelNeurologicalFinds"
@@ -124,18 +131,18 @@ export default function EMR_PatientInfo() {
           <input
             className="inline m-2"
             type="radio"
-            value="true" // Set value as string "true"
+            value="true"
             name="HasAphasia"
-            checked={patientEMR.HasAphasia === true} // Compare with boolean true
+            checked={patientEMR.HasAphasia === true}
             onChange={handleChange}
           />
           <label>Yes</label>
           <input
             className="inline m-2"
             type="radio"
-            value="false" // Set value as string "false"
+            value="false"
             name="HasAphasia"
-            checked={patientEMR.HasAphasia === false} // Compare with boolean false
+            checked={patientEMR.HasAphasia === false}
             onChange={handleChange}
           />
           <label>No</label>
@@ -147,6 +154,12 @@ export default function EMR_PatientInfo() {
           />
         </div>
       </div>
+      <button
+        onClick={savePatientInfo}
+        className="mt-4 bg-blue-500 text-white px-2 py-1 rounded w-24 text-sm"
+      >
+        Set
+      </button>
     </div>
   );
 }
