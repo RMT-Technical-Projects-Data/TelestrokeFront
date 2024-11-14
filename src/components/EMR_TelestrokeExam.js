@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 function EMR_TelestrokeExam() {
   const [formData1, setFormData1] = useState({
@@ -13,6 +13,8 @@ function EMR_TelestrokeExam() {
     examTolerated: null, // Exam Tolerated (boolean)
     os: { ruq: null, rlq: null, luq: null, llq: null }, // Visual Fields OS
   });
+
+
 
   const [savedData, setSavedData] = useState(null);
 
@@ -29,7 +31,7 @@ function EMR_TelestrokeExam() {
             [region]: checked ? value : null,
           },
         }));
-      } else if (name === "nys" || name === "examTolerated") {
+      } else if (name === "hasNystagmus" || name === "examTolerated") {
         setFormData1((prevState) => ({
           ...prevState,
           [name]: checked ? value === "true" : false,
@@ -50,9 +52,11 @@ function EMR_TelestrokeExam() {
 
   const handleSet = () => {
     setSavedData(formData1);
-    alert("EMR_Telestroke information set.");
-    console.log("EMR_Telestroke Info:", formData1);
+    localStorage.setItem("emrTelestrokeExam", JSON.stringify(formData1)); // Save to local storage
+    alert("EMR_Telestroke information.");
+    // console.log("EMR_Telestroke Info:", formData1);
   };
+  
 
   return (
     <div className="flex flex-col gap-12">
@@ -61,26 +65,26 @@ function EMR_TelestrokeExam() {
           <p className="font-bold text-lg inline mr-4">Smooth Pursuit and Saccades</p>
           <input
             className="inline m-2"
-            name="spas"
+            name="smoothPursuitAndSaccadesResult"
             type="radio"
             value="Normal"
-            checked={formData1.spas === "Normal"}
+            checked={formData1.smoothPursuitAndSaccadesResult === "Normal"}
             onChange={handleChange}
           />
           <label>Normal</label>
           <input
             className="inline m-2"
-            name="spas"
+            name="smoothPursuitAndSaccadesResult"
             type="radio"
             value="Abnormal"
-            checked={formData1.spas === "Abnormal"}
+            checked={formData1.smoothPursuitAndSaccadesResult === "Abnormal"}
             onChange={handleChange}
           />
           <label>Abnormal</label>
           <textarea
             className="h-20 block w-[100%]"
-            name="spastext"
-            value={formData1.spastext}
+            name="smoothPursuitAndSaccadesDescription"
+            value={formData1.smoothPursuitAndSaccadesDescription}
             onChange={handleChange}
           />
         </div>
@@ -89,10 +93,10 @@ function EMR_TelestrokeExam() {
           <div>
             <input
               className="m-2"
-              name="nys"
+              name="hasNystagmus"
               type="radio"
               value="true"
-              checked={formData1.nys === true}
+              checked={formData1.hasNystagmus === true}
               onChange={handleChange}
             />
             <label>Yes</label>
@@ -100,10 +104,10 @@ function EMR_TelestrokeExam() {
           <div>
             <input
               className="m-2"
-              name="nys"
+              name="hasNystagmus"
               type="radio"
               value="false"
-              checked={formData1.nys === false}
+              checked={formData1.hasNystagmus === false}
               onChange={handleChange}
             />
             <label>No</label>
@@ -114,10 +118,10 @@ function EMR_TelestrokeExam() {
           <div>
             <input
               className="m-2"
-              name="gt"
+              name="gazeType"
               type="radio"
               value="Conjugate"
-              checked={formData1.gt === "Conjugate"}
+              checked={formData1.gazeType === "Conjugate"}
               onChange={handleChange}
             />
             <label>Conjugate</label>
@@ -125,10 +129,10 @@ function EMR_TelestrokeExam() {
           <div>
             <input
               className="m-2"
-              name="gt"
+              name="gazeType"
               type="radio"
               value="Dysconjugate"
-              checked={formData1.gt === "Dysconjugate"}
+              checked={formData1.gazeType === "Dysconjugate"}
               onChange={handleChange}
             />
             <label>Dysconjugate</label>
@@ -227,26 +231,26 @@ function EMR_TelestrokeExam() {
           <p className="font-bold text-lg inline mr-4">Extraocular Movement</p>
           <input
             className="inline m-2"
-            name="exm"
+            name="extraocularMovementResult"
             type="radio"
             value="Normal"
-            checked={formData1.exm === "Normal"}
+            checked={formData1.extraocularMovementResult === "Normal"}
             onChange={handleChange}
           />
           <label>Normal</label>
           <input
             className="inline m-2"
-            name="exm"
+            name="extraocularMovementResult"
             type="radio"
             value="Abnormal"
-            checked={formData1.exm === "Abnormal"}
+            checked={formData1.extraocularMovementResult === "Abnormal"}
             onChange={handleChange}
           />
           <label>Abnormal</label>
           <textarea
             className="h-20 block w-[100%]"
-            name="exmtext"
-            value={formData1.exmtext}
+            name="extraocularMovementDescription"
+            value={formData1.extraocularMovementDescription}
             onChange={handleChange}
           />
         </div>
@@ -255,10 +259,10 @@ function EMR_TelestrokeExam() {
           <div>
             <input
               className="m-2"
-              name="nyd"
+              name="nystagmusDegree"
               type="radio"
               value="first"
-              checked={formData1.nyd === "first"}
+              checked={formData1.nystagmusDegree === "first"}
               onChange={handleChange}
             />
             <label>First</label>
@@ -266,10 +270,10 @@ function EMR_TelestrokeExam() {
           <div>
             <input
               className="m-2"
-              name="nyd"
+              name="nystagmusDegree"
               type="radio"
               value="second"
-              checked={formData1.nyd === "second"}
+              checked={formData1.nystagmusDegree === "second"}
               onChange={handleChange}
             />
             <label>Second</label>
@@ -277,10 +281,10 @@ function EMR_TelestrokeExam() {
           <div>
             <input
               className="m-2"
-              name="nyd"
+              name="nystagmusDegree"
               type="radio"
               value="third"
-              checked={formData1.nyd === "third"}
+              checked={formData1.nystagmusDegree === "third"}
               onChange={handleChange}
             />
             <label>Third</label>

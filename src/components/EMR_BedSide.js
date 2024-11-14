@@ -1,18 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 function EMR_BedSide() {
   const [formData, setFormData] = useState({
-    spas: "", // Smooth Pursuit and Saccades
-    nys: null, // Has Nystagmus (boolean)
-    gt: "", // Gaze Type
-    spastext: "",
-    exmtext: "",
+    smoothPursuitAndSaccadesResult: "", // Smooth Pursuit and Saccades
+    hasNystagmus: null, // Has Nystagmus (boolean)
+    gazeType: "", // Gaze Type
+    smoothPursuitAndSaccadesDescription: "",
+    extraocularMovementDescription: "",
     od: { ruq: null, rlq: null, luq: null, llq: null }, // Visual Fields OD
-    exm: "", // Extraocular Movement
-    nyd: "", // Nystagmus Degree
+    extraocularMovementResult: "", // Extraocular Movement
+    nystagmusDegree: "", // Nystagmus Degree
     examTolerated: null, // Exam Tolerated (boolean)
     os: { ruq: null, rlq: null, luq: null, llq: null }, // Visual Fields OS
   });
+
+ 
 
   const [savedData, setSavedData] = useState(null);
 
@@ -29,7 +31,7 @@ function EMR_BedSide() {
             [region]: checked ? value : null,
           },
         }));
-      } else if (name === "nys" || name === "examTolerated") {
+      } else if (name === "hasNystagmus" || name === "examTolerated") {
         setFormData((prevState) => ({
           ...prevState,
           [name]: checked ? value === "true" : false,
@@ -50,9 +52,11 @@ function EMR_BedSide() {
 
   const handleSet = () => {
     setSavedData(formData);
+    localStorage.setItem("emrBedSideData", JSON.stringify(formData)); // Save to local storage
     alert("EMR_BedSide information.");
-    console.log("EMR_BedSide Info:", formData);
+    // console.log("EMR_BedSide Info:", formData);
   };
+  
 
   return (
     <div className="flex flex-col gap-12">
@@ -61,26 +65,26 @@ function EMR_BedSide() {
           <p className="font-bold text-lg inline mr-4">Smooth Pursuit and Saccades</p>
           <input
             className="inline m-2"
-            name="spas"
+            name="smoothPursuitAndSaccadesResult"
             type="radio"
             value="Normal"
-            checked={formData.spas === "Normal"}
+            checked={formData.smoothPursuitAndSaccadesResult === "Normal"}
             onChange={handleChange}
           />
           <label>Normal</label>
           <input
             className="inline m-2"
-            name="spas"
+            name="smoothPursuitAndSaccadesResult"
             type="radio"
             value="Abnormal"
-            checked={formData.spas === "Abnormal"}
+            checked={formData.smoothPursuitAndSaccadesResult === "Abnormal"}
             onChange={handleChange}
           />
           <label>Abnormal</label>
           <textarea
             className="h-20 block w-[100%]"
-            name="spastext"
-            value={formData.spastext}
+            name="smoothPursuitAndSaccadesDescription"
+            value={formData.smoothPursuitAndSaccadesDescription}
             onChange={handleChange}
           />
         </div>
@@ -89,10 +93,10 @@ function EMR_BedSide() {
           <div>
             <input
               className="m-2"
-              name="nys"
+              name="hasNystagmus"
               type="radio"
               value="true"
-              checked={formData.nys === true}
+              checked={formData.hasNystagmus === true}
               onChange={handleChange}
             />
             <label>Yes</label>
@@ -100,10 +104,10 @@ function EMR_BedSide() {
           <div>
             <input
               className="m-2"
-              name="nys"
+              name="hasNystagmus"
               type="radio"
               value="false"
-              checked={formData.nys === false}
+              checked={formData.hasNystagmus === false}
               onChange={handleChange}
             />
             <label>No</label>
@@ -114,10 +118,10 @@ function EMR_BedSide() {
           <div>
             <input
               className="m-2"
-              name="gt"
+              name="gazeType"
               type="radio"
               value="Conjugate"
-              checked={formData.gt === "Conjugate"}
+              checked={formData.gazeType === "Conjugate"}
               onChange={handleChange}
             />
             <label>Conjugate</label>
@@ -125,10 +129,10 @@ function EMR_BedSide() {
           <div>
             <input
               className="m-2"
-              name="gt"
+              name="gazeType"
               type="radio"
               value="Dysconjugate"
-              checked={formData.gt === "Dysconjugate"}
+              checked={formData.gazeType === "Dysconjugate"}
               onChange={handleChange}
             />
             <label>Dysconjugate</label>
@@ -227,26 +231,26 @@ function EMR_BedSide() {
           <p className="font-bold text-lg inline mr-4">Extraocular Movement</p>
           <input
             className="inline m-2"
-            name="exm"
+            name="extraocularMovementResult"
             type="radio"
             value="Normal"
-            checked={formData.exm === "Normal"}
+            checked={formData.extraocularMovementResult === "Normal"}
             onChange={handleChange}
           />
           <label>Normal</label>
           <input
             className="inline m-2"
-            name="exm"
+            name="extraocularMovementResult"
             type="radio"
             value="Abnormal"
-            checked={formData.exm === "Abnormal"}
+            checked={formData.extraocularMovementResult === "Abnormal"}
             onChange={handleChange}
           />
           <label>Abnormal</label>
           <textarea
             className="h-20 block w-[100%]"
-            name="exmtext"
-            value={formData.exmtext}
+            name="extraocularMovementDescription"
+            value={formData.extraocularMovementDescription}
             onChange={handleChange}
           />
         </div>
@@ -255,10 +259,10 @@ function EMR_BedSide() {
           <div>
             <input
               className="m-2"
-              name="nyd"
+              name="nystagmusDegree"
               type="radio"
-              value="first"
-              checked={formData.nyd === "first"}
+              value="First"
+              checked={formData.nystagmusDegree === "First"}
               onChange={handleChange}
             />
             <label>First</label>
@@ -266,10 +270,10 @@ function EMR_BedSide() {
           <div>
             <input
               className="m-2"
-              name="nyd"
+              name="nystagmusDegree"
               type="radio"
-              value="second"
-              checked={formData.nyd === "second"}
+              value="Second"
+              checked={formData.nystagmusDegree === "Second"}
               onChange={handleChange}
             />
             <label>Second</label>
@@ -277,10 +281,10 @@ function EMR_BedSide() {
           <div>
             <input
               className="m-2"
-              name="nyd"
+              name="nystagmusDegree"
               type="radio"
-              value="third"
-              checked={formData.nyd === "third"}
+              value="Third"
+              checked={formData.nystagmusDegree === "Third"}
               onChange={handleChange}
             />
             <label>Third</label>
@@ -421,265 +425,3 @@ export default EMR_BedSide;
 
 
 
-
-
-// import React from "react";
-
-// function EMR_BedSide() {
-//   return (
-//     <div className="flex flex-col gap-12">
-//       <div className="flex flex-row gap-16 justify-between">
-//         <div className="basis-2/4">
-//           <p className="font-bold text-lg inline mr-4">
-//             Smooth Pursuit asn Saccades
-//           </p>
-//           <input
-//             className="inline m-2"
-//             name="spas"
-//             type="radio"
-//             value="Normal"
-//           />
-//           <label>Normal</label>
-//           <input
-//             className="inline m-2"
-//             name="spas"
-//             type="radio"
-//             value="Abnormal"
-//           />
-//           <label>Abnormal</label>
-//           <textarea className="h-20 block w-[100%]"> test </textarea>
-//         </div>
-//         <div className="basis-1/4">
-//           <p className="font-bold">Has Nystagmus</p>
-//           <div>
-//             <input className="m-2 " name="nys" type="radio" value="Yes" />
-//             <label>Yes</label>
-//           </div>
-//           <div>
-//             <input className="m-2 " name="nys" type="radio" value="No" />
-//             <label>No</label>
-//           </div>
-//         </div>
-
-//         <div className="basis-1/4">
-//           <p className="font-bold"> Gaze Type</p>
-//           <div>
-//             <input className=" m-2" name="gt" type="radio" value="Conjugate" />
-//             <label>Conjugate</label>
-//           </div>
-//           <div>
-//             <input
-//               className=" m-2"
-//               name="gt"
-//               type="radio"
-//               value="Dysconjugate"
-//             />
-//             <label>Dysconjugate</label>
-//           </div>
-//         </div>
-//         <div className="basis-2/4">
-//           <p className="text-center font-bold">Visual Fields: OD </p>
-//           <div>
-//             <div className="mt-2">
-//               <div className="flex items-center">
-//                 <span className="w-16">RUQ</span>
-//                 <input
-//                   type="radio"
-//                   name="od-ruq"
-//                   value="pass"
-//                   className="mr-2"
-//                 />
-//                 <label className="mr-4">Pass</label>
-//                 <input
-//                   type="radio"
-//                   name="od-ruq"
-//                   value="fail"
-//                   className="mr-2"
-//                 />
-//                 <label>Fail</label>
-
-//                 <span className="w-16 ml-24">RLQ</span>
-//                 <input
-//                   type="radio"
-//                   name="od-rlq"
-//                   value="pass"
-//                   className="mr-2"
-//                 />
-//                 <label className="mr-4">Pass</label>
-//                 <input
-//                   type="radio"
-//                   name="od-rlq"
-//                   value="fail"
-//                   className="mr-2"
-//                 />
-//                 <label>Fail</label>
-//               </div>
-//               <div className="flex items-center mt-2">
-//                 <span className="w-16">LUQ</span>
-//                 <input
-//                   type="radio"
-//                   name="od-luq"
-//                   value="pass"
-//                   className="mr-2"
-//                 />
-//                 <label className="mr-4">Pass</label>
-//                 <input
-//                   type="radio"
-//                   name="od-luq"
-//                   value="fail"
-//                   className="mr-2"
-//                 />
-//                 <label>Fail</label>
-
-//                 <span className="w-16 ml-24">LLQ</span>
-//                 <input
-//                   type="radio"
-//                   name="od-llq"
-//                   value="pass"
-//                   className="mr-2"
-//                 />
-//                 <label className="mr-4">Pass</label>
-//                 <input
-//                   type="radio"
-//                   name="od-llq"
-//                   value="fail"
-//                   className="mr-2"
-//                 />
-//                 <label>Fail</label>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//       <div className="flex flex-row gap-16 justify-between">
-//         <div className="basis-2/4">
-//           <p className="font-bold text-lg inline mr-4">
-//             Extraocular Movement
-//           </p>
-//           <input
-//             className="inline m-2"
-//             name="exm"
-//             type="radio"
-//             value="Normal"
-//           />
-//           <label>Normal</label>
-//           <input
-//             className="inline m-2"
-//             name="exm"
-//             type="radio"
-//             value="Abnormal"
-//           />
-//           <label>Abnormal</label>
-//           <textarea className="h-20 block w-[100%]"> test </textarea>
-//         </div>
-//         <div className="basis-1/4">
-//           <p>Nystagmus Degree </p>
-//           <div>
-//             <input className="m-2 " name="nyd" type="radio" value="first" />
-//             <label>First</label>
-//           </div>
-//           <div>
-//             <input className="m-2 " name="nyd" type="radio" value="second" />
-//             <label>Second</label>
-//           </div>
-//           <div>
-//             <input className="m-2 " name="nyd" type="radio" value="third" />
-//             <label>Third</label>
-//           </div>
-//         </div>
-
-//         <div className="basis-1/4">
-//           <p>Exam Tolerated </p>
-//           <div>
-//             <input className=" m-2" name="gt" type="radio" value="yes" />
-//             <label>yes</label>
-//           </div>
-//           <div>
-//             <input
-//               className=" m-2"
-//               name="gt"
-//               type="radio"
-//               value="No"
-//             />
-//             <label>No</label>
-//           </div>
-//         </div>
-//         <div className="basis-2/4">
-//           <p className="text-center font-bold">Visual Fields: OS </p>
-//           <div>
-//             <div className="mt-2">
-//               <div className="flex items-center">
-//                 <span className="w-16">RUQ</span>
-//                 <input
-//                   type="radio"
-//                   name="os-ruq"
-//                   value="pass"
-//                   className="mr-2"
-//                 />
-//                 <label className="mr-4">Pass</label>
-//                 <input
-//                   type="radio"
-//                   name="os-ruq"
-//                   value="fail"
-//                   className="mr-2"
-//                 />
-//                 <label>Fail</label>
-
-//                 <span className="w-16 ml-24">RLQ</span>
-//                 <input
-//                   type="radio"
-//                   name="os-rlq"
-//                   value="pass"
-//                   className="mr-2"
-//                 />
-//                 <label className="mr-4">Pass</label>
-//                 <input
-//                   type="radio"
-//                   name="os-rlq"
-//                   value="fail"
-//                   className="mr-2"
-//                 />
-//                 <label>Fail</label>
-//               </div>
-//               <div className="flex items-center mt-2">
-//                 <span className="w-16">LUQ</span>
-//                 <input
-//                   type="radio"
-//                   name="os-luq"
-//                   value="pass"
-//                   className="mr-2"
-//                 />
-//                 <label className="mr-4">Pass</label>
-//                 <input
-//                   type="radio"
-//                   name="os-luq"
-//                   value="fail"
-//                   className="mr-2"
-//                 />
-//                 <label>Fail</label>
-
-//                 <span className="w-16 ml-24">LLQ</span>
-//                 <input
-//                   type="radio"
-//                   name="os-llq"
-//                   value="pass"
-//                   className="mr-2"
-//                 />
-//                 <label className="mr-4">Pass</label>
-//                 <input
-//                   type="radio"
-//                   name="os-llq"
-//                   value="fail"
-//                   className="mr-2"
-//                 />
-//                 <label>Fail</label>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default EMR_BedSide;

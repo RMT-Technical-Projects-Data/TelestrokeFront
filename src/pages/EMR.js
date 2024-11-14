@@ -10,7 +10,7 @@ import EMR_BedSide from "../components/EMR_BedSide";
 import EMR_TelestrokeExam from "../components/EMR_TelestrokeExam";
 import QuadrantTracking from "../components/QuadrantTracking";
 import StimulusVideoController from "../components/StimulusVideoController";
-import { getSavedPatientInfo } from "../components/EMR_PatientInfo";
+
 
 
 // Import the saveData function from utils/auth.js to send data to the backend
@@ -18,7 +18,7 @@ import { submitExamData } from "../utils/auth";
 
 const EMRpage = () => {
   
-  const { pateintid, meetingid } = useParams();
+  const { patientid, meetingid } = useParams();
   const [name, setName] = useState("");
   const [selectedEye, setSelectedEye] = useState("left");
   const [meetingJoined, setMeetingJoined] = useState(false);
@@ -31,13 +31,29 @@ const EMRpage = () => {
     stop: "",
     coordinates: ""
   });
+
+
+  // the below useEffects are for resetting the local storage
+
+  useEffect(() => {
+    // Clear patient info from local storage on component mount
+    localStorage.removeItem("patientEMR");
+  }, []);
+
+
+  useEffect(() => {
+    // Clear patient info from local storage on component mount
+    localStorage.removeItem("emrBedSideData");
+  }, []);
+
+
+  useEffect(() => {
+    // Clear patient info from local storage on component mount
+    localStorage.removeItem("emrTelestrokeExam");
+  }, []);
+
   const [tab, setTab] = useState(0);
   const videoSpeedArr = ["Slow", "Medium", "High"];
-
-
-  const patientData = getSavedPatientInfo();
-console.log("Retrieved Patient Data:", patientData);
-
 
   const handleRadioChange = (event) => {
     setSelectedEye(event.target.value);
@@ -45,25 +61,65 @@ console.log("Retrieved Patient Data:", patientData);
   };
 
 
+  // to test whether data is in the local storage or not
+
+  // const getData= localStorage.getItem("emrBedSideData");
+  // console.log(getData);
+
   const updateSetting = (key, value) => {
     setSettings((prevSettings) => ({ ...prevSettings, [key]: value }));
   };
 
   const handleSave = async () => {
     try {
-      // Collect all the settings data from the states
+      const patientEMR = JSON.parse(localStorage.getItem("patientEMR")) || {};
+      const emrBedSideData = JSON.parse(localStorage.getItem("emrBedSideData")) || {};
+      const emrTelestrokeExam = JSON.parse(localStorage.getItem("emrTelestrokeExam")) || {};
+  
+      // Flattened structure if backend expects flat data (remove this if backend accepts nested data)
       const dataToSend = {
-        patient_id: pateintid,
+        patientid: patientid, // Corrected field name
+        patientDOB: patientEMR.PatientDOB,
+        patientSex: patientEMR.PatientSex,
+        examDate: patientEMR.ExamDate,
+        visualActivityOD: patientEMR.VisualActivityOD,
+        visualActivityOS: patientEMR.VisualActivityOS,
+        neuroFindings: patientEMR.RelNeurologicalFinds,
+        hasAphasia: patientEMR.HasAphasia ? 'Yes' : 'No',
+        aphasiaDescription: patientEMR.AphasiaText,
+        smoothPursuitAndSaccadesResult: emrBedSideData.smoothPursuitAndSaccadesResult,
+        smoothPursuitAndSaccadesDescription: emrBedSideData.smoothPursuitAndSaccadesDescription,
+        hasNystagmus: emrBedSideData.hasNystagmus ? 'Yes' : 'No',
+        gazeType: emrBedSideData.gazeType,
+        visualFieldsODRUQ: emrBedSideData.od.ruq === 'pass' ? 'Pass' : 'Fail',
+        visualFieldsODRLQ: emrBedSideData.od.rlq === 'pass' ? 'Pass' : 'Fail',
+        visualFieldsODLUQ: emrBedSideData.od.luq === 'pass' ? 'Pass' : 'Fail',
+        visualFieldsODLLQ: emrBedSideData.od.llq === 'pass' ? 'Pass' : 'Fail',
+        extraocularMovementResult: emrBedSideData.extraocularMovementResult,
+        extraocularMovementDescription: emrBedSideData.extraocularMovementDescription,
+        nystagmusDegree: emrBedSideData.nystagmusDegree, // Ensure this value matches the backend enum values
+        examTolerated: emrBedSideData.examTolerated ? 'Yes' : 'No',
+        visualFieldsOSRUQ: emrBedSideData.os.ruq === 'pass' ? 'Pass' : 'Fail',
+        visualFieldsOSRLQ: emrBedSideData.os.rlq === 'pass' ? 'Pass' : 'Fail',
+        visualFieldsOSLUQ: emrBedSideData.os.luq === 'pass' ? 'Pass' : 'Fail',
+        visualFieldsOSLLQ: emrBedSideData.os.llq === 'pass' ? 'Pass' : 'Fail'
       };
+      
 
-      // Send data to backend using the saveData function
+  
+      // Log data to confirm structure before sending
+      console.log("Data being sent to backend:", dataToSend);
+  
+      // Send data to backend
       const response = await submitExamData(dataToSend);
       console.log("Data saved successfully:", response);
     } catch (error) {
-      console.error("Error saving data:", error);
+      console.error("Error submitting exam data:", error);
+      console.error("Error response data:", error.response?.data);
     }
   };
-
+  
+  
   useEffect(() => {
     console.log(settings);
     debugger;
@@ -84,7 +140,7 @@ console.log("Retrieved Patient Data:", patientData);
         <div className="basis-[5%]">
           <Sidebar page="EMR" />
         </div>
-        {!pateintid ? (
+        {!patientid ? (
           // Patient Id is not present in the address
           <div className="basis-[80%] flex flex-row gap-5 h-2/6 ">
             <input
@@ -121,11 +177,11 @@ console.log("Retrieved Patient Data:", patientData);
                             checked={selectedEye === "left"}
                             onChange={() => {
                               setSelectedEye("left");
-                              updateSetting("eye_camera_control", "left");
+                              updateSetting("eye_camera_control", "right");
                             }}
                           />
                           <label htmlFor="left" className="mr-6 text-lg">
-                            Left
+                            Right
                           </label>
                           <input
                             type="radio"
@@ -136,11 +192,11 @@ console.log("Retrieved Patient Data:", patientData);
                             checked={selectedEye === "right"}
                             onChange={() => {
                               setSelectedEye("right");
-                              updateSetting("eye_camera_control", "right");
+                              updateSetting("eye_camera_control", "left");
                             }}
                           />
                           <label htmlFor="right" className="text-lg">
-                            Right
+                            Left
                           </label>
                         </div>
                         <label

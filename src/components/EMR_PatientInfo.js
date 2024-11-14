@@ -1,27 +1,25 @@
-import React, { useState } from "react";
-
-let savedPatientInfo = {}; // Variable to store saved data, accessible from other components
-
-export function getSavedPatientInfo() {
-  // Function to retrieve the saved data from the main page
-  return savedPatientInfo;
-}
+import React, { useState, useEffect } from "react";
 
 export default function EMR_PatientInfo() {
-  const [patientEMR, setPatientEMR] = useState({
-    PatientDOB: "",
-    PatientSex: "",
-    ExamDate: "",
-    VisualActivityOD: "",
-    VisualActivityOS: "",
-    RelNeurologicalFinds: "",
-    HasAphasia: true,
-    AphasiaText: "",
+  const [patientEMR, setPatientEMR] = useState ({
+   
+       
+          PatientDOB: "",
+          PatientSex: "Male",
+          ExamDate: "",
+          VisualActivityOD: "",
+          VisualActivityOS: "",
+          RelNeurologicalFinds: "",
+          HasAphasia: true,
+          AphasiaText: "",
+        
   });
+
+
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
 
     if (type === "radio" && name === "HasAphasia") {
       setPatientEMR((prevState) => ({
@@ -55,9 +53,10 @@ export default function EMR_PatientInfo() {
   };
 
   const savePatientInfo = () => {
-    savedPatientInfo = { ...patientEMR };
+    setPatientEMR (patientEMR );
+    localStorage.setItem("patientEMR", JSON.stringify(patientEMR)); // Save to local storage
     alert("Patient information set.");
-    console.log("Patient Info:", savedPatientInfo); // For debugging, you can see saved data in the console.
+    // console.log("Patient Info:", patientEMR); // For debugging, you can see saved data in the console.
   };
 
   return (

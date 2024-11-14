@@ -116,6 +116,7 @@ export const submitExamData = async (examData) => {
     return response.data; // Return the response data
   } catch (error) {
     console.error("Error submitting exam data:", error);
+    console.log(error.response.data); // This may give a detailed reason for the 400 error
     return catchError(error); // Handle any errors and return a standardized error response
   }
 };

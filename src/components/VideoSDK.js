@@ -106,7 +106,7 @@ function Controls({ customTrack, handleLeave }) {
   };
 
   return (
-    <div className="controls-bar -mt-12"> {/* Adjust the value as needed */}
+    <div className="controls-bar -mt-12.1"> {/* Adjust the value as needed */}
     <Button onClick={handleLeave}>End Appointment</Button>
     <Button onClick={() => toggleMic()}>
       <img
