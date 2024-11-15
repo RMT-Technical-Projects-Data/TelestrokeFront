@@ -35,22 +35,22 @@ const EMRpage = () => {
 
   // the below useEffects are for resetting the local storage
 
-  useEffect(() => {
-    // Clear patient info from local storage on component mount
-    localStorage.removeItem("patientEMR");
-  }, []);
+  // useEffect(() => {
+  //   // Clear patient info from local storage on component mount
+  //   localStorage.removeItem("patientEMR");
+  // }, []);
 
 
-  useEffect(() => {
-    // Clear patient info from local storage on component mount
-    localStorage.removeItem("emrBedSideData");
-  }, []);
+  // useEffect(() => {
+  //   // Clear patient info from local storage on component mount
+  //   localStorage.removeItem("emrBedSideData");
+  // }, []);
 
 
-  useEffect(() => {
-    // Clear patient info from local storage on component mount
-    localStorage.removeItem("emrTelestrokeExam");
-  }, []);
+  // useEffect(() => {
+  //   // Clear patient info from local storage on component mount
+  //   localStorage.removeItem("emrTelestrokeExam");
+  // }, []);
 
   const [tab, setTab] = useState(0);
   const videoSpeedArr = ["Slow", "Medium", "High"];
@@ -76,9 +76,9 @@ const EMRpage = () => {
       const emrBedSideData = JSON.parse(localStorage.getItem("emrBedSideData")) || {};
       const emrTelestrokeExam = JSON.parse(localStorage.getItem("emrTelestrokeExam")) || {};
   
-      // Flattened structure if backend expects flat data (remove this if backend accepts nested data)
-      const dataToSend = {
-        patientid: patientid, // Corrected field name
+      // Construct the three separate JSON objects
+      const patientData = {
+        patientid: patientid,
         patientDOB: patientEMR.PatientDOB,
         patientSex: patientEMR.PatientSex,
         examDate: patientEMR.ExamDate,
@@ -87,6 +87,9 @@ const EMRpage = () => {
         neuroFindings: patientEMR.RelNeurologicalFinds,
         hasAphasia: patientEMR.HasAphasia ? 'Yes' : 'No',
         aphasiaDescription: patientEMR.AphasiaText,
+      };
+  
+      const bedsideExamData = {
         smoothPursuitAndSaccadesResult: emrBedSideData.smoothPursuitAndSaccadesResult,
         smoothPursuitAndSaccadesDescription: emrBedSideData.smoothPursuitAndSaccadesDescription,
         hasNystagmus: emrBedSideData.hasNystagmus ? 'Yes' : 'No',
@@ -97,21 +100,40 @@ const EMRpage = () => {
         visualFieldsODLLQ: emrBedSideData.od.llq === 'pass' ? 'Pass' : 'Fail',
         extraocularMovementResult: emrBedSideData.extraocularMovementResult,
         extraocularMovementDescription: emrBedSideData.extraocularMovementDescription,
-        nystagmusDegree: emrBedSideData.nystagmusDegree, // Ensure this value matches the backend enum values
+        nystagmusDegree: emrBedSideData.nystagmusDegree,
         examTolerated: emrBedSideData.examTolerated ? 'Yes' : 'No',
         visualFieldsOSRUQ: emrBedSideData.os.ruq === 'pass' ? 'Pass' : 'Fail',
         visualFieldsOSRLQ: emrBedSideData.os.rlq === 'pass' ? 'Pass' : 'Fail',
         visualFieldsOSLUQ: emrBedSideData.os.luq === 'pass' ? 'Pass' : 'Fail',
-        visualFieldsOSLLQ: emrBedSideData.os.llq === 'pass' ? 'Pass' : 'Fail'
+        visualFieldsOSLLQ: emrBedSideData.os.llq === 'pass' ? 'Pass' : 'Fail',
       };
-      
-
+  
+      const teleStrokeExamData = {
+        tele_smoothPursuitAndSaccadesResult: emrTelestrokeExam.smoothPursuitAndSaccadesResult,
+        tele_smoothPursuitAndSaccadesDescription: emrTelestrokeExam.smoothPursuitAndSaccadesDescription,
+        tele_hasNystagmus: emrTelestrokeExam.hasNystagmus ? 'Yes' : 'No',
+        tele_gazeType: emrTelestrokeExam.gazeType,
+        tele_visualFieldsODRUQ: emrTelestrokeExam.od.ruq === 'pass' ? 'Pass' : 'Fail',
+        tele_visualFieldsODRLQ: emrTelestrokeExam.od.rlq === 'pass' ? 'Pass' : 'Fail',
+        tele_visualFieldsODLUQ: emrTelestrokeExam.od.luq === 'pass' ? 'Pass' : 'Fail',
+        tele_visualFieldsODLLQ: emrTelestrokeExam.od.llq === 'pass' ? 'Pass' : 'Fail',
+        tele_extraocularMovementResult: emrTelestrokeExam.extraocularMovementResult,
+        tele_extraocularMovementDescription: emrTelestrokeExam.extraocularMovementDescription,
+        tele_nystagmusDegree: emrTelestrokeExam.nystagmusDegree,
+        tele_examTolerated: emrTelestrokeExam.examTolerated ? 'Yes' : 'No',
+        tele_visualFieldsOSRUQ: emrTelestrokeExam.os.ruq === 'pass' ? 'Pass' : 'Fail',
+        tele_visualFieldsOSRLQ: emrTelestrokeExam.os.rlq === 'pass' ? 'Pass' : 'Fail',
+        tele_visualFieldsOSLUQ: emrTelestrokeExam.os.luq === 'pass' ? 'Pass' : 'Fail',
+        tele_visualFieldsOSLLQ: emrTelestrokeExam.os.llq === 'pass' ? 'Pass' : 'Fail',
+      };
+  
+      const dataToSend = { patientData, bedsideExamData, teleStrokeExamData };
   
       // Log data to confirm structure before sending
       console.log("Data being sent to backend:", dataToSend);
   
       // Send data to backend
-      const response = await submitExamData(dataToSend);
+      const response = await submitExamData(dataToSend); // Update this function to accept nested objects
       console.log("Data saved successfully:", response);
     } catch (error) {
       console.error("Error submitting exam data:", error);
@@ -120,9 +142,9 @@ const EMRpage = () => {
   };
   
   
+  
   useEffect(() => {
     console.log(settings);
-    debugger;
     axios
       .post("http://localhost:5000/videoController-webhook", settings)
       .then((response) => {

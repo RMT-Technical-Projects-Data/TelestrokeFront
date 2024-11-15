@@ -3,15 +3,15 @@ import React, { useState, useEffect } from "react";
 function EMR_BedSide() {
   const [formData, setFormData] = useState({
     smoothPursuitAndSaccadesResult: "", // Smooth Pursuit and Saccades
-    hasNystagmus: null, // Has Nystagmus (boolean)
+    hasNystagmus: "", // Has Nystagmus (boolean)
     gazeType: "", // Gaze Type
     smoothPursuitAndSaccadesDescription: "",
     extraocularMovementDescription: "",
-    od: { ruq: null, rlq: null, luq: null, llq: null }, // Visual Fields OD
+    od: { ruq: "", rlq: "", luq: "", llq: "" }, // Visual Fields OD
     extraocularMovementResult: "", // Extraocular Movement
     nystagmusDegree: "", // Nystagmus Degree
-    examTolerated: null, // Exam Tolerated (boolean)
-    os: { ruq: null, rlq: null, luq: null, llq: null }, // Visual Fields OS
+    examTolerated: "", // Exam Tolerated (boolean)
+    os: { ruq: "", rlq: "", luq: "", llq: "" }, // Visual Fields OS
   });
 
  
@@ -51,9 +51,16 @@ function EMR_BedSide() {
   };
 
   const handleSet = () => {
+    // Validation check for empty fields
+    for (const key in formData) {
+      if (formData[key] === "") {
+        alert(`Please fill in all fields. Missing field: ${key}`);
+        return;
+      }
+    }
     setSavedData(formData);
     localStorage.setItem("emrBedSideData", JSON.stringify(formData)); // Save to local storage
-    alert("EMR_BedSide information.");
+    alert("EMR_BedSide information Set.");
     // console.log("EMR_BedSide Info:", formData);
   };
   

@@ -112,11 +112,27 @@ export const UpdateAppointment = async ({ _id, appointmentDate, appointmentTime,
 // Function to submit exam data
 export const submitExamData = async (examData) => {
   try {
-    const response = await client.post("/api/examdatas", examData); // Adjust the endpoint as necessary
+    // Ensure the data is sent as three separate objects
+    const { patientData, bedsideExamData, teleStrokeExamData } = examData;
+
+    // Construct the payload
+    const payload = {
+      patientData,
+      bedsideExamData,
+      teleStrokeExamData,
+    };
+
+    // Send the data to the backend
+    const response = await client.post("/api/examdatas", payload); // Adjust the endpoint as necessary
+
     return response.data; // Return the response data
   } catch (error) {
     console.error("Error submitting exam data:", error);
-    console.log(error.response.data); // This may give a detailed reason for the 400 error
-    return catchError(error); // Handle any errors and return a standardized error response
+    if (error.response) {
+      console.log("Backend response error:", error.response.data); // Log backend error response details
+    }
+
+    return catchError(error); // Handle and return a standardized error response
   }
 };
+

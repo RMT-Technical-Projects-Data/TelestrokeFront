@@ -1,21 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 export default function EMR_PatientInfo() {
-  const [patientEMR, setPatientEMR] = useState ({
-   
-       
-          PatientDOB: "",
-          PatientSex: "Male",
-          ExamDate: "",
-          VisualActivityOD: "",
-          VisualActivityOS: "",
-          RelNeurologicalFinds: "",
-          HasAphasia: true,
-          AphasiaText: "",
-        
+  const [patientEMR, setPatientEMR] = useState({
+    PatientDOB: "",
+    PatientSex: "Male",
+    ExamDate: "",
+    VisualActivityOD: "",
+    VisualActivityOS: "",
+    RelNeurologicalFinds: "",
+    HasAphasia: "",
+    AphasiaText: ""
   });
-
-
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -24,7 +19,7 @@ export default function EMR_PatientInfo() {
     if (type === "radio" && name === "HasAphasia") {
       setPatientEMR((prevState) => ({
         ...prevState,
-        [name]: value === "true",
+        [name]: value === "true"
       }));
     } else if (name === "PatientDOB") {
       if (value > today) {
@@ -33,7 +28,7 @@ export default function EMR_PatientInfo() {
       }
       setPatientEMR((prevState) => ({
         ...prevState,
-        [name]: value,
+        [name]: value
       }));
     } else if (name === "ExamDate") {
       if (value < today) {
@@ -42,21 +37,28 @@ export default function EMR_PatientInfo() {
       }
       setPatientEMR((prevState) => ({
         ...prevState,
-        [name]: value,
+        [name]: value
       }));
     } else {
       setPatientEMR((prevState) => ({
         ...prevState,
-        [name]: value,
+        [name]: value
       }));
     }
   };
 
   const savePatientInfo = () => {
-    setPatientEMR (patientEMR );
+    // Validation check for empty fields
+    for (const key in patientEMR) {
+      if (patientEMR[key] === "") {
+        alert(`Please fill in all fields. Missing field: ${key}`);
+        return;
+      }
+    }
+
+    setPatientEMR(patientEMR);
     localStorage.setItem("patientEMR", JSON.stringify(patientEMR)); // Save to local storage
     alert("Patient information set.");
-    // console.log("Patient Info:", patientEMR); // For debugging, you can see saved data in the console.
   };
 
   return (

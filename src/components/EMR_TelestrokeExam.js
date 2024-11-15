@@ -3,14 +3,14 @@ import React, { useState, useEffect } from "react";
 function EMR_TelestrokeExam() {
   const [formData1, setFormData1] = useState({
     smoothPursuitAndSaccadesResult: "", // Smooth Pursuit and Saccades
-    hasNystagmus: null, // Has Nystagmus (boolean)
+    hasNystagmus: "", // Has Nystagmus (boolean)
     gazeType: "", // Gaze Type
     smoothPursuitAndSaccadesDescription: "",
     extraocularMovementDescription: "",
     od: { ruq: null, rlq: null, luq: null, llq: null }, // Visual Fields OD
     extraocularMovementResult: "", // Extraocular Movement
     nystagmusDegree: "", // Nystagmus Degree
-    examTolerated: null, // Exam Tolerated (boolean)
+    examTolerated: "", // Exam Tolerated (boolean)
     os: { ruq: null, rlq: null, luq: null, llq: null }, // Visual Fields OS
   });
 
@@ -50,13 +50,22 @@ function EMR_TelestrokeExam() {
     }
   };
 
+
+
   const handleSet = () => {
+    // Validation check for empty fields
+    for (const key in formData1) {
+      if (formData1[key] === "") {
+        alert(`Please fill in all fields. Missing field: ${key}`);
+        return;
+      }
+    }
     setSavedData(formData1);
     localStorage.setItem("emrTelestrokeExam", JSON.stringify(formData1)); // Save to local storage
-    alert("EMR_Telestroke information.");
-    // console.log("EMR_Telestroke Info:", formData1);
+    alert("EMR_Telestroke information Set.");
+    // console.log("EMR_BedSide Info:", formData);
   };
-  
+
 
   return (
     <div className="flex flex-col gap-12">
@@ -261,8 +270,8 @@ function EMR_TelestrokeExam() {
               className="m-2"
               name="nystagmusDegree"
               type="radio"
-              value="first"
-              checked={formData1.nystagmusDegree === "first"}
+              value="First"
+              checked={formData1.nystagmusDegree === "First"}
               onChange={handleChange}
             />
             <label>First</label>
@@ -272,8 +281,8 @@ function EMR_TelestrokeExam() {
               className="m-2"
               name="nystagmusDegree"
               type="radio"
-              value="second"
-              checked={formData1.nystagmusDegree === "second"}
+              value="Second"
+              checked={formData1.nystagmusDegree === "Second"}
               onChange={handleChange}
             />
             <label>Second</label>
@@ -283,8 +292,8 @@ function EMR_TelestrokeExam() {
               className="m-2"
               name="nystagmusDegree"
               type="radio"
-              value="third"
-              checked={formData1.nystagmusDegree === "third"}
+              value="Third"
+              checked={formData1.nystagmusDegree === "Third"}
               onChange={handleChange}
             />
             <label>Third</label>
