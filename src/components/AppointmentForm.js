@@ -1,46 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppointmentFormSubmit, getAllAppointments } from "../utils/auth"; 
-import { getToken, createMeeting } from "../API"; 
-import { getAllPatients } from "../utils/auth"; // Import getAllPatients
+import { AppointmentFormSubmit } from "../utils/auth";
+import { getAllAppointments } from "../utils/auth";
+import { getToken, createMeeting,} from "../API";
 
-const AppointmentForm = ({ close, appointments_data }) => {
+const AppointmentForm = ({ close }) => {
   const navigate = useNavigate();
 
-const [newAppointment, setNewAppointment] = useState({
-  Name: "",
-  ID: "",
-  AppointmentTime: "",
-  AppointmentDate: "",
-  Duration: 0,
-  Checkup_Status: "Pending",
-  token: "",
-  meetingId: "",
-  Age: "",      // New field
-  Gender: "",   // New field
-});
+  const [newAppointment, setNewAppointment] = useState({
+    Name: "",
+    ID: "",
+    AppointmentTime: "",
+    AppointmentDate: "",
+    Duration: 0,
+    Checkup_Status: "Pending",
+    token: "",
+    meetingId: "",
 
-
-  const [patients, setPatients] = useState([]);
-  const [suggestions, setSuggestions] = useState([]);
-  const [autofilledDate, setAutofilledDate] = useState("");
-
-  useEffect(() => {
-    const fetchPatients = async () => {
-      const allPatients = await getAllPatients();
-      setPatients(allPatients.map(formatPatientDate));
-    };
-
-    fetchPatients();
-  }, []);
-
-  const formatPatientDate = (patient) => {
-    if (patient.AppointmentDate) {
-      const date = new Date(patient.AppointmentDate);
-      patient.AppointmentDate = date.toISOString().split("T")[0];
-    }
-    return patient;
-  };
+  });
 
   const handleChange = (e) => {
     const today = new Date().toISOString().split("T")[0];
@@ -56,43 +33,26 @@ const [newAppointment, setNewAppointment] = useState({
     }
   };
 
-  const handleSearchChange = (e) => {
-    const value = e.target.value.toLowerCase();
-
-    const matchedPatients = patients.filter(
-      (patient) =>
-        patient.Name.toLowerCase().startsWith(value) ||
-        patient.ID.toString().startsWith(value)
-    );
-
-    setSuggestions(matchedPatients);
-    setNewAppointment((prev) => ({ ...prev, Name: e.target.value }));
-  };
-
-  const handleSuggestionClick = (patient) => {
-    setNewAppointment({
-      ...newAppointment,
-      Name: patient.Name,
-      ID: patient.ID,
-      AppointmentDate: patient.AppointmentDate || newAppointment.AppointmentDate,
-      Age: patient.Age,       // Autofill Age
-      Gender: patient.Gender, // Autofill Gender
-    });
-    setAutofilledDate(patient.AppointmentDate);
-    setSuggestions([]);
+  const generateAppointmentID = async () => {
+    try {
+      const appointments = await getAllAppointments(); // Fetch existing appointments from your API or database
+      let maxID = 0;
+  
+      if (appointments && appointments.length > 0) {
+        // Find the highest appointment ID
+        maxID = Math.max(...appointments.map((appt) => parseInt(appt.ID, 10)));
+      }
+  
+      // If no appointments, start with 1, and ensure it is a 5-digit number
+      const newID = String(maxID + 1).padStart(5, "0"); // Format it as a 5-digit number
+      return newID;
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      alert("Error generating appointment ID. Please try again.");
+    }
   };
   
-
-  const checkAppointmentCollision = async () => {
-    const allAppointments = await getAllAppointments();
-    return allAppointments.some((appointment) => {
-      const isSamePatient = newAppointment.ID === appointment.ID;
-      const isSameName = newAppointment.Name === appointment.Name;
-      const isSameDate = newAppointment.AppointmentDate === appointment.AppointmentDate;
-
-      return isSamePatient && isSameName && isSameDate;
-    });
-  };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -104,34 +64,22 @@ const [newAppointment, setNewAppointment] = useState({
         return;
       }
 
-      const patientExists = patients.some(
-        (patient) => patient.ID === newAppointment.ID
-      );
-
-      if (!patientExists) {
-        alert("Patient not found, please use Add Patient for making a new patient");
-        return;
-      }
-
-      if (await checkAppointmentCollision()) {
-        alert("Patient already has an appointment on the selected Date.");
-        return;
-      }
-
       const meetingId = await createMeeting();
       if (!meetingId) {
         alert("Failed to create meeting. Please try again.");
         return;
       }
 
+      // Generate the new appointment ID
+      const appointmentID = await generateAppointmentID();
+
       const newAppointmentData = {
         ...newAppointment,
+        ID: appointmentID, // Add the generated ID here
         token: token,
         meetingId: meetingId,
-        Age: newAppointment.Age,       // Ensure Age is sent
-        Gender: newAppointment.Gender, // Ensure Gender is sent
+    
       };
-      
 
       const response = await AppointmentFormSubmit(newAppointmentData);
 
@@ -151,8 +99,6 @@ const [newAppointment, setNewAppointment] = useState({
     navigate("/Patient");
   };
 
-  const isSaveDisabled = autofilledDate && newAppointment.AppointmentDate === autofilledDate;
-
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md mr-52 mt-8">
       <div className="mb-4">
@@ -161,23 +107,10 @@ const [newAppointment, setNewAppointment] = useState({
           type="text"
           name="Name"
           value={newAppointment.Name}
-          onChange={handleSearchChange}
+          onChange={handleChange}
           className="w-full p-2 border rounded"
           required
         />
-        {suggestions.length > 0 && (
-          <ul className="border rounded mt-1">
-            {suggestions.map((patient) => (
-              <li
-                key={patient.ID}
-                onClick={() => handleSuggestionClick(patient)}
-                className="cursor-pointer hover:bg-gray-200 p-2"
-              >
-                {patient.Name} (ID: {patient.ID})
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
       <div className="mb-4">
         <label className="block text-gray-700">Patient ID</label>
@@ -185,8 +118,10 @@ const [newAppointment, setNewAppointment] = useState({
           type="text"
           name="ID"
           value={newAppointment.ID}
-          readOnly
+          onChange={handleChange}
           className="w-full p-2 border rounded"
+          required
+          readOnly // Make the ID field read-only as it's generated automatically
         />
       </div>
       <div className="mb-4">
@@ -199,9 +134,6 @@ const [newAppointment, setNewAppointment] = useState({
           className="w-full p-2 border rounded"
           required
         />
-        {isSaveDisabled && (
-          <span className="text-red-500 text-sm">Change the Date</span>
-        )}
       </div>
       <div className="mb-4">
         <label className="block text-gray-700">Appointment Time</label>
@@ -250,19 +182,11 @@ const [newAppointment, setNewAppointment] = useState({
       <div className="flex justify">
         <button
           type="submit"
-          disabled={isSaveDisabled}
-          className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 ${isSaveDisabled ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Save Appointment
         </button>
-        <button
-          type="button"
-          onClick={handleAddPatient}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 ml-4"
-        >
-          Add Patient
-        </button>
+        
         <button
           type="button"
           onClick={close}

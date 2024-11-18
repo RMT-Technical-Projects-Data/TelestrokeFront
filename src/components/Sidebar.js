@@ -68,7 +68,7 @@ const Sidebar = ({ page }) => {
         </div>
       </Link>
 
-      <Link to="/patient">
+      <Link to="/meeting">
         <div
           className={
             page === "PATIENTS"
@@ -81,7 +81,7 @@ const Sidebar = ({ page }) => {
             width={60}
             alt="patient"
           />
-          <p className="hidden lg:inline">Patient</p>
+          <p className="hidden lg:inline">Meeting</p>
         </div>
       </Link>
 

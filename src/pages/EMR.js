@@ -3,6 +3,7 @@ import NavBar from "../components/NavBar";
 import Sidebar from "../components/Sidebar";
 import Button from "../components/Button";
 import axios from "axios";
+import client from "../api/client"; // Import your axios client
 import VIDEOSDK from "../components/VideoSDK";
 import { useParams } from "react-router-dom";
 import EMR_PatientInfo from "../components/EMR_PatientInfo";
@@ -17,7 +18,6 @@ import StimulusVideoController from "../components/StimulusVideoController";
 import { submitExamData } from "../utils/auth";
 
 const EMRpage = () => {
-  
   const { patientid, meetingid } = useParams();
   const [name, setName] = useState("");
   const [selectedEye, setSelectedEye] = useState("left");
@@ -52,6 +52,9 @@ const EMRpage = () => {
   //   localStorage.removeItem("emrTelestrokeExam");
   // }, []);
 
+
+
+
   const [tab, setTab] = useState(0);
   const videoSpeedArr = ["Slow", "Medium", "High"];
 
@@ -61,10 +64,6 @@ const EMRpage = () => {
   };
 
 
-  // to test whether data is in the local storage or not
-
-  // const getData= localStorage.getItem("emrBedSideData");
-  // console.log(getData);
 
   const updateSetting = (key, value) => {
     setSettings((prevSettings) => ({ ...prevSettings, [key]: value }));
@@ -76,7 +75,6 @@ const EMRpage = () => {
       const emrBedSideData = JSON.parse(localStorage.getItem("emrBedSideData")) || {};
       const emrTelestrokeExam = JSON.parse(localStorage.getItem("emrTelestrokeExam")) || {};
   
-      // Construct the three separate JSON objects
       const patientData = {
         patientid: patientid,
         patientDOB: patientEMR.PatientDOB,
@@ -135,11 +133,18 @@ const EMRpage = () => {
       // Send data to backend
       const response = await submitExamData(dataToSend); // Update this function to accept nested objects
       console.log("Data saved successfully:", response);
+  
+      // Show confirmation
+      alert("Data saved successfully!");
     } catch (error) {
       console.error("Error submitting exam data:", error);
       console.error("Error response data:", error.response?.data);
+  
+      // Show error message
+      alert("There was an error saving the data. Please try again.");
     }
   };
+  
   
   
   
@@ -158,23 +163,12 @@ const EMRpage = () => {
   return (
     <>
       <NavBar />
+  
       <div className="flex flex-row justify-between gap-2 mb-28 bg-slate-50">
-        <div className="basis-[5%]">
-          <Sidebar page="EMR" />
-        </div>
-        {!patientid ? (
-          // Patient Id is not present in the address
-          <div className="basis-[80%] flex flex-row gap-5 h-2/6 ">
-            <input
-              type="text"
-              className="shadow-sm rounded-lg w-2/3 mx-auto h-2/4 p-1 pl-4 mt-6"
-              placeholder=" Search for a patient "
-            />
-            <Button onClick={() => {}} className="mx-auto h-2/4 mt-4">
-              Search
-            </Button>
-          </div>
-        ) : (
+  <div className="basis-[5%]">
+    <Sidebar page="EMR" />
+  </div>
+ 
           <div className="flex flex-col h-fit basis-[85%] mt-6 gap-6 p-2">
             {meetingid ? (
               <>
@@ -278,7 +272,7 @@ const EMRpage = () => {
             ) : (
               <Button>Join Meeting</Button>
             )}
-
+  
             {meetingJoined && (
               <>
                 <div className="flex flex-row gap-1">
@@ -307,13 +301,13 @@ const EMRpage = () => {
                     Telestroke Exam
                   </button>
                 </div>
-
+  
                 {tab === 0 && <EMR_PatientInfo />}
                 {tab === 1 && <EMR_BedSide />}
                 {tab === 2 && <EMR_TelestrokeExam />}
               </>
             )}
-
+  
             {/* Conditionally render buttons based on meetingJoined state */}
             {meetingJoined && (
               <div className="flex flex-row-reverse gap-8">
@@ -323,10 +317,10 @@ const EMRpage = () => {
               </div>
             )}
           </div>
-        )}
+        
       </div>
     </>
   );
-};
+}
 
 export default EMRpage;

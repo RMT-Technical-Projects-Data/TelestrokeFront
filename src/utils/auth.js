@@ -72,27 +72,20 @@ export const saveUserInfo = async (user) => {
 };
 
 
-// Function to delete an appointment
-export const deleteAppointment = async ({ patientId, appointmentDate }) => {
+export const deleteAppointment = async ({ patientId }) => {
   try {
-    // Format the date to match the expected API format (YYYY-MM-DDTHH:mm:ss.sssZ)
-    const formattedDate = new Date(appointmentDate).toISOString(); // This will give you the required format
+    // Sending the patientId in the body of the DELETE request
+    const response = await client.delete("/api/appointments", { 
+      data: { patientId } 
+    });
 
-    // Sending the patient ID and formatted appointment date in the body of the DELETE request
-    const response = await client.delete(`/api/appointments`, { 
-      data: { 
-        patientId, 
-        appointmentDate: formattedDate // Use formatted date here
-      } 
-    }); 
-
-    return response.data; // Return any relevant response data
+    return response.data; // Return the relevant response data
   } catch (error) {
     console.error("Error deleting appointment:", error);
-    // Return a standardized error response for handling in the calling component
     return { success: false, error: error.response ? error.response.data : "Unknown error occurred" };
   }
 };
+
 
 // Function to update an existing appointment
 export const UpdateAppointment = async ({ _id, appointmentDate, appointmentTime, duration }) => {
