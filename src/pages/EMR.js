@@ -33,24 +33,26 @@ const EMRpage = () => {
   });
 
 
+  
+
   // the below useEffects are for resetting the local storage
 
-  // useEffect(() => {
-  //   // Clear patient info from local storage on component mount
-  //   localStorage.removeItem("patientEMR");
-  // }, []);
+  useEffect(() => {
+    // Clear patient info from local storage on component mount
+    localStorage.removeItem("patientEMR");
+  }, []);
 
 
-  // useEffect(() => {
-  //   // Clear patient info from local storage on component mount
-  //   localStorage.removeItem("emrBedSideData");
-  // }, []);
+  useEffect(() => {
+    // Clear patient info from local storage on component mount
+    localStorage.removeItem("emrBedSideData");
+  }, []);
 
 
-  // useEffect(() => {
-  //   // Clear patient info from local storage on component mount
-  //   localStorage.removeItem("emrTelestrokeExam");
-  // }, []);
+  useEffect(() => {
+    // Clear patient info from local storage on component mount
+    localStorage.removeItem("emrTelestrokeExam");
+  }, []);
 
 
 
@@ -77,6 +79,7 @@ const EMRpage = () => {
   
       const patientData = {
         patientid: patientid,
+        Name: patientEMR.Name,
         patientDOB: patientEMR.PatientDOB,
         patientSex: patientEMR.PatientSex,
         examDate: patientEMR.ExamDate,
@@ -136,6 +139,15 @@ const EMRpage = () => {
   
       // Show confirmation
       alert("Data saved successfully!");
+  
+      // Clear 'patientName' from localStorage after successful save
+      localStorage.removeItem("patientName");
+      localStorage.removeItem("patientEMR");
+      localStorage.removeItem("emrBedSideData");
+      localStorage.removeItem("emrTelestrokeExam");
+    
+
+  
     } catch (error) {
       console.error("Error submitting exam data:", error);
       console.error("Error response data:", error.response?.data);
@@ -310,10 +322,10 @@ const EMRpage = () => {
   
             {/* Conditionally render buttons based on meetingJoined state */}
             {meetingJoined && (
-              <div className="flex flex-row-reverse gap-8">
+              <div className="flex flex-row-reverse gap-8 mx-8 ">
                 <Button onClick={handleSave}>Save</Button>
-                <Button onClick={() => {}}>Start New Test</Button>
-                <Button onClick={() => {}}>End Exam</Button>
+                {/* <Button onClick={() => {}}>Start New Test</Button> */}
+                {/* <Button onClick={() => {}}>End Exam</Button> */}
               </div>
             )}
           </div>

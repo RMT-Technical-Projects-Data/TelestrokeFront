@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function EMR_PatientInfo() {
+  // Initial state for patient EMR with empty fields
   const [patientEMR, setPatientEMR] = useState({
+    Name: "", // Name will be updated from localStorage if available
     PatientDOB: "",
     PatientSex: "Male",
     ExamDate: "",
@@ -11,6 +13,17 @@ export default function EMR_PatientInfo() {
     HasAphasia: "",
     AphasiaText: ""
   });
+
+  // useEffect to set patient name from localStorage on page load
+  useEffect(() => {
+    const storedName = localStorage.getItem("patientName");
+    if (storedName) {
+      setPatientEMR((prevState) => ({
+        ...prevState,
+        Name: storedName // Set the patient name in state
+      }));
+    }
+  }, []); // Empty dependency array to run only on mount
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -64,6 +77,17 @@ export default function EMR_PatientInfo() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-row gap-20">
+        <div>
+          <p className="font-bold text-lg my-3">Name</p>
+          <input
+            className="border-t-0 border-x-0 border-b-2"
+            type="text"
+            name="Name"
+            value={patientEMR.Name}
+            onChange={handleChange}
+            readOnly // Make the name field read-only
+          />
+        </div>
         <div>
           <p className="font-bold text-lg my-3">Patient D.O.B</p>
           <input

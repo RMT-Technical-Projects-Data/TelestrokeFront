@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import client from "../api/client"; // Import your axios client
-import { FaTrash, FaEdit } from "react-icons/fa"; // Import a trash and edit icon from react-icons
+import { FaTrash, FaEdit } from "react-icons/fa"; // Import trash and edit icons from react-icons
 import { deleteAppointment, UpdateAppointment } from "../utils/auth"; // Import delete and update functions
 
 const AppointmentTable = ({ addAppointment }) => {
@@ -37,26 +37,24 @@ const AppointmentTable = ({ addAppointment }) => {
   const handleDelete = async (patientId) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this appointment?");
     if (!confirmDelete) return;
-  
+
     try {
       // Call the delete API with just the patientId
       const result = await deleteAppointment({ patientId });
-  
+
       if (result?.success) {
         // Filter out the deleted appointment from the state
         setAppointmentsData(appointments_data.filter(appointment => appointment.ID !== patientId));
         setErrorMessage(null);
       } else {
-        // Show an error if the API response indicates failure
         setErrorMessage("Failed to delete appointment. Please try again.");
       }
     } catch (error) {
-      // Log the error for debugging and set an error message
       console.error("Error deleting appointment:", error);
       setErrorMessage("An error occurred. Please try again.");
     }
   };
-  
+
   const formatTime = (time) => {
     if (!time) return '';
     const [hour, minute] = time.split(':') || [];
@@ -102,6 +100,11 @@ const AppointmentTable = ({ addAppointment }) => {
     setIsEditing(true);
   };
 
+  const handleJoin = (appointmentId, patientName) => {
+    // Store the patient name in local storage
+    localStorage.setItem('patientName', patientName);
+  };
+
   return (
     <div className="w-full">
       {errorMessage && <div className="text-red-500">{errorMessage}</div>}
@@ -137,7 +140,10 @@ const AppointmentTable = ({ addAppointment }) => {
                 <td className="border px-4 py-2 text-center">{appointment?.Duration ?? ''} Minutes</td>
                 <td className="border px-4 py-2 text-center">
                   <Link to={`/emr/${appointment?.ID}/${appointment?.meetingId}`}>
-                    <div className="bg-[#234ee8] text-white px-4 py-2 w-20 rounded-md shadow-lg mx-auto">
+                    <div
+                      className="bg-[#234ee8] text-white px-4 py-2 w-20 rounded-md shadow-lg mx-auto"
+                      onClick={() => handleJoin(appointment.ID, appointment.Name)} // Store name on join button click
+                    >
                       Join
                     </div>
                   </Link>
@@ -150,7 +156,7 @@ const AppointmentTable = ({ addAppointment }) => {
                     <FaEdit />
                   </button>
                   <button 
-                    onClick={() => handleDelete(appointment?.ID, appointment?.AppointmentDate)}
+                    onClick={() => handleDelete(appointment?.ID)}
                     className="text-red-600"
                   >
                     <FaTrash />
@@ -185,32 +191,24 @@ const AppointmentTable = ({ addAppointment }) => {
               <select
                 name="Duration"
                 value={updatedDuration}
-                onChange={(e) => setUpdatedDuration(Number(e.target.value))}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                required
+                onChange={(e) => setUpdatedDuration(e.target.value)}
+                className="w-full border border-gray-300 rounded-md p-2 mt-1"
               >
-                {Array.from({ length: 7 }, (_, i) => i * 10).map((minutes) => (
-                  <option key={minutes} value={minutes}>
-                    {minutes} mins
-                  </option>
-                ))}
+                <option value="">Select Duration</option>
+                <option value="15">15 Minutes</option>
+                <option value="30">30 Minutes</option>
+                <option value="45">45 Minutes</option>
+                <option value="60">1 Hour</option>
+                <option value="90">1 Hour 30 Minutes</option>
+                <option value="120">2 Hours</option>
               </select>
             </div>
-
-            <div className="flex justify-end">
-              <button 
-                onClick={handleUpdate} 
-                className="bg-blue-600 text-white px-4 py-2 rounded-md mr-2"
-              >
-                Update
-              </button>
-              <button 
-                onClick={() => setIsEditing(false)} 
-                className="bg-gray-600 text-white px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-            </div>
+            <button
+              onClick={handleUpdate}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg"
+            >
+              Update Appointment
+            </button>
           </div>
         </div>
       )}

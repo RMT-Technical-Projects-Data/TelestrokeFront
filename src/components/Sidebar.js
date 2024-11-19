@@ -85,22 +85,7 @@ const Sidebar = ({ page }) => {
         </div>
       </Link>
 
-      <Link to="/dashboard">
-        <div
-          className={
-            page === "SETTINGS"
-              ? " flex flex-col items-center px-5 py-2 cursor-pointer bg-slate-700 rounded-xl hover:bg-slate-600"
-              : "flex flex-col items-center px-5 py-2 cursor-pointer hover:bg-slate-600 hover:rounded-lg"
-          }
-        >
-          <img
-            src={page === "SETTINGS" ? settings_selected : settings}
-            width={60}
-            alt="settings"
-          />
-          <p className="hidden lg:inline">Settings</p>
-        </div>
-      </Link>
+    
 
       {/* Logout Button with Image */}
       <div

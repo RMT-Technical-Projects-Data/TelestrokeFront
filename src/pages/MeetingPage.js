@@ -16,6 +16,16 @@ const MeetingPage = () => {
   const [isMeetingCreated, setIsMeetingCreated] = useState(false);  // New state to track meeting creation status
   const [copied, setCopied] = useState(false); // New state to track if the meeting ID has been copied
 
+
+
+    // the below useEffects are for resetting the local storage
+
+    useEffect(() => {
+      ["patientEMR", "emrBedSideData", "emrTelestrokeExam", "patientName"].forEach((key) =>
+        localStorage.removeItem(key)
+      );
+    }, []);
+
   useEffect(() => {
     // Automatically generate the patient ID when the page loads
     const generatePatientID = async () => {
@@ -84,9 +94,13 @@ const MeetingPage = () => {
 
   const handleStartMeeting = () => {
     if (meetingId) {
-      navigate(`/emr/${patientID}/${meetingId}`);  // Navigate to the meeting
+      // Save the patient's name to local storage
+      localStorage.setItem("patientName", patientName);
+      // Navigate to the meeting
+      navigate(`/emr/${patientID}/${meetingId}`);
     }
   };
+  
 
   const handleCopyClick = () => {
     setCopied(true); // Mark as copied

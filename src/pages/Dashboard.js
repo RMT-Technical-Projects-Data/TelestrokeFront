@@ -18,6 +18,32 @@ function Dashboard() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true); // State to manage loading
 
+
+    // the below useEffects are for resetting the local storage
+
+    useEffect(() => {
+      // Clear patient info from local storage on component mount
+      localStorage.removeItem("patientEMR");
+    }, []);
+  
+  
+    useEffect(() => {
+      // Clear patient info from local storage on component mount
+      localStorage.removeItem("emrBedSideData");
+    }, []);
+  
+  
+    useEffect(() => {
+      // Clear patient info from local storage on component mount
+      localStorage.removeItem("emrTelestrokeExam");
+    }, []);
+
+    useEffect(() => {
+      // Clear patient info from local storage on component mount
+      localStorage.removeItem("patientName");
+    }, []);
+  
+
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
@@ -33,6 +59,8 @@ function Dashboard() {
         setLoading(false); // Stop loading
       }
     };
+
+   
 
     const sendIdTokenToBackend = async (token) => {
       try {
@@ -56,6 +84,9 @@ function Dashboard() {
         console.error("Error sending ID token to backend:", error);
       }
     };
+
+    
+  
 
     const handleUserData = async () => {
       if (isAuthenticated) {
@@ -83,10 +114,18 @@ function Dashboard() {
     return displayedAppointments.map((appointment) => {
       const isMeetingAvailable = appointment.meetingId; // Check if meetingId exists
   
+
+
+      const handleJoin = (appointmentId, patientName) => {
+        // Store the patient name in local storage
+        localStorage.setItem('patientName', patientName);
+      };
+
       return (
         <div
           key={appointment.ID}
-          className="bg-gray-200 p-5 rounded-md shadow-lg w-fit flex justify-between items-center gap-20 transition ease-in-out animate-fadeIn"
+          className="bg-gray-200 p-5 rounded-md shadow-lg w-full max-w-lg flex justify-between items-center gap-4 transition ease-in-out animate-fadeIn"
+
         >
           <div>
             <p className="text-lg">Patient ID: {appointment.ID}</p>
@@ -94,11 +133,14 @@ function Dashboard() {
             <p className="text-lg">Appointment Time: {appointment.AppointmentTime}</p>
           </div>
           {isMeetingAvailable ? (
-            <Link to={`/emr/${appointment.ID}/${appointment.meetingId}`}>
-              <div className="bg-[#234ee8] text-white px-4 py-2 w-20 rounded-md shadow-lg mx-auto">
-                Join
-              </div>
-            </Link>
+          <Link to={`/emr/${appointment?.ID}/${appointment?.meetingId}`}>
+          <div
+            className="bg-[#234ee8] text-white px-4 py-2 w-20 rounded-md shadow-lg mx-auto"
+            onClick={() => handleJoin(appointment.ID, appointment.Name)} // Store name on join button click
+          >
+            Join
+          </div>
+        </Link>
           ) : (
             <div className="text-gray-500">No Meeting Available</div>
           )}
