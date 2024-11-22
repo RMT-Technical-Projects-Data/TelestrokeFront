@@ -12,12 +12,10 @@ const NavBar = () => {
   const nickname = user?.nickname || "Anonymous";
 
   return (
-    <div className="bg-[#E9F5FE] w-screen h-[5%] p-1 py-0 px-7 flex flex-row justify-between">
+    <div className="bg-white w-screen h-[5%] p-1 py-0 px-7 flex flex-row justify-between border-b-2 border-gray-300 text-gray-800">
       <div className="flex items-center">
-       
         {/* Wrap the logo and name in a Link component */}
         <Link
-        
           to="/dashboard"
           className="flex items-center p-2 hover:bg-transparent transition-transform duration-150 ease-in-out transform hover:scale-110"
         >
@@ -27,7 +25,7 @@ const NavBar = () => {
             className="inline"
             style={{ width: "auto", maxHeight: "60px" }} // Adjusted size
           />
-           <h1 className="font-black">TELESTROKE</h1> 
+          <h1 className="font-black">TELESTROKE</h1>
         </Link>
       </div>
 

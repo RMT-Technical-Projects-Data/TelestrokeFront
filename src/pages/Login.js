@@ -1,146 +1,89 @@
-import React, { useEffect, useState } from "react"; 
-import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate } from "react-router-dom"; 
-import LoginImage from "../assets/Login.jpg"; // Import the image from your assets folder
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios"; // For API requests
+import LoginImage from "../assets/Login.jpg"; // Import the image
 
 const Login = () => {
-  const {
-    loginWithPopup,
-    loginWithRedirect,
-    getAccessTokenSilently,
-    isAuthenticated,
-    getIdTokenClaims,
-  } = useAuth0();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-  const [accessToken, setAccessToken] = useState(null); 
-  const [idToken, setIdToken] = useState(null);
-  const navigate = useNavigate(); 
+  const handleLogin = async (e) => {
+    e.preventDefault(); // Prevent default form submission behavior
 
-  useEffect(() => {
-    const handleUserData = async () => {
-      if (isAuthenticated) {
-        try {
-          const accessTokenResponse = await getAccessTokenSilently();
-          setAccessToken(accessTokenResponse); 
-
-          const idTokenClaims = await getIdTokenClaims();
-          const rawIdToken = idTokenClaims.__raw; 
-          setIdToken(rawIdToken); 
-
-          await sendIdTokenToBackend(rawIdToken);
-          navigate("/dashboard"); 
-
-        } catch (error) {
-          console.error("Error in handling user data:", error);
-        }
-      }
-    };
-
-    handleUserData();
-  }, [isAuthenticated, getAccessTokenSilently, getIdTokenClaims, navigate]);
-
-  const sendIdTokenToBackend = async (token) => {
     try {
-      const response = await fetch("http://localhost:5000/receive-id-token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`, 
-        },
-        body: JSON.stringify({ idToken: token }), 
+      // Call the backend API for login
+      const response = await axios.post("http://localhost:5000/api/auth/login", {
+        username,
+        password,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Extract token and role from the response
+      const { token, role } = response.data;
+
+      if (token) {
+        // Store the token in localStorage
+        localStorage.setItem("token", token);
+
+        // Navigate based on the user's role
+        if (role === "admin") {
+          navigate("/userManagement");
+        } else if (role === "user") {
+          navigate("/dashboard");
+        } else {
+          alert("Invalid user role");
+        }
+      } else {
+        alert("Invalid username or password");
       }
-
-      const data = await response.json();
-      console.log("Response from backend:", data);
-
     } catch (error) {
-      console.error("Error sending ID token to backend:", error);
+      console.error("Login error:", error);
+      alert("Invalid username or password");
     }
   };
 
   return (
-    <div style={styles.container}>
-      {/* Left half with image */}
-      <div style={styles.imageContainer}>
-        <img src={LoginImage} alt="Login" style={styles.image} />
+    <div className="flex h-screen">
+      {/* Left section with image */}
+      <div className="flex-[6]">
+        <img
+          src={LoginImage}
+          alt="Login"
+          className="w-full h-full object-cover"
+        />
       </div>
-      
-      {/* Right half with text and buttons */}
-      <div style={styles.contentContainer}>
-        <h1 style={styles.heading}>Welcome to Telestroke WebApp</h1>
-        <button onClick={loginWithPopup} style={styles.button}>
-          Login with Popup
-        </button>
-        <button onClick={loginWithRedirect} style={styles.button}>
-          Login with Redirect
-        </button>
-        
-        {accessToken && (
-          <div style={styles.tokenContainer}>
-            <h2>Access Token:</h2>
-            <pre>{accessToken}</pre> 
-          </div>
-        )}
 
-        {idToken && (
-          <div style={styles.tokenContainer}>
-            <h2>ID Token:</h2>
-            <pre>{idToken}</pre> 
-          </div>
-        )}
+      {/* Right section with form */}
+      <div className="flex-[4] flex flex-col justify-center items-center bg-gray-100 p-8">
+        <h1 className="text-3xl font-bold mb-6 text-center">
+          Welcome to Telestroke WebApp
+        </h1>
+
+        <form onSubmit={handleLogin} className="w-3/4">
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="mb-4 p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mb-4 p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            className="w-full py-3 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition"
+          >
+            Login
+          </button>
+        </form>
       </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    display: "flex",
-    height: "100vh",
-  },
-  imageContainer: {
-    flex: 0.65,
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-  },
-  contentContainer: {
-    flex: 0.35,
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: "20px",
-    backgroundColor: "#f5f5f5",
-    textAlign: "center",
-  },
-  heading: {
-    fontSize: "1.8rem",
-    fontWeight: "bold",
-    marginBottom: "20px",
-  },
-  button: {
-    margin: "10px",
-    padding: "10px 20px",
-    backgroundColor: "#4A90E2",
-    color: "white",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    fontSize: "1rem",
-    transition: "background-color 0.3s",
-  },
-  tokenContainer: {
-    marginTop: "20px",
-    textAlign: "left",
-    maxWidth: "80%",
-  },
 };
 
 export default Login;

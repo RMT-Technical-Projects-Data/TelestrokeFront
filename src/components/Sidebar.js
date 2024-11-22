@@ -9,13 +9,23 @@ import patient from "../assets/btn_patients.svg";
 import patient_selected from "../assets/btn_patients_selected.svg";
 import settings from "../assets/btn_settings.svg";
 import settings_selected from "../assets/btn_settings_selected.svg";
-import LogoutIcon from "../assets/btn_Logout.png"; 
-// Import useAuth0 hook for logout
-import { useAuth0 } from "@auth0/auth0-react";
-import { Link } from "react-router-dom";
+import LogoutIcon from "../assets/btn_Logout.png"; // Import the Logout image
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate for programmatic navigation
 
 const Sidebar = ({ page }) => {
-  const { logout } = useAuth0(); // Get the logout function from Auth0
+  const navigate = useNavigate(); // Initialize useNavigate hook for redirection
+
+  // Custom logout handler
+  const handleLogout = () => {
+    // Remove the token from localStorage or sessionStorage
+    localStorage.removeItem("token");
+    
+    // You can also clear any other data like user info, etc. if stored in localStorage
+    // localStorage.removeItem("user");
+
+    // Redirect to login page
+    navigate("/login"); // Navigate to the login page after logout
+  };
 
   return (
     <div className="fixed flex flex-col justify-center rounded-r-xl px-4 bg-slate-800 h-[100%] text-white gap-10">
@@ -23,7 +33,7 @@ const Sidebar = ({ page }) => {
         <div
           className={
             page === "DASHBOARD"
-              ? " flex flex-col  items-center  p-2 cursor-pointer bg-slate-700 rounded-xl hover:bg-slate-600 hover:rounded-lg"
+              ? " flex flex-col items-center p-2 cursor-pointer bg-slate-700 rounded-xl hover:bg-slate-600 hover:rounded-lg"
               : "flex flex-col items-center p-2 cursor-pointer hover:bg-slate-600 hover:rounded-lg"
           }
         >
@@ -45,9 +55,7 @@ const Sidebar = ({ page }) => {
           }
         >
           <img
-            src={
-              page === "APPOINTMENTS" ? appointments_selected : appointments
-            }
+            src={page === "APPOINTMENTS" ? appointments_selected : appointments}
             width={60}
             alt="appointments"
           />
@@ -85,15 +93,9 @@ const Sidebar = ({ page }) => {
         </div>
       </Link>
 
-    
-
       {/* Logout Button with Image */}
       <div
-        onClick={() =>
-          logout({
-            returnTo: window.location.origin + "/login", // Redirect to login page after logout
-          })
-        }
+        onClick={handleLogout} // Use the custom logout handler here
         className="flex flex-col items-center p-2 cursor-pointer hover:bg-slate-600 hover:rounded-lg"
       >
         <img src={LogoutIcon} width={60} alt="logout" /> {/* Use the Logout image */}

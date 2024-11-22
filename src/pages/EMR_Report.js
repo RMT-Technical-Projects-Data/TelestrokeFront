@@ -4,6 +4,8 @@ import Sidebar from "../components/Sidebar";
 import Button from "../components/Button";
 import client from "../api/client";
 import { jsPDF } from "jspdf";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDownload } from '@fortawesome/free-solid-svg-icons';
 
 const EMRReportpage = () => {
   const [Exam_data, setExamData] = useState([]);
@@ -287,7 +289,7 @@ const handleShowReport = (patientId) => {
             <div className="overflow-x-auto" style={{ marginRight: '15%' }}>
               <table className="table-auto border-collapse border border-gray-300 w-full">
                 <thead>
-                  <tr className="bg-gray-200">
+                  <tr className="bg-slate-700 text-white">
                     <th className="border px-4 py-2 text-left">Patient ID</th>
                     <th className="border px-4 py-2 text-left">Actions</th>
                   </tr>
@@ -295,13 +297,24 @@ const handleShowReport = (patientId) => {
                 <tbody>
                   {Exam_data.map((exam) => (
                     <tr key={exam.patientData.patientid} className="hover:bg-gray-50">
-                      <td className="border px-4 py-2 text-left">
+                      <td className="bg-white border px-4 py-2 text-left">
                         {exam.patientData.patientid}
                       </td>
-                      <td className="border px-4 py-2 text-left">
-                        <Button onClick={() => handleShowReport(exam.patientData.patientid)}>VIEW</Button>
-                        <Button onClick={() => generatePDF(exam, exam.patientData.patientid)}>DOWNLOAD PDF</Button>
-                      </td>
+                      <td className="bg-white border px-4 py-2 text-left">
+  <Button
+    className=""
+    onClick={() => handleShowReport(exam.patientData.patientid)}
+  >
+    VIEW
+  </Button>
+ <Button
+  className=""
+  onClick={() => generatePDF(exam, exam.patientData.patientid)}
+>
+  <FontAwesomeIcon icon={faDownload} className="text-white" />
+</Button>
+</td>
+
                     </tr>
                   ))}
                 </tbody>

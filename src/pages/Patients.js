@@ -5,30 +5,7 @@ import PatientTable from "../components/PatientTable";
 import PatientForm from "../components/PatientForm";
 const PatientPage = () => {
   const [patients_data,setPatientData] = useState([
-    {
-      ID: "1",
-      Name: "Mr Collins",
-      Appointments_Time: "4:05",
-      Duration: "30 mins",
-      Checkup_Status: "Complete",
-      Diagnosis: true,
-    },
-    {
-      ID: "2",
-      Name: "Mr. Daniel",
-      Appointments_Time: "4:40",
-      Duration: "15 mins",
-      Checkup_Status: "Pending",
-      Diagnosis: false,
-    },
-    {
-      ID: "3",
-      Name: "Mr. Hanry",
-      Appointments_Time: "5:20",
-      Duration: "10 mins",
-      Checkup_Status: "Pending",
-      Diagnosis: false,
-    },
+ 
   ]);
 
   const [showForm,setShowForm]=useState(false)
