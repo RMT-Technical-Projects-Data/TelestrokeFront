@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function EMR_PatientInfo() {
   // Initial state for patient EMR with empty fields
@@ -36,7 +38,7 @@ export default function EMR_PatientInfo() {
       }));
     } else if (name === "PatientDOB") {
       if (value > today) {
-        alert("Date of birth must be today or earlier.");
+        toast.error("Date of birth must be today or earlier.");
         return;
       }
       setPatientEMR((prevState) => ({
@@ -45,7 +47,7 @@ export default function EMR_PatientInfo() {
       }));
     } else if (name === "ExamDate") {
       if (value < today) {
-        alert("Exam date must be today or later.");
+        toast.error("Exam date must be today or later.");
         return;
       }
       setPatientEMR((prevState) => ({
@@ -64,14 +66,14 @@ export default function EMR_PatientInfo() {
     // Validation check for empty fields
     for (const key in patientEMR) {
       if (patientEMR[key] === "") {
-        alert(`Please fill in all fields. Missing field: ${key}`);
+        toast.error(`Please fill in all fields. Missing field: ${key}`);
         return;
       }
     }
 
     setPatientEMR(patientEMR);
     localStorage.setItem("patientEMR", JSON.stringify(patientEMR)); // Save to local storage
-    alert("Patient information set.");
+    toast.success("Patient information set.");
   };
 
   return (
@@ -185,6 +187,9 @@ export default function EMR_PatientInfo() {
       >
         Set
       </button>
+
+      {/* ToastContainer to display the toast notifications */}
+      <ToastContainer />
     </div>
   );
 }

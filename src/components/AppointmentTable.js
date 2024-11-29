@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify"; // Import Toastify
+import "react-toastify/dist/ReactToastify.css"; // Import Toastify CSS
 import client from "../api/client"; // Import your axios client
 import { FaTrash, FaEdit } from "react-icons/fa"; // Import trash and edit icons from react-icons
 import { deleteAppointment, UpdateAppointment } from "../utils/auth"; // Import delete and update functions
@@ -11,7 +13,7 @@ const AppointmentTable = ({ addAppointment }) => {
   const [currentAppointment, setCurrentAppointment] = useState({});
   const [updatedDate, setUpdatedDate] = useState('');
   const [updatedTime, setUpdatedTime] = useState('');
-  const [updatedDuration, setUpdatedDuration] = useState('');
+  const [updatedCheckupStatus, setUpdatedCheckupStatus] = useState('');
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -20,6 +22,7 @@ const AppointmentTable = ({ addAppointment }) => {
         setAppointmentsData(response.data);
       } catch (error) {
         console.error("Error fetching appointments:", error);
+        toast.error("Failed to load appointments!");
       }
     };
 
@@ -35,24 +38,45 @@ const AppointmentTable = ({ addAppointment }) => {
   };
 
   const handleDelete = async (patientId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this appointment?");
-    if (!confirmDelete) return;
+    toast.info(
+      <>
+        <div>Are you sure you want to delete this appointment?</div>
+        <div className="mt-2 flex justify-end">
+          <button
+            onClick={async () => {
+              try {
+                const result = await deleteAppointment({ patientId });
 
-    try {
-      // Call the delete API with just the patientId
-      const result = await deleteAppointment({ patientId });
-
-      if (result?.success) {
-        // Filter out the deleted appointment from the state
-        setAppointmentsData(appointments_data.filter(appointment => appointment.ID !== patientId));
-        setErrorMessage(null);
-      } else {
-        setErrorMessage("Failed to delete appointment. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error deleting appointment:", error);
-      setErrorMessage("An error occurred. Please try again.");
-    }
+                if (result?.success) {
+                  setAppointmentsData(
+                    appointments_data.filter(
+                      (appointment) => appointment.ID !== patientId
+                    )
+                  );
+                  toast.dismiss(); // Close the confirmation toast
+                  toast.success("Appointment successfully deleted!");
+                } else {
+                  toast.error("Failed to delete appointment. Please try again.");
+                }
+              } catch (error) {
+                console.error("Error deleting appointment:", error);
+                toast.error("An error occurred while deleting the appointment.");
+              }
+            }}
+            className="bg-red-600 text-white px-3 py-1 rounded mr-2"
+          >
+            Delete
+          </button>
+          <button
+            onClick={() => toast.dismiss()}
+            className="bg-gray-600 text-white px-3 py-1 rounded"
+          >
+            Cancel
+          </button>
+        </div>
+      </>,
+      { autoClose: false }
+    );
   };
 
   const formatTime = (time) => {
@@ -72,23 +96,26 @@ const AppointmentTable = ({ addAppointment }) => {
         _id: currentAppointment._id, // Use _id to identify the appointment
         appointmentDate: updatedDate,
         appointmentTime: updatedTime,
-        duration: updatedDuration,
+        checkupStatus: updatedCheckupStatus,
       });
 
       if (result.success) {
         setAppointmentsData(appointments_data.map(appointment =>
           appointment._id === currentAppointment._id
-            ? { ...appointment, AppointmentDate: updatedDate, AppointmentTime: updatedTime, Duration: updatedDuration }
+            ? { ...appointment, AppointmentDate: updatedDate, AppointmentTime: updatedTime,  }
             : appointment
         ));
         setIsEditing(false);
         setErrorMessage(null);
+        toast.success("Appointment successfully updated!");
       } else {
         setErrorMessage("Failed to update appointment. Please try again.");
+        toast.error("Failed to update appointment.");
       }
     } catch (error) {
       console.error("Error updating appointment:", error);
       setErrorMessage("An error occurred. Please try again.");
+      toast.error("An error occurred while updating the appointment.");
     }
   };
 
@@ -96,18 +123,18 @@ const AppointmentTable = ({ addAppointment }) => {
     setCurrentAppointment(appointment);
     setUpdatedDate(appointment?.AppointmentDate ?? '');
     setUpdatedTime(appointment?.AppointmentTime ?? '');
-    setUpdatedDuration(appointment?.Duration ?? '');
     setIsEditing(true);
   };
 
   const handleJoin = (appointmentId, patientName) => {
-    // Store the patient name in local storage
     localStorage.setItem('patientName', patientName);
+    toast.info(`Joining appointment with ${patientName}`);
   };
 
   return (
     <div className="w-full">
       {errorMessage && <div className="text-red-500">{errorMessage}</div>}
+      <ToastContainer position="top-right" autoClose={3000} /> {/* Toast Container */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Appointments</h1>
         <button
@@ -125,7 +152,7 @@ const AppointmentTable = ({ addAppointment }) => {
               <th className="px-4 py-2">Patient Name</th>
               <th className="px-4 py-2">Appointment Date</th>
               <th className="px-4 py-2">Appointment Time</th>
-              <th className="px-4 py-2">Duration</th>
+              <th className="px-4 py-2">Checkup Status</th>
               <th className="px-4 py-2">Join</th>
               <th className="px-4 py-2">Actions</th>
             </tr>
@@ -137,12 +164,12 @@ const AppointmentTable = ({ addAppointment }) => {
                 <td className="border px-4 py-2 text-center">{appointment?.Name ?? ''}</td>
                 <td className="border px-4 py-2 text-center">{formatDate(appointment?.AppointmentDate)}</td>
                 <td className="border px-4 py-2 text-center">{formatTime(appointment?.AppointmentTime)}</td>
-                <td className="border px-4 py-2 text-center">{appointment?.Duration ?? ''} Minutes</td>
+                <td className="border px-4 py-2 text-center">{appointment?.CheckupStatus ?? 'Pending'}</td>
                 <td className="border px-4 py-2 text-center">
                   <Link to={`/emr/${appointment?.ID}/${appointment?.meetingId}`}>
                     <div
                       className="bg-[#234ee8] text-white px-4 py-2 w-20 rounded-md shadow-lg mx-auto"
-                      onClick={() => handleJoin(appointment.ID, appointment.Name)} // Store name on join button click
+                      onClick={() => handleJoin(appointment.ID, appointment.Name)}
                     >
                       Join
                     </div>
@@ -176,9 +203,11 @@ const AppointmentTable = ({ addAppointment }) => {
             <input
               type="date"
               value={updatedDate.split('T')[0]}
+              min={new Date().toISOString().split('T')[0]} // Set the minimum date to today
               onChange={(e) => setUpdatedDate(e.target.value)}
               className="border border-gray-300 rounded-md p-2 mb-4 w-full"
             />
+
             <label className="block mb-2">Time:</label>
             <input
               type="time"
@@ -186,29 +215,22 @@ const AppointmentTable = ({ addAppointment }) => {
               onChange={(e) => setUpdatedTime(e.target.value)}
               className="border border-gray-300 rounded-md p-2 mb-4 w-full"
             />
-            <div className="mb-4">
-              <label className="block text-gray-700">Duration (Minutes):</label>
-              <select
-                name="Duration"
-                value={updatedDuration}
-                onChange={(e) => setUpdatedDuration(e.target.value)}
-                className="w-full border border-gray-300 rounded-md p-2 mt-1"
+
+
+            <div className="flex justify-end">
+              <button 
+                onClick={handleUpdate} 
+                className="bg-blue-600 text-white px-4 py-2 rounded-md mr-2"
               >
-                <option value="">Select Duration</option>
-                <option value="15">15 Minutes</option>
-                <option value="30">30 Minutes</option>
-                <option value="45">45 Minutes</option>
-                <option value="60">1 Hour</option>
-                <option value="90">1 Hour 30 Minutes</option>
-                <option value="120">2 Hours</option>
-              </select>
+                Save
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="bg-gray-600 text-white px-4 py-2 rounded-md"
+              >
+                Cancel
+              </button>
             </div>
-            <button
-              onClick={handleUpdate}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg"
-            >
-              Update Appointment
-            </button>
           </div>
         </div>
       )}

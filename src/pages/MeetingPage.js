@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllAppointments } from "../utils/auth"; // Assuming this fetches appointments
-import { getToken, createMeeting } from "../API"; // API methods to get token and create meeting
-import { AppointmentFormSubmit } from "../utils/auth"; // Method to save meeting info (in your DB)
-import { CopyToClipboard } from "react-copy-to-clipboard"; // Import CopyToClipboard
-import { FaCopy } from "react-icons/fa"; // Import Font Awesome copy icon
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"; // Import CSS for Toastify
+import { getAllAppointments } from "../utils/auth";
+import { getToken, createMeeting } from "../API";
+import { AppointmentFormSubmit } from "../utils/auth";
+import { CopyToClipboard } from "react-copy-to-clipboard";
+import { FaCopy } from "react-icons/fa";
 
 const MeetingPage = () => {
   const navigate = useNavigate();
@@ -13,21 +15,16 @@ const MeetingPage = () => {
   const [meetingId, setMeetingId] = useState("");
   const [token, setToken] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isMeetingCreated, setIsMeetingCreated] = useState(false);  // New state to track meeting creation status
-  const [copied, setCopied] = useState(false); // New state to track if the meeting ID has been copied
-
-
-
-    // the below useEffects are for resetting the local storage
-
-    useEffect(() => {
-      ["patientEMR", "emrBedSideData", "emrTelestrokeExam", "patientName"].forEach((key) =>
-        localStorage.removeItem(key)
-      );
-    }, []);
+  const [isMeetingCreated, setIsMeetingCreated] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    // Automatically generate the patient ID when the page loads
+    ["patientEMR", "emrBedSideData", "emrTelestrokeExam", "patientName"].forEach((key) =>
+      localStorage.removeItem(key)
+    );
+  }, []);
+
+  useEffect(() => {
     const generatePatientID = async () => {
       try {
         const appointments = await getAllAppointments();
@@ -35,12 +32,11 @@ const MeetingPage = () => {
         if (appointments && appointments.length > 0) {
           maxID = Math.max(...appointments.map((appt) => parseInt(appt.ID, 10)));
         }
-        // Generate a new patient ID with leading zeros
         const newID = String(maxID + 1).padStart(5, "0");
         setPatientID(newID);
       } catch (error) {
         console.error("Error fetching appointments:", error);
-        alert("Error generating Patient ID. Please try again.");
+        toast.error("Error generating Patient ID. Please try again.");
       }
     };
 
@@ -52,26 +48,23 @@ const MeetingPage = () => {
     setIsLoading(true);
 
     try {
-      // Get the token
       const generatedToken = await getToken();
       if (!generatedToken) {
-        alert("Failed to generate token. Please try again.");
+        toast.error("Failed to generate token. Please try again.");
         setIsLoading(false);
         return;
       }
       setToken(generatedToken);
 
-      // Create the meeting
       const generatedMeetingId = await createMeeting();
       if (!generatedMeetingId) {
-        alert("Failed to create meeting. Please try again.");
+        toast.error("Failed to create meeting. Please try again.");
         setIsLoading(false);
         return;
       }
       setMeetingId(generatedMeetingId);
-      setIsMeetingCreated(true);  // Set this to true after the meeting is created
+      setIsMeetingCreated(true);
 
-      // Save meeting details to the database
       const meetingDetails = {
         Name: patientName,
         ID: patientID,
@@ -80,13 +73,13 @@ const MeetingPage = () => {
       };
       const saveResponse = await AppointmentFormSubmit(meetingDetails);
       if (saveResponse) {
-        alert("Meeting created successfully!");
+        toast.success("Meeting created successfully!");
       } else {
-        alert("Failed to save meeting details.");
+        toast.error("Failed to save meeting details.");
       }
     } catch (error) {
       console.error("Error creating meeting:", error);
-      alert("Error creating meeting. Please try again.");
+      toast.error("Error creating meeting. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -94,33 +87,36 @@ const MeetingPage = () => {
 
   const handleStartMeeting = () => {
     if (meetingId) {
-      // Save the patient's name to local storage
       localStorage.setItem("patientName", patientName);
-      // Navigate to the meeting
       navigate(`/emr/${patientID}/${meetingId}`);
     }
   };
-  
 
   const handleCopyClick = () => {
-    setCopied(true); // Mark as copied
-    setTimeout(() => setCopied(false), 1500); // Reset copied state after a brief period
+    setCopied(true);
+    toast.info("Meeting ID copied to clipboard!");
+    setTimeout(() => setCopied(false), 1500);
   };
 
   return (
     <div className="bg-white p-6 rounded shadow-md max-w-lg mx-auto mt-8">
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
       <h2 className="text-2xl font-bold mb-4">Create an Instant Meeting</h2>
       <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700">Patient Name</label>
-          <input
-            type="text"
-            value={patientName}
-            onChange={(e) => setPatientName(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
+      <div className="mb-4">
+  <label className="block text-gray-700">
+    Patient Name <span className="text-red-600">*</span>
+  </label>
+  <input
+    type="text"
+    value={patientName}
+    onChange={(e) => setPatientName(e.target.value)}
+    className="w-full p-2 border rounded"
+    required
+    maxLength={30} // Limit to 25 characters
+  />
+</div>
+
         <div className="mb-4">
           <label className="block text-gray-700">Patient ID</label>
           <input
@@ -139,23 +135,21 @@ const MeetingPage = () => {
               readOnly
               className="w-full p-2 border rounded"
             />
-            {/* Copy button with icon visible once meeting is created */}
             {isMeetingCreated && (
               <CopyToClipboard text={meetingId}>
                 <button
                   type="button"
-                  onClick={handleCopyClick} // Trigger copy click
+                  onClick={handleCopyClick}
                   className={`ml-2 ${copied ? "text-blue-600" : "text-gray-400"} hover:text-blue-600 focus:outline-none`}
-                  style={{ border: "none", background: "none" }} // Remove border
+                  style={{ border: "none", background: "none" }}
                 >
-                  <FaCopy size={20} /> {/* Copy Icon */}
+                  <FaCopy size={20} />
                 </button>
               </CopyToClipboard>
             )}
           </div>
         </div>
         <div className="flex justify-between">
-          {/* Show "Create Meeting" button initially, change to "Start Meeting" once created */}
           {!isMeetingCreated ? (
             <button
               type="submit"

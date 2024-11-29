@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function EMR_BedSide() {
   const [formData, setFormData] = useState({
@@ -7,11 +9,11 @@ function EMR_BedSide() {
     gazeType: "", // Gaze Type
     smoothPursuitAndSaccadesDescription: "",
     extraocularMovementDescription: "",
-    od: { ruq: "", rlq: "", luq: "", llq: "" }, // Visual Fields OD
+    od: { ruq: null, rlq: null, luq: null, llq: null }, // Visual Fields OD
     extraocularMovementResult: "", // Extraocular Movement
     nystagmusDegree: "", // Nystagmus Degree
     examTolerated: "", // Exam Tolerated (boolean)
-    os: { ruq: "", rlq: "", luq: "", llq: "" }, // Visual Fields OS
+    os: { ruq: null, rlq: null, luq: null, llq: null }, // Visual Fields OS
   });
 
  
@@ -54,13 +56,13 @@ function EMR_BedSide() {
     // Validation check for empty fields
     for (const key in formData) {
       if (formData[key] === "") {
-        alert(`Please fill in all fields. Missing field: ${key}`);
+        toast.error(`Please fill in all fields. Missing field: ${key}`);
         return;
       }
     }
     setSavedData(formData);
     localStorage.setItem("emrBedSideData", JSON.stringify(formData)); // Save to local storage
-    alert("EMR_BedSide information Set.");
+    toast.success("EMR_BedSide information Set.");
     // console.log("EMR_BedSide Info:", formData);
   };
   
@@ -413,6 +415,7 @@ function EMR_BedSide() {
       <button className="mt-4 bg-blue-500 text-white px-2 py-1 rounded w-24 text-sm" onClick={handleSet}>
         Set
       </button>
+      <ToastContainer />
     </div>
   );
 }

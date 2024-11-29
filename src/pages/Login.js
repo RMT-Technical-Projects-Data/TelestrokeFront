@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; // For API requests
 import LoginImage from "../assets/Login.jpg"; // Import the image
+import { toast, ToastContainer } from "react-toastify"; // Import toast and ToastContainer
+import "react-toastify/dist/ReactToastify.css"; // Import the CSS for react-toastify
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -28,17 +30,27 @@ const Login = () => {
         // Navigate based on the user's role
         if (role === "admin") {
           navigate("/userManagement");
+          toast.success("Login successful! Redirecting to User Management."); // Success toast
         } else if (role === "user") {
           navigate("/dashboard");
+          toast.success("Login successful! Redirecting to Dashboard."); // Success toast
         } else {
-          alert("Invalid user role");
+          toast.error("Invalid user role. Please contact support."); // Error toast for invalid role
         }
       } else {
-        alert("Invalid username or password");
+        toast.error("Invalid username or password. Please try again."); // Error toast for invalid login
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert("Invalid username or password");
+
+      // Check if the error is due to invalid credentials or network issue
+      if (error.response && error.response.status === 401) {
+        // Unauthorized (invalid credentials)
+        toast.error("Invalid username or password. Please try again.");
+      } else {
+        // General error (server or network issue)
+        toast.error("An error occurred while logging in. Please try again later.");
+      }
     }
   };
 
@@ -82,6 +94,9 @@ const Login = () => {
           </button>
         </form>
       </div>
+
+      {/* Toast container to display toast notifications */}
+      <ToastContainer />
     </div>
   );
 };

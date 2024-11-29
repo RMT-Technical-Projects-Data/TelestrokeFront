@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function EMR_TelestrokeExam() {
   const [formData1, setFormData1] = useState({
@@ -56,13 +58,13 @@ function EMR_TelestrokeExam() {
     // Validation check for empty fields
     for (const key in formData1) {
       if (formData1[key] === "") {
-        alert(`Please fill in all fields. Missing field: ${key}`);
+        toast.error(`Please fill in all fields. Missing field: ${key}`);
         return;
       }
     }
     setSavedData(formData1);
     localStorage.setItem("emrTelestrokeExam", JSON.stringify(formData1)); // Save to local storage
-    alert("EMR_Telestroke information Set.");
+    toast.success("EMR_Telestroke information Set.");
     // console.log("EMR_BedSide Info:", formData);
   };
 
@@ -415,6 +417,8 @@ function EMR_TelestrokeExam() {
       <button className="mt-4 bg-blue-500 text-white px-2 py-1 rounded w-24 text-sm" onClick={handleSet}>
         Set
       </button>
+      
+      <ToastContainer />
     </div>
   );
 }

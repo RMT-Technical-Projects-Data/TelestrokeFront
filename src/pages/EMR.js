@@ -11,7 +11,8 @@ import EMR_BedSide from "../components/EMR_BedSide";
 import EMR_TelestrokeExam from "../components/EMR_TelestrokeExam";
 import QuadrantTracking from "../components/QuadrantTracking";
 import StimulusVideoController from "../components/StimulusVideoController";
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 // Import the saveData function from utils/auth.js to send data to the backend
@@ -34,25 +35,26 @@ const EMRpage = () => {
 
 
   
+  
 
   // the below useEffects are for resetting the local storage
 
-  useEffect(() => {
-    // Clear patient info from local storage on component mount
-    localStorage.removeItem("patientEMR");
-  }, []);
+  // useEffect(() => {
+  //   // Clear patient info from local storage on component mount
+  //   localStorage.removeItem("patientEMR");
+  // }, []);
 
 
-  useEffect(() => {
-    // Clear patient info from local storage on component mount
-    localStorage.removeItem("emrBedSideData");
-  }, []);
+  // useEffect(() => {
+  //   // Clear patient info from local storage on component mount
+  //   localStorage.removeItem("emrBedSideData");
+  // }, []);
 
 
-  useEffect(() => {
-    // Clear patient info from local storage on component mount
-    localStorage.removeItem("emrTelestrokeExam");
-  }, []);
+  // useEffect(() => {
+  //   // Clear patient info from local storage on component mount
+  //   localStorage.removeItem("emrTelestrokeExam");
+  // }, []);
 
 
 
@@ -71,8 +73,13 @@ const EMRpage = () => {
     setSettings((prevSettings) => ({ ...prevSettings, [key]: value }));
   };
 
+ 
+
   const handleSave = async () => {
     try {
+      console.log("patientEMR from localStorage:", localStorage.getItem("patientEMR"));
+      console.log("emrBedSideData from localStorage:", localStorage.getItem("emrBedSideData"));
+      console.log("emrTelestrokeExam from localStorage:", localStorage.getItem("emrTelestrokeExam"));
       const patientEMR = JSON.parse(localStorage.getItem("patientEMR")) || {};
       const emrBedSideData = JSON.parse(localStorage.getItem("emrBedSideData")) || {};
       const emrTelestrokeExam = JSON.parse(localStorage.getItem("emrTelestrokeExam")) || {};
@@ -95,39 +102,39 @@ const EMRpage = () => {
         smoothPursuitAndSaccadesDescription: emrBedSideData.smoothPursuitAndSaccadesDescription,
         hasNystagmus: emrBedSideData.hasNystagmus ? 'Yes' : 'No',
         gazeType: emrBedSideData.gazeType,
-        visualFieldsODRUQ: emrBedSideData.od.ruq === 'pass' ? 'Pass' : 'Fail',
-        visualFieldsODRLQ: emrBedSideData.od.rlq === 'pass' ? 'Pass' : 'Fail',
-        visualFieldsODLUQ: emrBedSideData.od.luq === 'pass' ? 'Pass' : 'Fail',
-        visualFieldsODLLQ: emrBedSideData.od.llq === 'pass' ? 'Pass' : 'Fail',
+        visualFieldsODRUQ: emrBedSideData.od.ruq === 'pass' ? 'Pass' : (emrBedSideData.od.ruq ? 'Fail' : null),
+        visualFieldsODRLQ: emrBedSideData.od.rlq === 'pass' ? 'Pass' : (emrBedSideData.od.rlq ? 'Fail' : null),
+        visualFieldsODLUQ: emrBedSideData.od.luq === 'pass' ? 'Pass' : (emrBedSideData.od.luq ? 'Fail' : null),
+        visualFieldsODLLQ: emrBedSideData.od.llq === 'pass' ? 'Pass' : (emrBedSideData.od.llq ? 'Fail' : null),
         extraocularMovementResult: emrBedSideData.extraocularMovementResult,
         extraocularMovementDescription: emrBedSideData.extraocularMovementDescription,
         nystagmusDegree: emrBedSideData.nystagmusDegree,
         examTolerated: emrBedSideData.examTolerated ? 'Yes' : 'No',
-        visualFieldsOSRUQ: emrBedSideData.os.ruq === 'pass' ? 'Pass' : 'Fail',
-        visualFieldsOSRLQ: emrBedSideData.os.rlq === 'pass' ? 'Pass' : 'Fail',
-        visualFieldsOSLUQ: emrBedSideData.os.luq === 'pass' ? 'Pass' : 'Fail',
-        visualFieldsOSLLQ: emrBedSideData.os.llq === 'pass' ? 'Pass' : 'Fail',
+        visualFieldsOSRUQ: emrBedSideData.os.ruq === 'pass' ? 'Pass' : (emrBedSideData.os.ruq ? 'Fail' : null),
+        visualFieldsOSRLQ: emrBedSideData.os.rlq === 'pass' ? 'Pass' : (emrBedSideData.os.rlq ? 'Fail' : null),
+        visualFieldsOSLUQ: emrBedSideData.os.luq === 'pass' ? 'Pass' : (emrBedSideData.os.luq ? 'Fail' : null),
+        visualFieldsOSLLQ: emrBedSideData.os.llq === 'pass' ? 'Pass' : (emrBedSideData.os.llq ? 'Fail' : null),
       };
-  
+      
       const teleStrokeExamData = {
         tele_smoothPursuitAndSaccadesResult: emrTelestrokeExam.smoothPursuitAndSaccadesResult,
         tele_smoothPursuitAndSaccadesDescription: emrTelestrokeExam.smoothPursuitAndSaccadesDescription,
         tele_hasNystagmus: emrTelestrokeExam.hasNystagmus ? 'Yes' : 'No',
         tele_gazeType: emrTelestrokeExam.gazeType,
-        tele_visualFieldsODRUQ: emrTelestrokeExam.od.ruq === 'pass' ? 'Pass' : 'Fail',
-        tele_visualFieldsODRLQ: emrTelestrokeExam.od.rlq === 'pass' ? 'Pass' : 'Fail',
-        tele_visualFieldsODLUQ: emrTelestrokeExam.od.luq === 'pass' ? 'Pass' : 'Fail',
-        tele_visualFieldsODLLQ: emrTelestrokeExam.od.llq === 'pass' ? 'Pass' : 'Fail',
+        tele_visualFieldsODRUQ: emrBedSideData.od.ruq === 'pass' ? 'Pass' : (emrBedSideData.od.ruq ? 'Fail' : null),
+        tele_visualFieldsODRLQ: emrBedSideData.od.rlq === 'pass' ? 'Pass' : (emrBedSideData.od.rlq ? 'Fail' : null),
+        tele_visualFieldsODLUQ: emrBedSideData.od.luq === 'pass' ? 'Pass' : (emrBedSideData.od.luq ? 'Fail' : null),
+        tele_visualFieldsODLLQ: emrBedSideData.od.llq === 'pass' ? 'Pass' : (emrBedSideData.od.llq ? 'Fail' : null),
         tele_extraocularMovementResult: emrTelestrokeExam.extraocularMovementResult,
         tele_extraocularMovementDescription: emrTelestrokeExam.extraocularMovementDescription,
         tele_nystagmusDegree: emrTelestrokeExam.nystagmusDegree,
         tele_examTolerated: emrTelestrokeExam.examTolerated ? 'Yes' : 'No',
-        tele_visualFieldsOSRUQ: emrTelestrokeExam.os.ruq === 'pass' ? 'Pass' : 'Fail',
-        tele_visualFieldsOSRLQ: emrTelestrokeExam.os.rlq === 'pass' ? 'Pass' : 'Fail',
-        tele_visualFieldsOSLUQ: emrTelestrokeExam.os.luq === 'pass' ? 'Pass' : 'Fail',
-        tele_visualFieldsOSLLQ: emrTelestrokeExam.os.llq === 'pass' ? 'Pass' : 'Fail',
+        tele_visualFieldsOSRUQ: emrBedSideData.os.ruq === 'pass' ? 'Pass' : (emrBedSideData.os.ruq ? 'Fail' : null),
+        tele_visualFieldsOSRLQ: emrBedSideData.os.rlq === 'pass' ? 'Pass' : (emrBedSideData.os.rlq ? 'Fail' : null),
+        tele_visualFieldsOSLUQ: emrBedSideData.os.luq === 'pass' ? 'Pass' : (emrBedSideData.os.luq ? 'Fail' : null),
+        tele_visualFieldsOSLLQ: emrBedSideData.os.llq === 'pass' ? 'Pass' : (emrBedSideData.os.llq ? 'Fail' : null),
       };
-  
+      
       const dataToSend = { patientData, bedsideExamData, teleStrokeExamData };
   
       // Log data to confirm structure before sending
@@ -138,7 +145,7 @@ const EMRpage = () => {
       console.log("Data saved successfully:", response);
   
       // Show confirmation
-      alert("Data saved successfully!");
+      toast.success("Data saved successfully!");
   
       // Clear 'patientName' from localStorage after successful save
       localStorage.removeItem("patientName");
@@ -149,11 +156,11 @@ const EMRpage = () => {
 
   
     } catch (error) {
-      console.error("Error submitting exam data:", error);
-      console.error("Error response data:", error.response?.data);
+      toast.error("Error submitting exam data:", error);
+      toast.error("Error response data:", error.response?.data);
   
       // Show error message
-      alert("There was an error saving the data. Please try again.");
+      toast.error("There was an error saving the data. Please try again.");
     }
   };
   
@@ -168,7 +175,7 @@ const EMRpage = () => {
         console.log("Command sent:", response.data);
       })
       .catch((error) => {
-        console.error("There was an error sending the command!", error);
+        toast.error("There was an error sending the command!", error);
       });
   }, [settings]);
 

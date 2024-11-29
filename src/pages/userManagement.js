@@ -45,6 +45,8 @@ const UserManagement = () => {
     fetchUsers();
   }, [navigate]);
 
+ 
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
@@ -52,13 +54,19 @@ const UserManagement = () => {
 
   const handleCreateUser = async () => {
     setCreateError("");
-
+  
+    // Check if the password is at least 6 characters long
+    if (newUser.password.length < 6) {
+      setCreateError("Password must be at least 6 characters long.");
+      return;
+    }
+  
     const usernameExists = users.some((user) => user.username === newUser.username);
     if (usernameExists) {
       setCreateError("Username already exists. Please choose a different one.");
       return;
     }
-
+  
     try {
       const token = localStorage.getItem("token");
       await axios.post(
@@ -66,20 +74,27 @@ const UserManagement = () => {
         { username: newUser.username, password: newUser.password },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
+  
       const response = await axios.get("http://localhost:5000/api/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
-
+  
       setNewUser({ username: "", password: "" });
       setIsModalOpen(false);
-
+  
       toast.success("User successfully created!");
     } catch (error) {
-      setCreateError("Error creating user: " + error.message);
+      if (error.response && error.response.status === 401) {
+        setCreateError("Expired or Invalid token. Please log in again.");
+        handleLogout(); // Log out the user
+      } else {
+        setCreateError("Error creating user: " + error.message);
+      }
     }
   };
+  
+
 
   const handlePasswordEdit = (user) => {
     setEditingUser(user);
@@ -88,37 +103,53 @@ const UserManagement = () => {
   };
 
   const handlePasswordChange = async () => {
-    
+    // Check if the new password is at least 6 characters long
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters long.");
+      return;
+    }
+  
     if (!newPassword || !confirmPassword) {
       toast.error("Both password fields are required.");
       return;
     }
-
+  
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match.");
       return;
     }
-
+  
     try {
       const token = localStorage.getItem("token");
-
+      if (!token) {
+        toast.error("No token provided. Please log in again.");
+        handleLogout();
+        return;
+      }
+  
       await axios.put(
-        `http://localhost:5000/api/users/${editingUser.username}`,
-        { password: newPassword },
+        `http://localhost:5000/api/users/edit`,
+        { username: editingUser.username, newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
+  
       const response = await axios.get("http://localhost:5000/api/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
-
-      setEditingUser(null); // Close the editing mode
+  
+      setEditingUser(null);
       toast.success("Password updated successfully!");
     } catch (error) {
-      toast.error("Error updating password: " + error.message);
+      if (error.response && error.response.status === 401) {
+        toast.error("Expired or Invalid token. Please log in again.");
+        handleLogout();
+      } else {
+        toast.error("Error updating password: " + error.message);
+      }
     }
   };
+  
 
   if (loading) {
     return (
