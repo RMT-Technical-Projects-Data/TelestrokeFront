@@ -164,7 +164,7 @@ const AppointmentTable = ({ addAppointment }) => {
                 <td className="border px-4 py-2 text-center">{appointment?.Name ?? ''}</td>
                 <td className="border px-4 py-2 text-center">{formatDate(appointment?.AppointmentDate)}</td>
                 <td className="border px-4 py-2 text-center">{formatTime(appointment?.AppointmentTime)}</td>
-                <td className="border px-4 py-2 text-center">{appointment?.CheckupStatus ?? 'Pending'}</td>
+                <td className="border px-4 py-2 text-center">{appointment?.Checkup_Status ?? 'Pending'}</td>
                 <td className="border px-4 py-2 text-center">
                   <Link to={`/emr/${appointment?.ID}/${appointment?.meetingId}`}>
                     <div

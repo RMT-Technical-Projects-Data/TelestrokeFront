@@ -11,6 +11,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import ReactPlayer from "react-player";
 import Button from "./Button";
 import loading from "../assets/btn_loading.gif";
+import axios from "axios";
+
 
 function JoinScreen({ getMeetingAndToken }) {
   const { meetingid } = useParams();
@@ -94,7 +96,7 @@ function onParticipantJoined(participant) {
   participant.setQuality("high");
 }
 
-function Controls({ customTrack, handleLeave }) {
+function Controls({ customTrack, handleLeave, meetingId, patientId }) {
   const { toggleMic, toggleWebcam, localMicOn } = useMeeting({ onParticipantJoined });
 
   const handleToggleWebcam = () => {
@@ -105,22 +107,55 @@ function Controls({ customTrack, handleLeave }) {
     }
   };
 
+  
+  const handleEndAppointment = async () => {
+    // Save meetingId and patientId to localStorage
+    localStorage.setItem("Ended", JSON.stringify({ meetingId, patientId }));
+  
+    try {
+      // Make API call to update the appointment status
+      console.log("Making API request to update appointment...");
+      const response = await axios.put("http://localhost:5000/api/appointments", {
+        meetingId,
+        ID: patientId, // Pass patientId as ID
+      });
+  
+      // Log the response to see the result from the backend
+      console.log("Response from API:", response.data);
+  
+      if (response.data.success) {
+        console.log("Appointment status updated to 'Complete'.");
+      } else {
+        console.log("No changes made: Appointment is already 'Complete'.");
+      }
+    } catch (error) {
+      console.error("Error updating appointment status:", error.message);
+    }
+  
+    // Delay calling handleLeave to ensure the status update completes
+    setTimeout(() => {
+      console.log("Calling leave handler...");
+      handleLeave();
+    }, 500); // Delay to ensure status update is done (adjust time as needed)
+  };
+  
+  
+  
+
   return (
     <div className="controls-bar -mt-12.1"> {/* Adjust the value as needed */}
-    <Button onClick={handleLeave}>End Appointment</Button>
-    <Button onClick={() => toggleMic()}>
-      <img
-        src={localMicOn ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/microphone.png" : "https://img.icons8.com/ios-glyphs/50/FFFFFF/no-microphone.png"}
-        width={25}
-        height={25}
-      />
-    </Button>
-    <Button onClick={() => handleToggleWebcam()}>Web Cam</Button>
-  </div>
-  
+      <Button onClick={handleEndAppointment}>End Appointment</Button>
+      <Button onClick={() => toggleMic()}>
+        <img
+          src={localMicOn ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/microphone.png" : "https://img.icons8.com/ios-glyphs/50/FFFFFF/no-microphone.png"}
+          width={25}
+          height={25}
+        />
+      </Button>
+      <Button onClick={() => handleToggleWebcam()}>Web Cam</Button>
+    </div>
   );
 }
-
 
 function MeetingView(props) {
   const [joined, setJoined] = useState(null);
@@ -165,21 +200,27 @@ function MeetingView(props) {
               />
             ))}
           </div>
-          <Controls customTrack={props.customTrack} handleLeave={handleLeaveAndNavigate} />
+          <Controls
+            customTrack={props.customTrack}
+            handleLeave={handleLeaveAndNavigate}
+            meetingId={props.meetingId}
+            patientId={props.patientId}
+          />
         </div>
       ) : joined && joined === "JOINING" ? (
         <div className="ml-[50%] mt-[25%]"><img src={loading} width={50} height={50}></img></div>
       ) : (
-        <Button onClick={joinMeeting} className="ml-[45%] mt-[25%]">Start Appointment</Button>
+        <Button onClick={joinMeeting} className="ml-[45%] mt-[25%]">Join</Button>
       )}
     </div>
   );
 }
 
 function VIDEOSDK(props) {
-  const { meetingid } = useParams();
+  const { meetingid, patientid } = useParams(); // Extract patient ID from the URL
   const [customTrack, setCustomTrack] = useState(null);
   const [meetingId, setMeetingId] = useState(meetingid);
+  const [patientId, setPatientId] = useState(patientid);
   const navigate = useNavigate(); // Create a navigate instance
 
   const getTrack = async () => {
@@ -198,6 +239,7 @@ function VIDEOSDK(props) {
   const onMeetingLeave = () => {
     props.setMeetingJoined(false);
     setMeetingId(null);
+    setPatientId(null);
     navigate('/dashboard'); // Navigate to the dashboard on meeting leave
   };
 
@@ -212,7 +254,13 @@ function VIDEOSDK(props) {
       }}
       token={authToken}
     >
-      <MeetingView meetingId={meetingId} onMeetingLeave={onMeetingLeave} customTrack={customTrack} setMeetingJoined={props.setMeetingJoined} />
+      <MeetingView
+        meetingId={meetingId}
+        patientId={patientId}  // Pass patientId to MeetingView
+        onMeetingLeave={onMeetingLeave}
+        customTrack={customTrack}
+        setMeetingJoined={props.setMeetingJoined}
+      />
     </MeetingProvider>
   ) : (
     <></>

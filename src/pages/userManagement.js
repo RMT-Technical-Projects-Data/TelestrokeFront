@@ -29,7 +29,7 @@ const UserManagement = () => {
           return;
         }
 
-        const response = await axios.get("http://localhost:5000/api/users", {
+        const response = await axios.get("http://localhost:5000/api/users/get", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -75,7 +75,7 @@ const UserManagement = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
   
-      const response = await axios.get("http://localhost:5000/api/users", {
+      const response = await axios.get("http://localhost:5000/api/users/get", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
@@ -133,7 +133,7 @@ const UserManagement = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
   
-      const response = await axios.get("http://localhost:5000/api/users", {
+      const response = await axios.get("http://localhost:5000/api/users/get", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);

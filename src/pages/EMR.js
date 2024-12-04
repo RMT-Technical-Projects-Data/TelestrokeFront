@@ -3,7 +3,7 @@ import NavBar from "../components/NavBar";
 import Sidebar from "../components/Sidebar";
 import Button from "../components/Button";
 import axios from "axios";
-import client from "../api/client"; // Import your axios client
+// import client from "../api/client"; // Import your axios client
 import VIDEOSDK from "../components/VideoSDK";
 import { useParams } from "react-router-dom";
 import EMR_PatientInfo from "../components/EMR_PatientInfo";
@@ -11,7 +11,7 @@ import EMR_BedSide from "../components/EMR_BedSide";
 import EMR_TelestrokeExam from "../components/EMR_TelestrokeExam";
 import QuadrantTracking from "../components/QuadrantTracking";
 import StimulusVideoController from "../components/StimulusVideoController";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 
@@ -20,7 +20,7 @@ import { submitExamData } from "../utils/auth";
 
 const EMRpage = () => {
   const { patientid, meetingid } = useParams();
-  const [name, setName] = useState("");
+  // const [name, setName] = useState("");
   const [selectedEye, setSelectedEye] = useState("left");
   const [meetingJoined, setMeetingJoined] = useState(false);
   const [centerFocus, setCenterFocus] = useState(true);

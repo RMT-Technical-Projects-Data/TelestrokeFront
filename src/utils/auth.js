@@ -17,18 +17,6 @@ export const AppointmentFormSubmit = async (appointmentData) => {
 };
 
 
-// Function to submit the patient form data
-export const PatientFormSubmit = async (values) => {
-  try {
-    const { data } = await client.post('/api/patients', { ...values });
-    return data;
-  } catch (error) {
-    return catchError(error);
-  }
-};
-
-
-
 // Function to fetch all appointments
 export const getAllAppointments = async () => {
   try {
@@ -39,37 +27,6 @@ export const getAllAppointments = async () => {
   }
 };
 
-
-
-
-export const getAllPatients = async () => {
-  try {
-    const { data } = await client.get('/api/patients'); // Adjust the endpoint as necessary
-    return data; // Return the fetched appointment data
-  } catch (error) {
-    return catchError(error); // Handle any errors
-  }
-};
-
-
-
-// // utils/auth.js
-
-// export const saveUserInfo = async (user) => {
-//   try {
-//     console.log("Saving user info:", user); // Log the user data being sent
-//     const response = await client.post("/api/doctors", {
-//       email: user.email,
-//       name: user.name,
-//       userId: user.sub, // Assuming user.sub is the Auth0 user ID
-//     });
-//     console.log("Response from saveUserInfo:", response.data); // Log the response data
-//     return response.data; // Return the response data for further handling if needed
-//   } catch (error) {
-//     console.error("Error saving user info:", error);
-//     throw error; // Rethrow the error for handling in the calling function
-//   }
-// };
 
 
 export const deleteAppointment = async ({ patientId }) => {
@@ -88,12 +45,12 @@ export const deleteAppointment = async ({ patientId }) => {
 
 
 // Function to update an existing appointment
-export const UpdateAppointment = async ({ _id, appointmentDate, appointmentTime, duration }) => {
+export const UpdateAppointment = async ({ _id, appointmentDate, appointmentTime }) => {
   try {
     const response = await client.put(`/api/appointments/${_id}`, {
       AppointmentDate: appointmentDate,
       AppointmentTime: appointmentTime,
-      Duration: duration
+      
     });
     return { success: true, data: response.data }; // Return the updated appointment data
   } catch (error) {
