@@ -17,10 +17,14 @@ export const AppointmentFormSubmit = async (appointmentData) => {
 };
 
 
-// Function to fetch all appointments
-export const getAllAppointments = async () => {
+// Function to fetch all appointments with optional doctor name
+export const getAllAppointments = async (Doctor = '') => {
   try {
-    const { data } = await client.get('/api/appointments'); // Adjust the endpoint as necessary
+    // If a doctor name is provided, include it as a query parameter
+    const url = Doctor ? `/api/appointments?Doctor=${Doctor}` : '/api/appointments';
+    
+    // Make the GET request to the backend
+    const { data } = await client.get(url); // Adjust the endpoint as necessary
     return data; // Return the fetched appointment data
   } catch (error) {
     return catchError(error); // Handle any errors

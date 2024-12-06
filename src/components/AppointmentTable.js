@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify"; // Import Toastify
 import "react-toastify/dist/ReactToastify.css"; // Import Toastify CSS
-import client from "../api/client"; // Import your axios client
+// import client from "../api/client"; // Import your axios client
 import { FaTrash, FaEdit } from "react-icons/fa"; // Import trash and edit icons from react-icons
-import { deleteAppointment, UpdateAppointment } from "../utils/auth"; // Import delete and update functions
+import { deleteAppointment, UpdateAppointment, getAllAppointments  } from "../utils/auth"; // Import delete and update functions
 
 const AppointmentTable = ({ addAppointment }) => {
   const [appointments_data, setAppointmentsData] = useState([]);
@@ -18,17 +18,23 @@ const AppointmentTable = ({ addAppointment }) => {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const response = await client.get('/api/appointments');
-        setAppointmentsData(response.data);
+        // Get the doctor's name from localStorage
+        const Doctor = localStorage.getItem('Doctor');  // Assuming 'Doctor' is stored in localStorage
+        
+        // Call the getAllAppointments function with the Doctor parameter
+        const appointmentsData = await getAllAppointments(Doctor);
+        
+        // Set the appointments data in state
+        setAppointmentsData(appointmentsData);
       } catch (error) {
         console.error("Error fetching appointments:", error);
         toast.error("Failed to load appointments!");
       }
     };
-
+  
     fetchAppointments();
-  }, []);
-
+  }, []);  // Empty dependency array ensures this runs on component mount
+  
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);

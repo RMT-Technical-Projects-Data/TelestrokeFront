@@ -4,6 +4,8 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify"; // Import Toastify
+import { getAllAppointments  } from "../utils/auth"; // Import delete and update functions
 
 // Register required chart components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -12,6 +14,8 @@ function Dashboard() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true); // State to manage loading
   const [totalAppointments, setTotalAppointments] = useState(0); // State to store total appointments
+  const [attendedAppointments, setAttendedAppointments] = useState(0); // State to store attended appointments
+  const [scheduledAppointments, setScheduledAppointments] = useState(0); // State for scheduled appointments
 
   // Clear specific local storage items on component mount
   useEffect(() => {
@@ -19,27 +23,39 @@ function Dashboard() {
     localStorage.removeItem("emrBedSideData");
     localStorage.removeItem("emrTelestrokeExam");
     localStorage.removeItem("patientName");
+    localStorage.removeItem("Ended");
   }, []);
 
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/appointments"); // Adjust the URL as needed
+        const response = await fetch("http://localhost:5000/api/appointments");
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
         setAppointments(data);
-        setTotalAppointments(data.length); // Count total appointments
+        setTotalAppointments(data.length);
+  
+        const attendedCount = data.filter(
+          (appointment) => appointment.Checkup_Status === "Complete"
+        ).length;
+        setAttendedAppointments(attendedCount);
+  
+        const scheduledCount = data.filter(
+          (appointment) => appointment.Checkup_Status !== "Complete"
+        ).length;
+        setScheduledAppointments(scheduledCount);
       } catch (error) {
         console.error("Error fetching appointments:", error);
       } finally {
-        setLoading(false); // Stop loading
+        setLoading(false);
       }
     };
-
-    fetchAppointments(); // Fetch appointments
-  }, []); // Dependency array
+  
+    fetchAppointments();
+  }, []);
+  
 
   // Function to sort and group appointments by date and time
   const groupAndSortAppointments = () => {
@@ -146,7 +162,11 @@ function Dashboard() {
     datasets: [
       {
         label: "Appointment Stats",
-        data: [14, 16, totalAppointments - (14 + 16)], // Dynamic Remaining
+        data: [
+          attendedAppointments,
+          scheduledAppointments,
+          totalAppointments - (attendedAppointments + scheduledAppointments),
+        ], // Dynamic Remaining
         backgroundColor: ["#36A2EB", "#FFCE56", "#4CAF50"],
         hoverBackgroundColor: ["#36A2EB", "#FFCE56", "#4CAF50"],
       },
@@ -174,11 +194,15 @@ function Dashboard() {
                 </div>
                 <div className="flex flex-col gap-8 bg-blue-500 text-white p-4 rounded-md shadow-lg h-36">
                   <h2 className="text-3xl">Appointments Attended</h2>
-                  <p className="text-3xl font-bold text-right">14</p>
+                  <p className="text-3xl font-bold text-right">
+                    {attendedAppointments}
+                  </p>
                 </div>
                 <div className="flex flex-col gap-8 bg-[#ECBA00] text-white p-4 rounded-md shadow-lg h-36">
                   <h2 className="text-3xl">Appointments Scheduled</h2>
-                  <p className="text-3xl font-bold text-right">16</p>
+                  <p className="text-3xl font-bold text-right">
+                    {scheduledAppointments}
+                  </p>
                 </div>
               </div>
               <div className="flex flex-row gap-9 justify-between">

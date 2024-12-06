@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppointmentFormSubmit } from "../utils/auth";
 import { getAllAppointments } from "../utils/auth";
@@ -16,7 +16,17 @@ const AppointmentForm = ({ close }) => {
     Checkup_Status: "Pending",
     token: "",
     meetingId: "",
+    Doctor: "", // Add Doctor field in the state
   });
+
+  // Retrieve the doctor's name from localStorage
+  useEffect(() => {
+    const doctorName = localStorage.getItem("Doctor") || "Unknown Doctor";
+    setNewAppointment((prev) => ({
+      ...prev,
+      Doctor: doctorName, // Set the Doctor field
+    }));
+  }, []);
 
   const handleChange = (e) => {
     const today = new Date().toISOString().split("T")[0];
@@ -35,59 +45,56 @@ const AppointmentForm = ({ close }) => {
 
   const generateAppointmentID = async () => {
     try {
-      const appointments = await getAllAppointments(); // Fetch existing appointments from your API or database
+      const appointments = await getAllAppointments();
       let maxID = 0;
 
       if (appointments && appointments.length > 0) {
-        // Find the highest appointment ID
         maxID = Math.max(...appointments.map((appt) => parseInt(appt.ID, 10)));
       }
 
-      // If no appointments, start with 1, and ensure it is a 5-digit number
-      const newID = String(maxID + 1).padStart(5, "0"); // Format it as a 5-digit number
+      const newID = String(maxID + 1).padStart(5, "0");
       return newID;
     } catch (error) {
       console.error("Error fetching appointments:", error);
-      toast.error("Error generating appointment ID. Please try again."); // Toast error notification
+      toast.error("Error generating appointment ID. Please try again.");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     try {
       const token = await getToken();
       if (!token) {
         toast.error("Failed to generate token. Please try again."); // Toast error notification
         return;
       }
-
+  
       const meetingId = await createMeeting();
       if (!meetingId) {
         toast.error("Failed to create meeting. Please try again."); // Toast error notification
         return;
       }
-
+  
       // Generate the new appointment ID
       const appointmentID = await generateAppointmentID();
-
+  
       const newAppointmentData = {
         ...newAppointment,
         ID: appointmentID, // Add the generated ID here
         token: token,
         meetingId: meetingId,
+        Doctor: localStorage.getItem("Doctor") || "",  // Fetch doctor name from localStorage
       };
-
+  
       const response = await AppointmentFormSubmit(newAppointmentData);
   
       if (response) {
         toast.success("Appointment saved successfully!"); // Show success toast
         // Wait for the toast to appear before navigating
         setTimeout(() => {
-           // Navigate to the appointment table page
           close(); // Close the form
         }, 1500);
-      
       } else {
         toast.error("Failed to save the appointment. Please try again.");
       }
@@ -96,6 +103,7 @@ const AppointmentForm = ({ close }) => {
       toast.error("An unexpected error occurred. Please try again.");
     }
   };
+  
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md mr-52 mt-8">
@@ -110,10 +118,10 @@ const AppointmentForm = ({ close }) => {
           onChange={handleChange}
           className="w-medium p-2 border rounded"
           required
-          maxLength={30} // Limit to 25 characters
+          maxLength={30}
         />
       </div>
-  
+
       <div className="mb-4">
         <label className="block text-gray-700">
           Patient ID <span className="text-red-600">*</span>
@@ -125,30 +133,38 @@ const AppointmentForm = ({ close }) => {
           onChange={handleChange}
           className="w-smalll p-2 border rounded"
           required
-          readOnly // Make the ID field read-only as it's generated automatically
+          readOnly
         />
       </div>
-  
-      <div>
-        {/* ToastContainer to display notifications */}
-        <ToastContainer position="top-right" autoClose={3000} />
-  
-        {/* Input field for Appointment Date */}
-        <div className="mb-4">
-          <label className="block text-gray-700">
-            Appointment Date <span className="text-red-600">*</span>
-          </label>
-          <input
-            type="date"
-            name="AppointmentDate"
-            value={newAppointment.AppointmentDate}
-            onChange={handleChange}
-            className="w-small p-2 border rounded"
-            required
-          />
-        </div>
+
+      {/* Read-only field to display the doctor's name */}
+      <div className="mb-4">
+        <label className="block text-gray-700">
+          Doctor <span className="text-red-600">*</span>
+        </label>
+        <input
+          type="text"
+          name="Doctor"
+          value={newAppointment.Doctor}
+          className="w-medium p-2 border rounded bg-gray-200"
+          readOnly
+        />
       </div>
-  
+
+      <div className="mb-4">
+        <label className="block text-gray-700">
+          Appointment Date <span className="text-red-600">*</span>
+        </label>
+        <input
+          type="date"
+          name="AppointmentDate"
+          value={newAppointment.AppointmentDate}
+          onChange={handleChange}
+          className="w-small p-2 border rounded"
+          required
+        />
+      </div>
+
       <div className="mb-4">
         <label className="block text-gray-700">
           Appointment Time <span className="text-red-600">*</span>
@@ -162,9 +178,7 @@ const AppointmentForm = ({ close }) => {
           required
         />
       </div>
-  
-      {/* Duration field removed */}
-  
+
       <div className="mb-4">
         <label className="block text-gray-700">Checkup Status</label>
         <select
@@ -177,10 +191,9 @@ const AppointmentForm = ({ close }) => {
           required
         >
           <option value="Pending">Pending</option>
-          {/* <option value="Complete">Complete</option> */}
         </select>
       </div>
-  
+
       <div className="flex justify">
         <button
           type="submit"
@@ -188,7 +201,7 @@ const AppointmentForm = ({ close }) => {
         >
           Save Appointment
         </button>
-  
+
         <button
           type="button"
           onClick={close}
@@ -197,8 +210,10 @@ const AppointmentForm = ({ close }) => {
           Cancel
         </button>
       </div>
+
+      <ToastContainer position="top-right" autoClose={3000} />
     </form>
   );
-}  
+};
 
 export default AppointmentForm;

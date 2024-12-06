@@ -183,163 +183,156 @@ const EMRpage = () => {
     <>
       <NavBar />
   
-      <div className="flex flex-row justify-between gap-2 mb-28 bg-slate-50">
-  <div className="basis-[5%]">
-    <Sidebar page="EMR" />
-  </div>
- 
-          <div className="flex flex-col h-fit basis-[85%] mt-6 gap-6 p-2">
-            {meetingid ? (
-              <>
-                <div className="flex flex-row justify-between h-[720px] gap-8 py-5 px-3">
-                  <div className="basis-[80%] bg-[#F0F0F0]">
-                    <VIDEOSDK setMeetingJoined={setMeetingJoined} />
-                  </div>
-                  {meetingJoined && (
-                    <div className="bg-slate-200 p-5 rounded-md ">
-                      <div className="basis-[30%] flex flex-col gap-3 justify-evenly items-left">
-                        <h3 className="font-bold text-2xl text-center ">
-                          Video Control Panel
-                        </h3>
-                        <h3 className="font-bold text-lg ">Eye Camera Controls</h3>
-                        <div className="flex items-center">
-                          <input
-                            type="radio"
-                            id="left"
-                            name="eye"
-                            value="left"
-                            className="mr-2"
-                            checked={selectedEye === "left"}
-                            onChange={() => {
-                              setSelectedEye("left");
-                              updateSetting("eye_camera_control", "right");
-                            }}
-                          />
-                          <label htmlFor="left" className="mr-6 text-lg">
-                            Right
-                          </label>
-                          <input
-                            type="radio"
-                            id="right"
-                            name="eye"
-                            value="right"
-                            className="mr-2"
-                            checked={selectedEye === "right"}
-                            onChange={() => {
-                              setSelectedEye("right");
-                              updateSetting("eye_camera_control", "left");
-                            }}
-                          />
-                          <label htmlFor="right" className="text-lg">
-                            Left
-                          </label>
-                        </div>
-                        <label
-                          htmlFor="examMode"
-                          className="text-lg font-semibold mr-4"
-                        >
-                          Exam Mode
+      <div className="flex flex-col h-full bg-slate-50 py-6 ml-32"> {/* Added ml-4 to move everything to the right */}
+        {/* Main Content Area */}
+        <div className="flex flex-col h-full mt-6 gap-6 p-2">
+          {meetingid ? (
+            <>
+              <div className="flex flex-row justify-between gap-8 py-5 px-3 h-[720px]">
+                <div className="basis-[80%] bg-[#F0F0F0]">
+                  <VIDEOSDK setMeetingJoined={setMeetingJoined} />
+                </div>
+                {meetingJoined && (
+                  <div className="bg-slate-200 p-5 rounded-md">
+                    <div className="basis-[30%] flex flex-col gap-3 justify-evenly items-left">
+                      <h3 className="font-bold text-2xl text-center">
+                        Video Control Panel
+                      </h3>
+                      <h3 className="font-bold text-lg">Eye Camera Controls</h3>
+                      <div className="flex items-center">
+                        <input
+                          type="radio"
+                          id="left"
+                          name="eye"
+                          value="left"
+                          className="mr-2"
+                          checked={selectedEye === "left"}
+                          onChange={() => {
+                            setSelectedEye("left");
+                            updateSetting("eye_camera_control", "right");
+                          }}
+                        />
+                        <label htmlFor="left" className="mr-6 text-lg">
+                          Right
                         </label>
-                        <div className="flex items-center">
-                          <input
-                            onChange={() => {
-                              updateSetting("exam_mode", "CenterFocus");
-                              setCenterFocus(true);
-                            }}
-                            type="radio"
-                            id="centerFocus"
-                            name="examMode"
-                            value="centerFocus"
-                            className="mr-2"
-                            checked={centerFocus}
-                          />
-                          <label htmlFor="centerFocus" className="mr-6 text-lg">
-                            Center Focus
-                          </label>
-                          <input
-                            onChange={() => {
-                              updateSetting("exam_mode", "Quadrant");
-                              setCenterFocus(false);
-                            }}
-                            type="radio"
-                            id="quadrant"
-                            name="examMode"
-                            value="quadrant"
-                            className="mr-2"
-                            checked={!centerFocus}
-                          />
-                          <label htmlFor="quadrant" className="text-lg">
-                            Quadrant
-                          </label>
-                        </div>
-                        {centerFocus ? (
-                          <StimulusVideoController
-                            settings={settings}
-                            updateSetting={updateSetting}
-                          />
-                        ) : (
-                          <QuadrantTracking
-                            settings={settings}
-                            updateSetting={updateSetting}
-                          />
-                        )}
+                        <input
+                          type="radio"
+                          id="right"
+                          name="eye"
+                          value="right"
+                          className="mr-2"
+                          checked={selectedEye === "right"}
+                          onChange={() => {
+                            setSelectedEye("right");
+                            updateSetting("eye_camera_control", "left");
+                          }}
+                        />
+                        <label htmlFor="right" className="text-lg">
+                          Left
+                        </label>
                       </div>
+                      <label htmlFor="examMode" className="text-lg font-semibold mr-4">
+                        Exam Mode
+                      </label>
+                      <div className="flex items-center">
+                        <input
+                          onChange={() => {
+                            updateSetting("exam_mode", "CenterFocus");
+                            setCenterFocus(true);
+                          }}
+                          type="radio"
+                          id="centerFocus"
+                          name="examMode"
+                          value="centerFocus"
+                          className="mr-2"
+                          checked={centerFocus}
+                        />
+                        <label htmlFor="centerFocus" className="mr-6 text-lg">
+                          Center Focus
+                        </label>
+                        <input
+                          onChange={() => {
+                            updateSetting("exam_mode", "Quadrant");
+                            setCenterFocus(false);
+                          }}
+                          type="radio"
+                          id="quadrant"
+                          name="examMode"
+                          value="quadrant"
+                          className="mr-2"
+                          checked={!centerFocus}
+                        />
+                        <label htmlFor="quadrant" className="text-lg">
+                          Quadrant
+                        </label>
+                      </div>
+                      {centerFocus ? (
+                        <StimulusVideoController
+                          settings={settings}
+                          updateSetting={updateSetting}
+                        />
+                      ) : (
+                        <QuadrantTracking
+                          settings={settings}
+                          updateSetting={updateSetting}
+                        />
+                      )}
                     </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <Button>Join Meeting</Button>
-            )}
-  
-            {meetingJoined && (
-              <>
-                <div className="flex flex-row gap-1">
-                  <button
-                    className={`rounded-b-none rounded-t-md border-b-0 text-sm ${
-                      tab === 0 ? "bg-[rgb(5,60,212)] text-white" : "bg-gray-200"
-                    }`}
-                    onClick={() => setTab(0)}
-                  >
-                    Patient Info
-                  </button>
-                  <button
-                    className={`rounded-b-none rounded-t-md border-b-0 text-sm ${
-                      tab === 1 ? "bg-[rgb(5,60,212)] text-white" : "bg-gray-200"
-                    }`}
-                    onClick={() => setTab(1)}
-                  >
-                    Bedside Exam
-                  </button>
-                  <button
-                    className={`rounded-b-none rounded-t-md border-b-0 text-sm ${
-                      tab === 2 ? "bg-[rgb(5,60,212)] text-white" : "bg-gray-200"
-                    }`}
-                    onClick={() => setTab(2)}
-                  >
-                    Telestroke Exam
-                  </button>
-                </div>
-  
-                {tab === 0 && <EMR_PatientInfo />}
-                {tab === 1 && <EMR_BedSide />}
-                {tab === 2 && <EMR_TelestrokeExam />}
-              </>
-            )}
-  
-            {/* Conditionally render buttons based on meetingJoined state */}
-            {meetingJoined && (
-              <div className="flex flex-row-reverse gap-8 mx-8 ">
-                <Button onClick={handleSave}>Save</Button>
-                {/* <Button onClick={() => {}}>Start New Test</Button> */}
-                {/* <Button onClick={() => {}}>End Exam</Button> */}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        
+            </>
+          ) : (
+            <Button>Join Meeting</Button>
+          )}
+  
+          {meetingJoined && (
+            <>
+              <div className="flex flex-row gap-1">
+                <button
+                  className={`rounded-b-none rounded-t-md border-b-0 text-sm ${
+                    tab === 0 ? "bg-[rgb(5,60,212)] text-white" : "bg-gray-200"
+                  }`}
+                  onClick={() => setTab(0)}
+                >
+                  Patient Info
+                </button>
+                <button
+                  className={`rounded-b-none rounded-t-md border-b-0 text-sm ${
+                    tab === 1 ? "bg-[rgb(5,60,212)] text-white" : "bg-gray-200"
+                  }`}
+                  onClick={() => setTab(1)}
+                >
+                  Bedside Exam
+                </button>
+                <button
+                  className={`rounded-b-none rounded-t-md border-b-0 text-sm ${
+                    tab === 2 ? "bg-[rgb(5,60,212)] text-white" : "bg-gray-200"
+                  }`}
+                  onClick={() => setTab(2)}
+                >
+                  Telestroke Exam
+                </button>
+              </div>
+  
+              {tab === 0 && <EMR_PatientInfo />}
+              {tab === 1 && <EMR_BedSide />}
+              {tab === 2 && <EMR_TelestrokeExam />}
+            </>
+          )}
+  
+          {/* Conditionally render buttons based on meetingJoined state */}
+          {meetingJoined && (
+            <div className="flex flex-row-reverse gap-8 mx-8 ">
+              <Button onClick={handleSave}>Save</Button>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );
+  
+  
 }
 
 export default EMRpage;

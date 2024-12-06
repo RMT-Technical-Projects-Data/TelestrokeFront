@@ -20,12 +20,15 @@ const Login = () => {
         password,
       });
 
+      
+
       // Extract token and role from the response
       const { token, role } = response.data;
 
       if (token) {
         // Store the token in localStorage
         localStorage.setItem("token", token);
+        localStorage.setItem("Doctor", username); // Save the entered username
 
         // Navigate based on the user's role
         if (role === "admin") {
