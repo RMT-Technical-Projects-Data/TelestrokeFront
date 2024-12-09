@@ -17,13 +17,22 @@ const MeetingPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isMeetingCreated, setIsMeetingCreated] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [doctor, setDoctor] = useState(""); // State to hold Doctor value
 
+  // Fetch Doctor from localStorage on component mount
+  useEffect(() => {
+    const storedDoctor = localStorage.getItem("Doctor") || "Unknown Doctor";
+    setDoctor(storedDoctor);
+  }, []);
+
+  // Clear specific localStorage keys on component mount
   useEffect(() => {
     ["patientEMR", "emrBedSideData", "emrTelestrokeExam", "patientName"].forEach((key) =>
       localStorage.removeItem(key)
     );
   }, []);
 
+  // Generate Patient ID
   useEffect(() => {
     const generatePatientID = async () => {
       try {
@@ -43,6 +52,7 @@ const MeetingPage = () => {
     generatePatientID();
   }, []);
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -65,12 +75,15 @@ const MeetingPage = () => {
       setMeetingId(generatedMeetingId);
       setIsMeetingCreated(true);
 
+      // Include Doctor in the meeting details
       const meetingDetails = {
         Name: patientName,
         ID: patientID,
         token: generatedToken,
         meetingId: generatedMeetingId,
+        Doctor: doctor, // Add Doctor to the data being sent to the backend
       };
+
       const saveResponse = await AppointmentFormSubmit(meetingDetails);
       if (saveResponse) {
         toast.success("Meeting created successfully!");
@@ -103,20 +116,19 @@ const MeetingPage = () => {
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
       <h2 className="text-2xl font-bold mb-4">Create an Instant Meeting</h2>
       <form onSubmit={handleSubmit}>
-      <div className="mb-4">
-  <label className="block text-gray-700">
-    Patient Name <span className="text-red-600">*</span>
-  </label>
-  <input
-    type="text"
-    value={patientName}
-    onChange={(e) => setPatientName(e.target.value)}
-    className="w-full p-2 border rounded"
-    required
-    maxLength={30} // Limit to 25 characters
-  />
-</div>
-
+        <div className="mb-4">
+          <label className="block text-gray-700">
+            Patient Name <span className="text-red-600">*</span>
+          </label>
+          <input
+            type="text"
+            value={patientName}
+            onChange={(e) => setPatientName(e.target.value)}
+            className="w-full p-2 border rounded"
+            required
+            maxLength={30} // Limit to 25 characters
+          />
+        </div>
         <div className="mb-4">
           <label className="block text-gray-700">Patient ID</label>
           <input
@@ -124,6 +136,15 @@ const MeetingPage = () => {
             value={patientID}
             readOnly
             className="w-full p-2 border rounded"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700">Doctor</label>
+          <input
+            type="text"
+            value={doctor}
+            readOnly
+            className="w-full p-2 border rounded bg-gray-100 text-gray-700"
           />
         </div>
         <div className="mb-4">
@@ -167,7 +188,6 @@ const MeetingPage = () => {
               Start Meeting
             </button>
           )}
-
           <button
             type="button"
             onClick={() => navigate("/Dashboard")}

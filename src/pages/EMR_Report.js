@@ -14,15 +14,26 @@ const EMRReportpage = () => {
   useEffect(() => {
     const fetchExamData = async () => {
       try {
-        const response = await client.get('/api/examdatas');
-        setExamData(response.data);
+        // Get the doctor's information from local storage
+        const doctor = localStorage.getItem('Doctor');
+  
+        // If doctor is available in local storage, include it in the request
+        if (doctor) {
+          const response = await client.get('/api/examdatas', {
+            params: { doctor }
+          });
+          setExamData(response.data);
+        } else {
+          console.error("Doctor not found in local storage");
+        }
       } catch (error) {
         console.error("Error fetching exam data:", error);
       }
     };
-
+  
     fetchExamData();
   }, []);
+  
 
   const generatePDF = (patientData, patientId) => {
     const doc = new jsPDF();
@@ -31,10 +42,14 @@ const EMRReportpage = () => {
 
     let yPosition = 15; // Start with a Y position for the title
 
-    // Add the title
+    // Add the title with Patient ID at the top
     doc.setFontSize(20);
     doc.text(`Report for Patient ID: ${patientId}`, 105, yPosition, null, null, "center");
-    yPosition += 20; // Move down after the title
+    yPosition += 10; // Move down slightly to make space for Doctor's name
+
+    // Add Doctor's name at the top along with Patient ID
+    doc.text(`Doctor: ${patientData.patientData.Doctor}`, 105, yPosition, null, null, "center");
+    yPosition += 20; // Move down after adding Doctor's name
 
     // Add patient information section
     doc.setFontSize(12);
@@ -158,7 +173,6 @@ const EMRReportpage = () => {
 };
 
 
-
 const handleShowReport = (patientId) => {
   const patientData = Exam_data.find((exam) => exam.patientData.patientid === patientId);
 
@@ -177,6 +191,12 @@ const handleShowReport = (patientId) => {
             h1 {
               text-align: center;
               font-size: 24px;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
             }
             .section {
               margin-bottom: 30px;
@@ -212,7 +232,11 @@ const handleShowReport = (patientId) => {
           </style>
         </head>
         <body>
-          <h1>Report for Patient ID: ${patientId}</h1>
+          <div class="header">
+            <h1>Report for Patient ID: ${patientId}</h1>
+            <span><strong>Doctor:</strong> ${patientData.patientData.Doctor}</span>
+          </div>
+
           <div class="section">
             <div class="section-header">Patient Info</div>
             <div class="field"><span class="field-title">Date of Birth:</span> <span class="field-value">${new Date(patientData.patientData.patientDOB).toLocaleDateString()}</span></div>

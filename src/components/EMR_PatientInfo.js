@@ -6,6 +6,7 @@ export default function EMR_PatientInfo() {
   // Initial state for patient EMR with empty fields
   const [patientEMR, setPatientEMR] = useState({
     Name: "", // Name will be updated from localStorage if available
+    Doctor: "", // Doctor field to be autofilled from localStorage
     PatientDOB: "",
     PatientSex: "Male",
     ExamDate: "",
@@ -16,15 +17,15 @@ export default function EMR_PatientInfo() {
     AphasiaText: ""
   });
 
-  // useEffect to set patient name from localStorage on page load
+  // useEffect to set patient name and doctor from localStorage on page load
   useEffect(() => {
     const storedName = localStorage.getItem("patientName");
-    if (storedName) {
-      setPatientEMR((prevState) => ({
-        ...prevState,
-        Name: storedName // Set the patient name in state
-      }));
-    }
+    const storedDoctor = localStorage.getItem("Doctor");
+    setPatientEMR((prevState) => ({
+      ...prevState,
+      Name: storedName || "", // Set the patient name in state
+      Doctor: storedDoctor || "" // Set the doctor in state
+    }));
   }, []); // Empty dependency array to run only on mount
 
   const handleChange = (e) => {
@@ -79,70 +80,88 @@ export default function EMR_PatientInfo() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-row gap-20">
-        <div>
-          <p className="font-bold text-lg my-3">Name</p>
-          <input
-            className="border-t-0 border-x-0 border-b-2"
-            type="text"
-            name="Name"
-            value={patientEMR.Name}
-            onChange={handleChange}
-            readOnly // Make the name field read-only
-          />
-        </div>
-        <div>
-          <p className="font-bold text-lg my-3">Patient D.O.B</p>
-          <input
-            className="border-t-0 border-x-0 border-b-2"
-            type="date"
-            name="PatientDOB"
-            value={patientEMR.PatientDOB}
-            onChange={handleChange}
-          />
-        </div>
-        <div>
-          <p className="font-bold text-lg my-3">Patient Sex</p>
-          <select
-            className="border-t-0 border-x-0 border-b-2"
-            name="PatientSex"
-            value={patientEMR.PatientSex}
-            onChange={handleChange}
-          >
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-          </select>
-        </div>
-        <div>
-          <p className="font-bold text-lg my-3">Exam Date</p>
-          <input
-            className="border-t-0 border-x-0 border-b-2"
-            type="date"
-            name="ExamDate"
-            value={patientEMR.ExamDate}
-            onChange={handleChange}
-          />
-        </div>
-        <div>
-          <p className="font-bold text-lg my-3 text-center">Visual Activity</p>
-          <label className="font-bold text-lg m-4">OD</label>
-          <input
-            className="border-t-0 border-x-0 border-b-2"
-            type="text"
-            name="VisualActivityOD"
-            value={patientEMR.VisualActivityOD}
-            onChange={handleChange}
-          />
-          <label className="font-bold text-lg m-4">OS</label>
-          <input
-            className="border-t-0 border-x-0 border-b-2"
-            type="text"
-            name="VisualActivityOS"
-            value={patientEMR.VisualActivityOS}
-            onChange={handleChange}
-          />
-        </div>
+  <div>
+    <p className="font-bold text-lg my-3">Name</p>
+    <input
+      className="border-t-0 border-x-0 border-b-2"
+      type="text"
+      name="Name"
+      value={patientEMR.Name}
+      onChange={handleChange}
+      readOnly // Make the name field read-only
+    />
+  </div>
+  <div>
+    <p className="font-bold text-lg my-3">Doctor</p>
+    <input
+      className="border-t-0 border-x-0 border-b-2"
+      type="text"
+      name="Doctor"
+      value={patientEMR.Doctor}
+      onChange={handleChange}
+      readOnly // Make the doctor field read-only
+    />
+  </div>
+  <div>
+    <p className="font-bold text-lg my-3">Patient D.O.B</p>
+    <input
+      className="border-t-0 border-x-0 border-b-2"
+      type="date"
+      name="PatientDOB"
+      value={patientEMR.PatientDOB}
+      onChange={handleChange}
+    />
+  </div>
+  <div>
+    <p className="font-bold text-lg my-3">Patient Sex</p>
+    <select
+      className="border-t-0 border-x-0 border-b-2"
+      name="PatientSex"
+      value={patientEMR.PatientSex}
+      onChange={handleChange}
+    >
+      <option>Male</option>
+      <option>Female</option>
+      <option>Other</option>
+    </select>
+  </div>
+  <div>
+    <p className="font-bold text-lg my-3">Exam Date</p>
+    <input
+      className="border-t-0 border-x-0 border-b-2"
+      type="date"
+      name="ExamDate"
+      value={patientEMR.ExamDate}
+      onChange={handleChange}
+    />
+  </div>
+  <div className="flex flex-col gap-2">
+    <p className="font-bold text-lg my-3">Visual Activity</p>
+    <div className="flex flex-col gap-4">
+      <div>
+        <label className="font-bold text-lg mr-4">OD</label>
+        <input
+          className="border-t-0 border-x-0 border-b-2"
+          type="text"
+          name="VisualActivityOD"
+          value={patientEMR.VisualActivityOD}
+          onChange={handleChange}
+        />
       </div>
+      <div>
+        <label className="font-bold text-lg mr-4">OS</label>
+        <input
+          className="border-t-0 border-x-0 border-b-2"
+          type="text"
+          name="VisualActivityOS"
+          value={patientEMR.VisualActivityOS}
+          onChange={handleChange}
+        />
+      </div>
+    </div>
+  </div>
+</div>
+
       <div className="flex flex-row gap-20 mt-10">
         <div>
           <p className="font-bold text-lg">Relevant Neurological Findings</p>

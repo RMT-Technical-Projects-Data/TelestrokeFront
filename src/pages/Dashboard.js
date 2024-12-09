@@ -29,7 +29,10 @@ function Dashboard() {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/appointments");
+        const Doctor = localStorage.getItem("Doctor"); // Retrieve the Doctor from local storage
+        const url = Doctor ? `http://localhost:5000/api/appointments?Doctor=${Doctor}` : "http://localhost:5000/api/appointments";
+  
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
@@ -55,6 +58,7 @@ function Dashboard() {
   
     fetchAppointments();
   }, []);
+  
   
 
   // Function to sort and group appointments by date and time
