@@ -29,8 +29,7 @@ const useAuth = () => {
   // Effect to check token expiration when the component mounts or when history changes
   useEffect(() => {
     if (checkTokenExpiration()) {
-    localStorage.removeItem('patientName');
-    localStorage.removeItem('token');
+    localStorage.clear();
       navigate('/login'); // Redirect to the login page using useNavigate
     }
   }, [navigate]); // Re-run when the component mounts or on navigate change

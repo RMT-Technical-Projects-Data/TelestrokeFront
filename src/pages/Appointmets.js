@@ -7,29 +7,7 @@ import AppointmentForm from "../components/AppointmentForm";
 const AppointmentsPage = () => {
 
 
-    // the below useEffects are for resetting the local storage
-
-    useEffect(() => {
-      // Clear patient info from local storage on component mount
-      localStorage.removeItem("patientEMR");
-    }, []);
   
-  
-    useEffect(() => {
-      // Clear patient info from local storage on component mount
-      localStorage.removeItem("emrBedSideData");
-    }, []);
-  
-  
-    useEffect(() => {
-      // Clear patient info from local storage on component mount
-      localStorage.removeItem("emrTelestrokeExam");
-    }, []);
-
-    useEffect(() => {
-      // Clear patient info from local storage on component mount
-      localStorage.removeItem("patientName");
-    }, []);
 
   const [appointments_data, setAppointmentsData] = useState([
  

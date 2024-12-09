@@ -1,5 +1,5 @@
 import React from 'react';
-import axios from 'axios';
+
 
 function QuadrantTracking({settings, updateSetting} ) {
     const gridSize = 5; // 5x5 matrix

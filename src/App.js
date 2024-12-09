@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route} from "react-router-dom";
 import useAuth from './components/useAuth'; // Import useAuth
 import EMRpage from "./pages/EMR";
 import EMRReportpage from "./pages/EMR_Report";

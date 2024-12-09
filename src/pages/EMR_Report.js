@@ -15,12 +15,12 @@ const EMRReportpage = () => {
     const fetchExamData = async () => {
       try {
         // Get the doctor's information from local storage
-        const doctor = localStorage.getItem('Doctor');
+        const Doctor = localStorage.getItem('Doctor');
   
         // If doctor is available in local storage, include it in the request
-        if (doctor) {
+        if (Doctor) {
           const response = await client.get('/api/examdatas', {
-            params: { doctor }
+            params: { Doctor }
           });
           setExamData(response.data);
         } else {

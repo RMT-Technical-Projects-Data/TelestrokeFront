@@ -63,6 +63,7 @@ export const UpdateAppointment = async ({ _id, appointmentDate, appointmentTime 
   }
 };
 
+
 // Function to submit exam data
 export const submitExamData = async (examData) => {
   try {
@@ -79,14 +80,38 @@ export const submitExamData = async (examData) => {
     // Send the data to the backend
     const response = await client.post("/api/examdatas", payload); // Adjust the endpoint as necessary
 
-    return response.data; // Return the response data
+    // Check if the response status is 201 (Created) and contains success information
+    if (response.status === 201 && response.data) {
+      return response.data; // Return the response data if successful
+    } else {
+      // Handle any unexpected response format or status
+      throw new Error("Unexpected response format or error from backend");
+    }
   } catch (error) {
     console.error("Error submitting exam data:", error);
-    if (error.response) {
-      console.log("Backend response error:", error.response.data); // Log backend error response details
-    }
 
-    return catchError(error); // Handle and return a standardized error response
+    // Handle specific error response from the backend
+    if (error.response) {
+      // If the error is from the backend (e.g., validation failure or missing fields)
+      console.log("Backend response error:", error.response.data); // Log backend error response details
+
+      // Return the backend error details for further handling
+      if (error.response.status === 400) {
+        // Handle bad request error (e.g., validation errors like missing sections)
+        return {
+          error: error.response.data.error || "There was an issue with the data. Please check and try again."
+        };
+      }
+      
+      // General backend error handling for other statuses
+      return {
+        error: error.response.data.error || "An error occurred while saving the data. Please try again."
+      };
+    } else {
+      // If the error is not related to the response (e.g., network issues)
+      return {
+        error: "An unexpected error occurred. Please check your network and try again."
+      };
+    }
   }
 };
-

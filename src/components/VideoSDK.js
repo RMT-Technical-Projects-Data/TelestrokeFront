@@ -189,7 +189,7 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
     event.preventDefault();
 
     // Call handleEndAppointment to ask the user for confirmation
-    handleEndAppointment(true);
+    // handleEndAppointment(true);
 
     // Modern browsers may ignore custom messages in `event.returnValue`
     // So instead of a custom message, we can rely on the handleEndAppointment flow

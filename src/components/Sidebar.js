@@ -7,8 +7,6 @@ import emr from "../assets/btn_EMR.svg";
 import emr_selected from "../assets/btn_EMR_selected.svg";
 import patient from "../assets/btn_patients.svg";
 import patient_selected from "../assets/btn_patients_selected.svg";
-import settings from "../assets/btn_settings.svg";
-import settings_selected from "../assets/btn_settings_selected.svg";
 import LogoutIcon from "../assets/btn_Logout.png"; // Import the Logout image
 import { Link, useNavigate } from "react-router-dom"; // Import useNavigate for programmatic navigation
 

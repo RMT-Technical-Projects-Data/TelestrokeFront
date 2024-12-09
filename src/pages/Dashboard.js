@@ -4,8 +4,6 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify"; // Import Toastify
-import { getAllAppointments  } from "../utils/auth"; // Import delete and update functions
 
 // Register required chart components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -17,14 +15,6 @@ function Dashboard() {
   const [attendedAppointments, setAttendedAppointments] = useState(0); // State to store attended appointments
   const [scheduledAppointments, setScheduledAppointments] = useState(0); // State for scheduled appointments
 
-  // Clear specific local storage items on component mount
-  useEffect(() => {
-    localStorage.removeItem("patientEMR");
-    localStorage.removeItem("emrBedSideData");
-    localStorage.removeItem("emrTelestrokeExam");
-    localStorage.removeItem("patientName");
-    localStorage.removeItem("Ended");
-  }, []);
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -162,20 +152,17 @@ function Dashboard() {
   };
 
   const pieData = {
-    labels: ["Appointments Attended", "Appointments Scheduled", "Remaining"],
+    labels: ["Appointments Attended", "Appointments Scheduled"],
     datasets: [
       {
-        label: "Appointment Stats",
-        data: [
-          attendedAppointments,
-          scheduledAppointments,
-          totalAppointments - (attendedAppointments + scheduledAppointments),
-        ], // Dynamic Remaining
-        backgroundColor: ["#36A2EB", "#FFCE56", "#4CAF50"],
-        hoverBackgroundColor: ["#36A2EB", "#FFCE56", "#4CAF50"],
+        data: [attendedAppointments, scheduledAppointments], // Only two categories
+        backgroundColor: ["#36A2EB", "#FFCE56"], // Blue and Yellow
+        hoverBackgroundColor: ["#36A2EB", "#FFCE56"],
       },
     ],
   };
+  
+
 
   return (
     <>
@@ -190,25 +177,34 @@ function Dashboard() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-10 p-10 -ml-10">
-                <div className="flex flex-col gap-8 bg-green-500 text-white p-4 rounded-md shadow-lg h-36">
-                  <h2 className="text-3xl">Total Appointments</h2>
-                  <p className="text-3xl font-bold text-right">
-                    {totalAppointments}
-                  </p>
+                <div className="flex flex-col gap-8 bg-green-500 text-white p-4 rounded-md shadow-lg h-20">
+                  <h2 className="text-3xl">Total Appointments: {totalAppointments}</h2>
+                  
                 </div>
-                <div className="flex flex-col gap-8 bg-blue-500 text-white p-4 rounded-md shadow-lg h-36">
-                  <h2 className="text-3xl">Appointments Attended</h2>
-                  <p className="text-3xl font-bold text-right">
-                    {attendedAppointments}
-                  </p>
+                <div className="flex flex-col gap-8 bg-blue-500 text-white p-4 rounded-md shadow-lg h-20">
+                  <h2 className="text-3xl">Appointments Attended: {attendedAppointments}</h2>
+                  
                 </div>
-                <div className="flex flex-col gap-8 bg-[#ECBA00] text-white p-4 rounded-md shadow-lg h-36">
-                  <h2 className="text-3xl">Appointments Scheduled</h2>
-                  <p className="text-3xl font-bold text-right">
-                    {scheduledAppointments}
-                  </p>
+                <div className="flex flex-col gap-8 bg-[#ECBA00] text-white p-4 rounded-md shadow-lg h-20">
+                  <h2 className="text-3xl">Appointments Scheduled: {scheduledAppointments}</h2>
+                 
                 </div>
               </div>
+              <div className="flex flex-col gap-5">
+              <div className="flex gap-5">
+                <Link to="/meeting">
+                  <button className="bg-blue-600 text-white px-5 py-3 rounded-md text-lg hover:bg-blue-700">
+                    Create a Meeting
+                  </button>
+                </Link>
+                <Link to="/appointment">
+                  <button className="bg-blue-600 text-white px-5 py-3 rounded-md text-lg hover:bg-blue-700">
+                    Schedule an Appointment
+                  </button>
+                </Link>
+                </div>
+                </div>
+
               <div className="flex flex-row gap-9 justify-between">
                 <div className="flex flex-col gap-7 w-1/2">
                   <h2 className="text-2xl font-bold">Upcoming Appointments:</h2>
