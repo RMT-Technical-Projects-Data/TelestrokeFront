@@ -13,7 +13,7 @@ const MeetingPage = () => {
   const [patientName, setPatientName] = useState("");
   const [patientID, setPatientID] = useState("");
   const [meetingId, setMeetingId] = useState("");
-  const [token, setToken] = useState("");
+  const [, setToken] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isMeetingCreated, setIsMeetingCreated] = useState(false);
   const [copied, setCopied] = useState(false);

@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import "../App.css";
 import {
   MeetingProvider,
@@ -16,20 +17,20 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 
-function JoinScreen({ getMeetingAndToken }) {
-  const { meetingid } = useParams();
-  const [meetingId, setMeetingId] = useState(meetingid);
+// function JoinScreen({ getMeetingAndToken }) {
+//   const { meetingid } = useParams();
+//   const [meetingId, setMeetingId] = useState(meetingid);
 
-  const onClick = async () => {
-    await getMeetingAndToken(meetingId);
-  };
+//   const onClick = async () => {
+//     await getMeetingAndToken(meetingId);
+//   };
 
-  return (
-    <div>
-      <button onClick={onClick}>Join</button>
-    </div>
-  );
-}
+//   return (
+//     <div>
+//       <button onClick={onClick}>Join</button>
+//     </div>
+//   );
+// }
 
 function ParticipantView(props) {
   const micRef = useRef(null);
@@ -111,7 +112,6 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
   };
 
   const handleEndAppointment = async (shouldReload = false) => {
-    // Show a confirmation toast
     const confirmToast = toast(
       <div>
         <p className="mb-4 text-lg font-semibold">Are you sure you want to end the appointment?</p>
@@ -119,19 +119,13 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
           <button
             className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
             onClick={async () => {
-              // Proceed with the logic if the user confirms
               localStorage.setItem("Ended", JSON.stringify({ meetingId, patientId }));
 
               try {
-                // Make API call to update the appointment status
-                console.log("Making API request to update appointment...");
-                const response = await axios.put("http://localhost:5000/api/appointments", {
+                const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/appointments`, {
                   meetingId,
-                  ID: patientId, // Pass patientId as ID
+                  ID: patientId,
                 });
-
-                // Log the response to see the result from the backend
-                console.log("Response from API:", response.data);
 
                 if (response.data.success) {
                   console.log("Appointment status updated to 'Complete'.");
@@ -142,19 +136,13 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
                 console.error("Error updating appointment status:", error.message);
               }
 
-              // Delay calling handleLeave to ensure the status update completes
               setTimeout(() => {
-                console.log("Calling leave handler...");
                 handleLeave();
-              }, 500); // Delay to ensure status update is done (adjust time as needed)
+              }, 500);
 
-              // Remove "Ended" from localStorage
               localStorage.removeItem("Ended");
-
-              // Close the toast after the operation is completed
               toast.dismiss(confirmToast);
 
-              // Reload if the user confirms and it's required
               if (shouldReload) {
                 window.location.reload();
               }
@@ -165,7 +153,6 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
           <button
             className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
             onClick={() => {
-              // Close the toast if the user cancels
               toast.dismiss(confirmToast);
             }}
           >
@@ -183,31 +170,70 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
     );
   };
 
-  // Function to handle page reload or navigation
   const handleBeforeUnload = (event) => {
-    // Prevent the default reload behavior
     event.preventDefault();
-
-    // Call handleEndAppointment to ask the user for confirmation
-    // handleEndAppointment(true);
-
-    // Modern browsers may ignore custom messages in `event.returnValue`
-    // So instead of a custom message, we can rely on the handleEndAppointment flow
-    event.returnValue = ''; // Optional: Can be kept to trigger the default browser reload warning (may be ignored in some browsers)
+    event.returnValue = '';
   };
 
-  // Add event listener for beforeunload
-  useEffect(() => {
-    window.addEventListener('beforeunload', handleBeforeUnload);
+  const handlePopState = useCallback((event) => {
+    event.preventDefault();
+  
+    const confirmToast = toast(
+      <div>
+        <p className="text-sm text-gray-600">Any unsaved changes will be lost.</p>
+        <div className="flex space-x-4 mt-4">
+          <button
+            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+            onClick={() => {
+              toast.dismiss(confirmToast);
+              setTimeout(() => {
+                handleLeave();
+              }, 500); // Trigger end appointment logic if user confirms
+            }}
+          >
+            Yes
+          </button>
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+            onClick={() => {
+              toast.dismiss(confirmToast);
+              // Push the current state back to history to prevent navigation
+              window.history.pushState(null, '', window.location.href);
+            }}
+          >
+            No
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+        theme: "light",
+      }
+    );
+  }, [handleLeave]); 
+  
 
-    // Cleanup the event listener when component unmounts
+  useEffect(() => {
+    // Add event listeners for beforeunload and popstate
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+  
+    // Push the current state to history to track it
+    window.history.pushState(null, '', window.location.href);
+  
     return () => {
+      // Cleanup event listeners on unmount
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
     };
-  }, []); // Empty dependency array to run once on mount
+  }, [handlePopState]); // useCallback ensures handlePopState is stable
+  
 
   return (
-    <div className="controls-bar -mt-12.1">
+    <div className="controls-bar -mt-10">
       <Button onClick={() => handleEndAppointment(false)} className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600">
         End Appointment
       </Button>
@@ -216,12 +242,13 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
           src={localMicOn ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/microphone.png" : "https://img.icons8.com/ios-glyphs/50/FFFFFF/no-microphone.png"}
           width={25}
           height={25}
+          alt={localMicOn ? "Microphone on" : "Microphone off"} // Added alt text for accessibility
         />
       </Button>
       <Button onClick={() => handleToggleWebcam()}>Web Cam</Button>
     </div>
   );
-}
+}  
 
 function MeetingView(props) {
   const [joined, setJoined] = useState(null);
@@ -252,6 +279,7 @@ function MeetingView(props) {
       handleLeaveAndNavigate();
     };
   }, []);
+  
 
   return (
     <div className="container">
@@ -274,13 +302,20 @@ function MeetingView(props) {
           />
         </div>
       ) : joined && joined === "JOINING" ? (
-        <div className="ml-[50%] mt-[25%]"><img src={loading} width={50} height={50}></img></div>
+        <div className="ml-[50%] mt-[25%]">
+          <img 
+            src={loading} 
+            width={50} 
+            height={50} 
+            alt="Loading..." // Added alt text for accessibility
+          />
+        </div>
       ) : (
         <Button onClick={joinMeeting} className="ml-[47%] mt-[20%]">Join</Button>
       )}
     </div>
   );
-}
+}  
 
 function VIDEOSDK(props) {
   const { meetingid, patientid } = useParams(); // Extract patient ID from the URL

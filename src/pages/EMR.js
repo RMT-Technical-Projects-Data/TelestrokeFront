@@ -5,9 +5,9 @@ import axios from "axios";
 // import client from "../api/client"; // Import your axios client
 import VIDEOSDK from "../components/VideoSDK";
 import { useParams } from "react-router-dom";
-import EMR_PatientInfo from "../components/EMR_PatientInfo";
-import EMR_BedSide from "../components/EMR_BedSide";
-import EMR_TelestrokeExam from "../components/EMR_TelestrokeExam";
+import EMRPatientInfo from "../components/EMR_PatientInfo";
+import EMRBedSide from "../components/EMR_BedSide";
+import EMRTelestrokeExam from "../components/EMR_TelestrokeExam";
 import QuadrantTracking from "../components/QuadrantTracking";
 import StimulusVideoController from "../components/StimulusVideoController";
 import { toast } from 'react-toastify';
@@ -59,12 +59,12 @@ const EMRpage = () => {
 
 
   const [tab, setTab] = useState(0);
-  const videoSpeedArr = ["Slow", "Medium", "High"];
+  // const videoSpeedArr = ["Slow", "Medium", "High"];
 
-  const handleRadioChange = (event) => {
-    setSelectedEye(event.target.value);
-    updateSetting("eye_camera_control", event.target.value);
-  };
+  // const handleRadioChange = (event) => {
+  //   setSelectedEye(event.target.value);
+  //   updateSetting("eye_camera_control", event.target.value);
+  // };
 
 
 
@@ -96,7 +96,7 @@ const EMRpage = () => {
         visualActivityOS: patientEMR.VisualActivityOS,
         neuroFindings: patientEMR.RelNeurologicalFinds,
         hasAphasia: patientEMR.HasAphasia ? 'Yes' : 'No',
-        aphasiaDescription: patientEMR.AphasiaText,
+        aphasiaDescription: patientEMR.AphasiaText || null,  // This allows "" or null
       };
   
       const bedsideExamData = {
@@ -170,7 +170,7 @@ const EMRpage = () => {
   useEffect(() => {
     console.log(settings);
     axios
-      .post("http://localhost:5000/videoController-webhook", settings)
+      .post(`${process.env.REACT_APP_BACKEND_URL}/videoController-webhook`, settings)
       .then((response) => {
         console.log("Command sent:", response.data);
       })
@@ -188,7 +188,7 @@ const EMRpage = () => {
   
       <div className="flex flex-col h-full bg-slate-50 py-6 ml-32"> {/* Added ml-4 to move everything to the right */}
         {/* Main Content Area */}
-        <div className="flex flex-col h-full mt-6 gap-6 p-2">
+        <div className="flex flex-col h-full">
           {meetingid ? (
             <>
               <div className="flex flex-row justify-between gap-8 py-5 px-3 h-[720px]">
@@ -318,15 +318,16 @@ const EMRpage = () => {
                 </button>
               </div>
   
-              {tab === 0 && <EMR_PatientInfo />}
-              {tab === 1 && <EMR_BedSide />}
-              {tab === 2 && <EMR_TelestrokeExam />}
+              {tab === 0 && <EMRPatientInfo />}
+              {tab === 1 && <EMRBedSide />}
+              {tab === 2 && <EMRTelestrokeExam />}
+
             </>
           )}
   
           {/* Conditionally render buttons based on meetingJoined state */}
           {meetingJoined && (
-  <div className="flex flex-row-reverse gap-8 mx-8">
+  <div className="flex flex-row-reverse gap-8 mx-8 mt-10">
     <Button
       onClick={handleSave}
       className="scale-110 rounded-lg px-6 py-3"  // Increased size, rounded, and added padding

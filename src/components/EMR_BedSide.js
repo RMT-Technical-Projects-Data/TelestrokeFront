@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -18,7 +18,7 @@ function EMR_BedSide() {
 
  
 
-  const [savedData, setSavedData] = useState(null);
+  const [, setSavedData] = useState(null);
 
   const handleChange = (e) => {
     const { name, type, value, checked } = e.target;
@@ -68,8 +68,8 @@ function EMR_BedSide() {
   
 
   return (
-    <div className="flex flex-col gap-12">
-      <div className="flex flex-row gap-16 justify-between">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-row gap-8 justify-between">
         <div className="basis-2/4">
           <p className="font-bold text-lg inline mr-4">Smooth Pursuit and Saccades</p>
           <input
@@ -152,7 +152,7 @@ function EMR_BedSide() {
           <div>
             <div className="mt-2">
               <div className="flex items-center">
-                <span className="w-16">RUQ</span>
+              <span className="w-16" style={{ fontWeight: 'bold' }}>RUQ:</span>
                 <input
                   type="radio"
                   name="od-ruq"
@@ -171,7 +171,7 @@ function EMR_BedSide() {
                   className="mr-2"
                 />
                 <label>Fail</label>
-                <span className="w-16 ml-24">RLQ</span>
+                <span className="w-16 ml-24" style={{ fontWeight: 'bold' }}>RLQ:</span>
                 <input
                   type="radio"
                   name="od-rlq"
@@ -192,7 +192,7 @@ function EMR_BedSide() {
                 <label>Fail</label>
               </div>
               <div className="flex items-center mt-2">
-                <span className="w-16">LUQ</span>
+                <span className="w-16" style={{ fontWeight: 'bold' }}>LUQ:</span>
                 <input
                   type="radio"
                   name="od-luq"
@@ -211,7 +211,7 @@ function EMR_BedSide() {
                   className="mr-2"
                 />
                 <label>Fail</label>
-                <span className="w-16 ml-24">LLQ</span>
+                <span className="w-16 ml-24" style={{ fontWeight: 'bold' }}>LLQ:</span>
                 <input
                   type="radio"
                   name="od-llq"
@@ -235,7 +235,7 @@ function EMR_BedSide() {
           </div>
         </div>
       </div>
-      <div className="flex flex-row gap-16 justify-between">
+      <div className="flex flex-row gap-8 justify-between">
         <div className="basis-2/4">
           <p className="font-bold text-lg inline mr-4">Extraocular Movement</p>
           <input
@@ -264,7 +264,7 @@ function EMR_BedSide() {
           />
         </div>
         <div className="basis-1/4">
-          <p>Nystagmus Degree</p>
+        <span className="w-16"style={{ fontWeight: 'bold' }}>Nystagmus Degree</span>
           <div>
             <input
               className="m-2"
@@ -300,7 +300,7 @@ function EMR_BedSide() {
           </div>
         </div>
         <div className="basis-1/4">
-          <p>Exam Tolerated</p>
+        <span className="w-16"style={{ fontWeight: 'bold' }}>Exam Tolerated</span>
           <div>
             <input
               className="m-2"
@@ -329,7 +329,7 @@ function EMR_BedSide() {
           <div>
             <div className="mt-2">
               <div className="flex items-center">
-                <span className="w-16">RUQ</span>
+                <span className="w-16" style={{ fontWeight: 'bold' }}>RUQ:</span>
                 <input
                   type="radio"
                   name="os-ruq"
@@ -348,7 +348,7 @@ function EMR_BedSide() {
                   className="mr-2"
                 />
                 <label>Fail</label>
-                <span className="w-16 ml-24">RLQ</span>
+                <span className="w-16 ml-24" style={{ fontWeight: 'bold' }}>RLQ:</span>
                 <input
                   type="radio"
                   name="os-rlq"
@@ -369,7 +369,7 @@ function EMR_BedSide() {
                 <label>Fail</label>
               </div>
               <div className="flex items-center mt-2">
-                <span className="w-16">LUQ</span>
+                <span className="w-16" style={{ fontWeight: 'bold' }}>LUQ:</span>
                 <input
                   type="radio"
                   name="os-luq"
@@ -388,7 +388,7 @@ function EMR_BedSide() {
                   className="mr-2"
                 />
                 <label>Fail</label>
-                <span className="w-16 ml-24">LLQ</span>
+                <span className="w-16 ml-24" style={{ fontWeight: 'bold' }}>LLQ:</span>
                 <input
                   type="radio"
                   name="os-llq"
@@ -412,7 +412,7 @@ function EMR_BedSide() {
           </div>
         </div>
       </div>
-      <button className="mt-4 bg-blue-500 text-white px-2 py-1 rounded w-24 text-sm" onClick={handleSet}>
+      <button className="mt-2 bg-blue-500 text-white px-2 py-1 rounded w-24 text-sm" onClick={handleSet}>
         Set
       </button>
       <ToastContainer />

@@ -1,5 +1,5 @@
 import React from "react";
-import { FaPlay, FaPause } from "react-icons/fa"; // Import icons from react-icons
+// import { FaPlay, FaPause } from "react-icons/fa"; // Import icons from react-icons
 
 const Button = (props) => {
   console.log('Button prop <---------------->',props.className);

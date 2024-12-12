@@ -29,7 +29,7 @@ const UserManagement = () => {
           return;
         }
 
-        const response = await axios.get("http://localhost:5000/api/users/get", {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/get`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -70,12 +70,12 @@ const UserManagement = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:5000/api/users/add",
+        `${process.env.REACT_APP_BACKEND_URL}/api/users/add`,
         { username: newUser.username, password: newUser.password },
         { headers: { Authorization: `Bearer ${token}` } }
       );
   
-      const response = await axios.get("http://localhost:5000/api/users/get", {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/get`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
@@ -128,12 +128,12 @@ const UserManagement = () => {
       }
   
       await axios.put(
-        `http://localhost:5000/api/users/edit`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/users/edit`,
         { username: editingUser.username, newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );
   
-      const response = await axios.get("http://localhost:5000/api/users/get", {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/get`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);

@@ -3,10 +3,9 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function EMR_PatientInfo() {
-  // Initial state for patient EMR with empty fields
   const [patientEMR, setPatientEMR] = useState({
-    Name: "", // Name will be updated from localStorage if available
-    Doctor: "", // Doctor field to be autofilled from localStorage
+    Name: "",
+    Doctor: "",
     PatientDOB: "",
     PatientSex: "Male",
     ExamDate: "",
@@ -17,16 +16,15 @@ export default function EMR_PatientInfo() {
     AphasiaText: ""
   });
 
-  // useEffect to set patient name and doctor from localStorage on page load
   useEffect(() => {
     const storedName = localStorage.getItem("patientName");
     const storedDoctor = localStorage.getItem("Doctor");
     setPatientEMR((prevState) => ({
       ...prevState,
-      Name: storedName || "", // Set the patient name in state
-      Doctor: storedDoctor || "" // Set the doctor in state
+      Name: storedName || "",
+      Doctor: storedDoctor || ""
     }));
-  }, []); // Empty dependency array to run only on mount
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -64,148 +62,175 @@ export default function EMR_PatientInfo() {
   };
 
   const savePatientInfo = () => {
-    // Validation check for empty fields
     for (const key in patientEMR) {
-      if (patientEMR[key] === "") {
+      // Skip the 'AphasiaText' field from validation
+      if (key !== "AphasiaText" && patientEMR[key] === "") {
         toast.error(`Please fill in all fields. Missing field: ${key}`);
         return;
       }
     }
-
     setPatientEMR(patientEMR);
-    localStorage.setItem("patientEMR", JSON.stringify(patientEMR)); // Save to local storage
+    localStorage.setItem("patientEMR", JSON.stringify(patientEMR));
     toast.success("Patient information set.");
   };
+  
+  
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-row gap-20">
-  <div>
-    <p className="font-bold text-lg my-3">Name</p>
-    <input
-      className="border-t-0 border-x-0 border-b-2"
-      type="text"
-      name="Name"
-      value={patientEMR.Name}
-      onChange={handleChange}
-      readOnly // Make the name field read-only
-    />
-  </div>
-  <div>
-    <p className="font-bold text-lg my-3">Doctor</p>
-    <input
-      className="border-t-0 border-x-0 border-b-2"
-      type="text"
-      name="Doctor"
-      value={patientEMR.Doctor}
-      onChange={handleChange}
-      readOnly // Make the doctor field read-only
-    />
-  </div>
-  <div>
-    <p className="font-bold text-lg my-3">Patient D.O.B</p>
-    <input
-      className="border-t-0 border-x-0 border-b-2"
-      type="date"
-      name="PatientDOB"
-      value={patientEMR.PatientDOB}
-      onChange={handleChange}
-    />
-  </div>
-  <div>
-    <p className="font-bold text-lg my-3">Patient Sex</p>
-    <select
-      className="border-t-0 border-x-0 border-b-2"
-      name="PatientSex"
-      value={patientEMR.PatientSex}
-      onChange={handleChange}
-    >
-      <option>Male</option>
-      <option>Female</option>
-      <option>Other</option>
-    </select>
-  </div>
-  <div>
-    <p className="font-bold text-lg my-3">Exam Date</p>
-    <input
-      className="border-t-0 border-x-0 border-b-2"
-      type="date"
-      name="ExamDate"
-      value={patientEMR.ExamDate}
-      onChange={handleChange}
-    />
-  </div>
-  <div className="flex flex-col gap-2">
-    <p className="font-bold text-lg my-3">Visual Activity</p>
-    <div className="flex flex-col gap-4">
-      <div>
-        <label className="font-bold text-lg mr-4">OD</label>
-        <input
-          className="border-t-0 border-x-0 border-b-2"
-          type="text"
-          name="VisualActivityOD"
-          value={patientEMR.VisualActivityOD}
-          onChange={handleChange}
-        />
-      </div>
-      <div>
-        <label className="font-bold text-lg mr-4">OS</label>
-        <input
-          className="border-t-0 border-x-0 border-b-2"
-          type="text"
-          name="VisualActivityOS"
-          value={patientEMR.VisualActivityOS}
-          onChange={handleChange}
-        />
-      </div>
-    </div>
-  </div>
-</div>
-
-      <div className="flex flex-row gap-20 mt-10">
+    <div className="flex flex-wrap gap-4">
+      {/* Name, Doctor, D.O.B, and Sex on a single line */}
+      <div className="flex flex-row gap-4 items-center">
+           <p className="font-bold text-lg">Patient</p> {/* Title on the left */}
         <div>
-          <p className="font-bold text-lg">Relevant Neurological Findings</p>
+          <input
+            className="border-t-0 border-x-0 border-b-2"
+            type="text"
+            name="Name"
+            value={patientEMR.Name}
+            onChange={handleChange}
+            readOnly
+            placeholder="Name"
+          />
+        </div>
+        <div className="flex flex-row gap-4 items-center">
+           <p className="font-bold text-lg">Doctor</p> {/* Title on the left */}
+        
+        <div>
+          <input
+            className="border-t-0 border-x-0 border-b-2"
+            type="text"
+            name="Doctor"
+            value={patientEMR.Doctor}
+            onChange={handleChange}
+            readOnly
+            placeholder="Doctor"
+          />
+        </div>
+        </div>
+        <div className="flex flex-row gap-4 items-center">
+           <p className="font-bold text-lg">DOB</p> {/* Title on the left */}
+        <div>
+          <input
+            className="border-t-0 border-x-0 border-b-2"
+            type="date"
+            name="PatientDOB"
+            value={patientEMR.PatientDOB}
+            onChange={handleChange}
+            placeholder="D.O.B"
+          />
+        </div>
+        </div>
+        <div className="flex flex-row gap-4 items-center">
+           <p className="font-bold text-lg">Gender</p> {/* Title on the left */}
+        <div>
+          <select
+            className="border-t-0 border-x-0 border-b-2"
+            name="PatientSex"
+            value={patientEMR.PatientSex}
+            onChange={handleChange}
+          >
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      </div>
+
+      {/* Exam Date, Visual Activity OD/OS on a single line */}
+        <div className="flex flex-row gap-4 items-center">
+        <p className="font-bold text-lg">Exam Date</p> {/* Title on the left */}
+        <input
+          className="border-t-0 border-x-0 border-b-2"
+          type="date"
+          name="ExamDate"
+          value={patientEMR.ExamDate}
+          onChange={handleChange}
+          placeholder="Exam Date"
+        />
+
+
+<div className="flex flex-row gap-4 items-center">
+  <p className="font-bold text-lg">Visual</p> {/* Title on the left */}
+  <div className="flex flex-row gap-2">
+    <div>
+      <input
+        className="border-t-0 border-x-0 border-b-2"
+        type="text"
+        name="VisualActivityOD"
+        value={patientEMR.VisualActivityOD}
+        onChange={handleChange}
+        placeholder="OD"
+      />
+    </div>
+    <div>
+      <input
+        className="border-t-0 border-x-0 border-b-2"
+        type="text"
+        name="VisualActivityOS"
+        value={patientEMR.VisualActivityOS}
+        onChange={handleChange}
+        placeholder="OS"
+      />
+          </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Relevant Neurological Findings and Aphasia on a single line */}
+      <div className="flex flex-row gap-4">
+        <div>
           <textarea
             className="h-20 w-60"
             name="RelNeurologicalFinds"
             value={patientEMR.RelNeurologicalFinds}
             onChange={handleChange}
+            placeholder="Neurological Findings"
           />
         </div>
-        <div>
-          <p className="font-bold text-lg inline mr-8">Has Aphasia</p>
-          <input
-            className="inline m-2"
-            type="radio"
-            value="true"
-            name="HasAphasia"
-            checked={patientEMR.HasAphasia === true}
-            onChange={handleChange}
-          />
-          <label>Yes</label>
-          <input
-            className="inline m-2"
-            type="radio"
-            value="false"
-            name="HasAphasia"
-            checked={patientEMR.HasAphasia === false}
-            onChange={handleChange}
-          />
-          <label>No</label>
+        <div className="flex flex-row gap-4">
+          <div className="flex items-center">
+           
+          </div>
           <textarea
-            className="h-20 block w-60"
+            className="h-20 w-60"
             name="AphasiaText"
             value={patientEMR.AphasiaText}
             onChange={handleChange}
+            placeholder="Aphasia Text"
+            
           />
+          <div className="flex items-center mt-4"> {/* Added margin-top here */}
+      <input
+        className="inline m-2"
+        type="radio"
+        value="true"
+        name="HasAphasia"
+        checked={patientEMR.HasAphasia === true}
+        onChange={handleChange}
+      />
+      <label>Yes</label>
+      <input
+        className="inline m-2"
+        type="radio"
+        value="false"
+        name="HasAphasia"
+        checked={patientEMR.HasAphasia === false}
+        onChange={handleChange}
+      />
+      <label>No</label>
+    </div>
         </div>
       </div>
+
+      {/* Save button */}
       <button
-        onClick={savePatientInfo}
-        className="mt-4 bg-blue-500 text-white px-2 py-1 rounded w-24 text-sm"
-      >
-        Set
-      </button>
+  onClick={savePatientInfo}
+  className="mt-2 bg-blue-500 text-white px-2 py-1 rounded w-24 h-14 text-sm ml-auto"
+>
+  Set
+</button>
+
 
       {/* ToastContainer to display the toast notifications */}
       <ToastContainer />

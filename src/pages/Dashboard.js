@@ -20,7 +20,7 @@ function Dashboard() {
     const fetchAppointments = async () => {
       try {
         const Doctor = localStorage.getItem("Doctor"); // Retrieve the Doctor from local storage
-        const url = Doctor ? `http://localhost:5000/api/appointments?Doctor=${Doctor}` : "http://localhost:5000/api/appointments";
+        const url = Doctor ? `${process.env.REACT_APP_BACKEND_URL}/api/appointments?Doctor=${Doctor}` : `${process.env.REACT_APP_BACKEND_URL}/api/appointments`;
   
         const response = await fetch(url);
         if (!response.ok) {

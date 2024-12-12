@@ -13,7 +13,7 @@ const AppointmentTable = ({ addAppointment }) => {
   const [currentAppointment, setCurrentAppointment] = useState({});
   const [updatedDate, setUpdatedDate] = useState('');
   const [updatedTime, setUpdatedTime] = useState('');
-  const [updatedCheckupStatus, setUpdatedCheckupStatus] = useState('');
+  const [updatedCheckupStatus] = useState('');
 
   useEffect(() => {
     const fetchAppointments = async () => {
