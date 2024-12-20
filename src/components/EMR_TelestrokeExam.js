@@ -96,6 +96,7 @@ function EMR_TelestrokeExam() {
             className="h-20 block w-[100%]"
             name="smoothPursuitAndSaccadesDescription"
             value={formData1.smoothPursuitAndSaccadesDescription}
+            maxLength={50} // Limit text to 40 characters
             onChange={handleChange}
           />
         </div>
@@ -262,6 +263,7 @@ function EMR_TelestrokeExam() {
             className="h-20 block w-[100%]"
             name="extraocularMovementDescription"
             value={formData1.extraocularMovementDescription}
+            maxLength={50} // Limit text to 40 characters
             onChange={handleChange}
           />
         </div>

@@ -3,3 +3,7 @@ build
 .gitignore
 *.log
 .env
+.git
+*.cache
+*.DS_Store
+coverage

@@ -161,6 +161,7 @@ export default function EMR_PatientInfo() {
         value={patientEMR.VisualActivityOD}
         onChange={handleChange}
         placeholder="OD"
+        maxLength={30} // Limit text to 40 characters
       />
     </div>
     <div>
@@ -171,11 +172,13 @@ export default function EMR_PatientInfo() {
         value={patientEMR.VisualActivityOS}
         onChange={handleChange}
         placeholder="OS"
+        maxLength={30} // Limit text to 40 characters
       />
-          </div>
-          </div>
-        </div>
-      </div>
+    </div>
+  </div>
+</div>
+</div>
+
 
       {/* Relevant Neurological Findings and Aphasia on a single line */}
       <div className="flex flex-row gap-4">
@@ -186,6 +189,7 @@ export default function EMR_PatientInfo() {
             value={patientEMR.RelNeurologicalFinds}
             onChange={handleChange}
             placeholder="Neurological Findings"
+            maxLength={50} // Limit text to 40 characters
           />
         </div>
         <div className="flex flex-row gap-4">
@@ -198,6 +202,7 @@ export default function EMR_PatientInfo() {
             value={patientEMR.AphasiaText}
             onChange={handleChange}
             placeholder="Aphasia Text"
+            maxLength={50} // Limit text to 40 characters
             
           />
           <div className="flex items-center mt-4"> {/* Added margin-top here */}

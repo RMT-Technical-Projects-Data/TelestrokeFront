@@ -153,6 +153,10 @@ const EMRpage = () => {
       } else {
         // If the response is successful, show a success toast
         toast.success("Data saved successfully!");
+        localStorage.removeItem("patientEMR");
+        localStorage.removeItem("emrBedSideData");
+        localStorage.removeItem("emrTelestrokeExam");
+
         
        
       }

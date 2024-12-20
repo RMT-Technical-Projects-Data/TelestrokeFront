@@ -51,16 +51,32 @@ const UserManagement = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
-
+  
   const handleCreateUser = async () => {
     setCreateError("");
   
-    // Check if the password is at least 6 characters long
-    if (newUser.password.length < 6) {
-      setCreateError("Password must be at least 6 characters long.");
+    // Check if the password length is between 8 and 16 characters
+    if (newUser.password.length < 8 || newUser.password.length > 16) {
+      setCreateError("Password must be between 8 and 16 characters long.");
       return;
     }
   
+    // Check if the password contains at least one special character
+    const specialCharacterRegex = /[!@#$%^&*(),.?":{}|<>]/;
+    if (!specialCharacterRegex.test(newUser.password)) {
+      setCreateError("Password must contain at least one special character.");
+      return;
+    }
+  
+    // Check if the username is at least 3 characters long, less than or equal to 20 characters, 
+    // and contains only alphabets and spaces
+    const nameRegex = /^[A-Za-z\s]+$/;  // Allow alphabets and spaces
+    if (newUser.username.length < 3 || newUser.username.length > 20 || !nameRegex.test(newUser.username)) {
+      setCreateError("Username must be between 3 and 20 characters and contain only alphabets and spaces.");
+      return;
+    }
+  
+    // Check if the username already exists
     const usernameExists = users.some((user) => user.username === newUser.username);
     if (usernameExists) {
       setCreateError("Username already exists. Please choose a different one.");
@@ -101,19 +117,28 @@ const UserManagement = () => {
     setNewPassword(""); // Reset password field
     setConfirmPassword(""); // Reset confirm password field
   };
-
+  
   const handlePasswordChange = async () => {
-    // Check if the new password is at least 6 characters long
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters long.");
+    // Check if the new password is between 8 and 16 characters
+    if (newPassword.length < 8 || newPassword.length > 16) {
+      toast.error("Password must be between 8 and 16 characters long.");
       return;
     }
   
+    // Check if the password contains at least one special character
+    const specialCharacterRegex = /[!@#$%^&*(),.?":{}|<>]/;
+    if (!specialCharacterRegex.test(newPassword)) {
+      toast.error("Password must contain at least one special character.");
+      return;
+    }
+  
+    // Check if both password fields are provided
     if (!newPassword || !confirmPassword) {
       toast.error("Both password fields are required.");
       return;
     }
   
+    // Check if the passwords match
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match.");
       return;
@@ -189,41 +214,45 @@ const UserManagement = () => {
       </button>
 
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-bold mb-4">Add New User</h2>
-            <div className="flex flex-col gap-2">
-              <input
-                type="text"
-                placeholder="Username"
-                value={newUser.username}
-                onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                className="border p-2 rounded"
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={newUser.password}
-                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                className="border p-2 rounded"
-              />
-              <button
-                onClick={handleCreateUser}
-                className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
-              >
-                Create User
-              </button>
-              {createError && <p className="text-red-600">{createError}</p>}
-            </div>
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="mt-4 py-2 px-4 bg-gray-400 text-white rounded-lg hover:bg-gray-300"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+      <h2 className="text-xl font-bold mb-4">Add New User</h2>
+      <div className="flex flex-col gap-2">
+        <input
+          type="text"
+          placeholder="Username"
+          value={newUser.username}
+          onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+          className="border p-2 rounded"
+          minLength={3}  // Username must be at least 3 characters
+          maxLength={30}  // Restrict username to 20 characters
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={newUser.password}
+          onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+          className="border p-2 rounded"
+          maxLength={16}  // Restrict password to 16 characters
+        />
+        <button
+          onClick={handleCreateUser}
+          className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
+        >
+          Create User
+        </button>
+        {createError && <p className="text-red-600">{createError}</p>}
+      </div>
+      <button
+        onClick={() => setIsModalOpen(false)}
+        className="mt-4 py-2 px-4 bg-gray-400 text-white rounded-lg hover:bg-gray-300"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+)}
+
 
       <table className="min-w-full bg-white border border-gray-300">
         <thead>

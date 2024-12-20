@@ -13,6 +13,8 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault(); // Prevent default form submission behavior
 
+    console.log(process.env.REACT_APP_BACKEND_URL);
+
     try {
       // Call the backend API for login
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/login`, {

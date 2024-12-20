@@ -4,7 +4,7 @@ import { ToastContainer, toast } from "react-toastify"; // Import Toastify
 import "react-toastify/dist/ReactToastify.css"; // Import Toastify CSS
 // import client from "../api/client"; // Import your axios client
 import { FaTrash, FaEdit } from "react-icons/fa"; // Import trash and edit icons from react-icons
-import { deleteAppointment, UpdateAppointment, getAllAppointments  } from "../utils/auth"; // Import delete and update functions
+import { deleteAppointment, UpdateAppointment, getAllAppointments } from "../utils/auth"; // Import delete and update functions
 
 const AppointmentTable = ({ addAppointment }) => {
   const [appointments_data, setAppointmentsData] = useState([]);
@@ -14,16 +14,17 @@ const AppointmentTable = ({ addAppointment }) => {
   const [updatedDate, setUpdatedDate] = useState('');
   const [updatedTime, setUpdatedTime] = useState('');
   const [updatedCheckupStatus] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // State for search query
 
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
         // Get the doctor's name from localStorage
-        const Doctor = localStorage.getItem('Doctor');  // Assuming 'Doctor' is stored in localStorage
-        
+        const Doctor = localStorage.getItem('Doctor'); // Assuming 'Doctor' is stored in localStorage
+
         // Call the getAllAppointments function with the Doctor parameter
         const appointmentsData = await getAllAppointments(Doctor);
-        
+
         // Set the appointments data in state
         setAppointmentsData(appointmentsData);
       } catch (error) {
@@ -31,9 +32,9 @@ const AppointmentTable = ({ addAppointment }) => {
         toast.error("Failed to load appointments!");
       }
     };
-  
+
     fetchAppointments();
-  }, []);  // Empty dependency array ensures this runs on component mount
+  }, []); // Empty dependency array ensures this runs on component mount
   
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -137,6 +138,17 @@ const AppointmentTable = ({ addAppointment }) => {
     toast.info(`Joining appointment with ${patientName}`);
   };
 
+  // Function to handle search input
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value); // Update search query state
+  };
+
+  // Filter appointments_data based on the search query (Patient ID or Patient Name)
+  const filteredAppointmentsData = appointments_data.filter((appointment) =>
+    appointment?.ID?.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
+    appointment?.Name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="w-full">
       {errorMessage && <div className="text-red-500">{errorMessage}</div>}
@@ -149,6 +161,16 @@ const AppointmentTable = ({ addAppointment }) => {
         >
           Add Appointment
         </button>
+      </div>
+      {/* Search Bar Section */}
+      <div className="mb-6">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={handleSearchChange}
+          placeholder="Search by Patient ID or Name"
+          className="p-2 w-1/3 border border-gray-300 rounded"
+        />
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ minWidth: '1275px' }} className="bg-white border border-gray-200">
@@ -164,7 +186,7 @@ const AppointmentTable = ({ addAppointment }) => {
             </tr>
           </thead>
           <tbody>
-            {appointments_data.map((appointment) => (
+            {filteredAppointmentsData.map((appointment) => (
               <tr key={appointment?.ID ?? Math.random()}>
                 <td className="border px-4 py-2 text-center">{String(appointment?.ID ?? '00000').padStart(5, '0')}</td>
                 <td className="border px-4 py-2 text-center">{appointment?.Name ?? ''}</td>
@@ -182,13 +204,13 @@ const AppointmentTable = ({ addAppointment }) => {
                   </Link>
                 </td>
                 <td className="border px-4 py-2 text-center">
-                  <button 
+                  <button
                     onClick={() => openEditModal(appointment)}
                     className="text-blue-600 mr-2"
                   >
                     <FaEdit />
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(appointment?.ID)}
                     className="text-red-600"
                   >
@@ -200,6 +222,7 @@ const AppointmentTable = ({ addAppointment }) => {
           </tbody>
         </table>
       </div>
+
 
       {isEditing && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">

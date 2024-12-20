@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
 import { AppointmentFormSubmit } from "../utils/auth";
 import { getAllAppointments } from "../utils/auth";
 import { getToken, createMeeting } from "../API";
 import { toast, ToastContainer } from "react-toastify"; // Import Toastify
 
 const AppointmentForm = ({ close }) => {
-  // const navigate = useNavigate();
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCancelEnabled, setIsCancelEnabled] = useState(true);
   const [newAppointment, setNewAppointment] = useState({
     Name: "",
     ID: "",
@@ -43,9 +42,29 @@ const AppointmentForm = ({ close }) => {
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return ''; // Handle invalid dates
+    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    return date.toLocaleDateString(undefined, options);
+  };
+
+  const formatTime = (time) => {
+    if (!time) return '';
+    const [hour, minute] = time.split(':') || [];
+    if (!hour || !minute) return '';
+    const hourNum = parseInt(hour, 10);
+    const isPM = hourNum >= 12;
+    const formattedHour = hourNum % 12 || 12;
+    const amPm = isPM ? 'PM' : 'AM';
+    return `${formattedHour}:${minute} ${amPm}`;
+  };
+
   const generateAppointmentID = async () => {
     try {
-      const appointments = await getAllAppointments();
+      const doctor = localStorage.getItem("Doctor");
+      const appointments = await getAllAppointments(doctor);
       let maxID = 0;
 
       if (appointments && appointments.length > 0) {
@@ -60,51 +79,102 @@ const AppointmentForm = ({ close }) => {
     }
   };
 
+  const checkForClashes = async () => {
+    try {
+      const doctor = localStorage.getItem("Doctor");
+      const appointments = await getAllAppointments(doctor);
+
+      // Format the appointment time and date of the new appointment
+      const appointmentDate = newAppointment.AppointmentDate;
+      const appointmentTime = newAppointment.AppointmentTime;
+
+      // Loop through existing appointments to check for a time clash
+      for (const appt of appointments) {
+        const existingDate = appt.AppointmentDate; // e.g., "2024-12-18T00:00:00.000Z"
+        const existingTime = appt.AppointmentTime; // e.g., "08:30"
+
+        const formattedExistingDate = formatDate(existingDate); 
+        const formattedExistingTime = formatTime(existingTime);
+
+        const formattedNewDate = formatDate(appointmentDate);
+        const formattedNewTime = formatTime(appointmentTime);
+
+        if (formattedExistingDate === formattedNewDate && formattedExistingTime === formattedNewTime) {
+          toast.error("Appointment time clashes with an existing appointment.");
+          return false; // Conflict found
+        }
+      }
+
+      return true; // No conflicts
+    } catch (error) {
+      console.error("Error checking for conflicts:", error);
+      toast.error("Error checking for appointment clashes.");
+      return false;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setIsCancelEnabled(false);
+
+    const isClashFree = await checkForClashes();
+    if (!isClashFree) {
+      setIsSubmitting(false);
+      setIsCancelEnabled(true);
+      return;
+    }
+
     try {
       const token = await getToken();
       if (!token) {
-        toast.error("Failed to generate token. Please try again."); // Toast error notification
+        toast.error("Failed to generate token. Please try again.");
+        setIsSubmitting(false);
+        setIsCancelEnabled(true);
         return;
       }
-  
+
       const meetingId = await createMeeting();
       if (!meetingId) {
-        toast.error("Failed to create meeting. Please try again."); // Toast error notification
+        toast.error("Failed to create meeting. Please try again.");
+        setIsSubmitting(false);
+        setIsCancelEnabled(true);
         return;
       }
-  
-      // Generate the new appointment ID
+
       const appointmentID = await generateAppointmentID();
-  
       const newAppointmentData = {
         ...newAppointment,
-        ID: appointmentID, // Add the generated ID here
+        ID: appointmentID,
         token: token,
         meetingId: meetingId,
-        Doctor: localStorage.getItem("Doctor") || "",  // Fetch doctor name from localStorage
+        Doctor: localStorage.getItem("Doctor") || "",
       };
-  
+
       const response = await AppointmentFormSubmit(newAppointmentData);
-  
+
       if (response) {
-        toast.success("Appointment saved successfully!"); // Show success toast
-        // Wait for the toast to appear before navigating
+        toast.success("Appointment saved successfully!");
         setTimeout(() => {
-          close(); // Close the form
-        }, 1500);
+          setIsSubmitting(false);
+          setIsCancelEnabled(true);
+          close();
+        }, 1000);
       } else {
         toast.error("Failed to save the appointment. Please try again.");
+        setIsSubmitting(false);
+        setIsCancelEnabled(true);
       }
     } catch (error) {
       console.error("Error saving appointment:", error);
       toast.error("An unexpected error occurred. Please try again.");
+      setIsSubmitting(false);
+      setIsCancelEnabled(true);
     }
   };
   
-
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md mr-52 mt-8">
       <div className="mb-4">
@@ -116,7 +186,7 @@ const AppointmentForm = ({ close }) => {
           name="Name"
           value={newAppointment.Name}
           onChange={handleChange}
-          className="w-medium p-2 border rounded"
+          className="w-1/3 p-2 border rounded"
           required
           maxLength={30}
         />
@@ -137,7 +207,6 @@ const AppointmentForm = ({ close }) => {
         />
       </div>
 
-      {/* Read-only field to display the doctor's name */}
       <div className="mb-4">
         <label className="block text-gray-700">
           Doctor <span className="text-red-600">*</span>
@@ -198,14 +267,15 @@ const AppointmentForm = ({ close }) => {
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          disabled={!isCancelEnabled}
         >
           Save Appointment
         </button>
-
         <button
           type="button"
-          onClick={close}
+          onClick={isCancelEnabled ? close : null}
           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 ml-4"
+          disabled={!isCancelEnabled}
         >
           Cancel
         </button>

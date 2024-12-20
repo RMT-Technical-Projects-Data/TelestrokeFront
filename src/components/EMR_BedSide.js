@@ -94,6 +94,7 @@ function EMR_BedSide() {
             className="h-20 block w-[100%]"
             name="smoothPursuitAndSaccadesDescription"
             value={formData.smoothPursuitAndSaccadesDescription}
+            maxLength={50} // Limit text to 40 characters
             onChange={handleChange}
           />
         </div>
@@ -260,6 +261,7 @@ function EMR_BedSide() {
             className="h-20 block w-[100%]"
             name="extraocularMovementDescription"
             value={formData.extraocularMovementDescription}
+            maxLength={50} // Limit text to 40 characters
             onChange={handleChange}
           />
         </div>

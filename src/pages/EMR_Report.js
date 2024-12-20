@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/Sidebar";
 import Button from "../components/Button";
 import client from "../api/client";
 import { jsPDF } from "jspdf";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDownload } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faDownload } from '@fortawesome/free-solid-svg-icons';
 
 const EMRReportpage = () => {
   const [Exam_data, setExamData] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(''); // State for search query
   
 
   useEffect(() => {
@@ -57,6 +58,12 @@ const EMRReportpage = () => {
     doc.text("Patient Info:", margin, yPosition);
     doc.setFont("helvetica", "normal"); // Reset font to normal for the content
     yPosition += 10;
+
+    // Add Patient Name
+    doc.text(`Name: ${patientData.patientData.Name}`, margin, yPosition);
+    yPosition += 10;
+
+    // Add other patient details
     doc.text(`Date of Birth: ${new Date(patientData.patientData.patientDOB).toLocaleDateString()}`, margin, yPosition);
     yPosition += 10;
     doc.text(`Sex: ${patientData.patientData.patientSex}`, margin, yPosition);
@@ -194,26 +201,23 @@ const handleShowReport = (patientId) => {
             }
             .header {
               display: flex;
-              justify-content: space-between;
-              align-items: center;
+              flex-direction: column; /* Stack elements vertically */
+              align-items: center; /* Center align the content */
               margin-bottom: 20px;
             }
             .section {
               margin-bottom: 30px;
             }
             .section-header {
-              font-weight: bold; /* Make the section headings bold */
-              font-size: 20px; /* Optional: Increase font size for better visibility */
-              margin-bottom: 10px; /* Space between the section header and content */
+              font-weight: bold;
+              font-size: 20px;
+              margin-bottom: 10px;
             }
             .field-title {
-              font-weight: normal; /* Ensure field labels are not bold */
+              font-weight: normal;
             }
             .field {
-              margin-bottom: 10px; /* Optional: Space between fields */
-            }
-            .field-title {
-              font-weight: normal; /* Ensure field title is not bold */
+              margin-bottom: 10px;
             }
             button {
               display: block;
@@ -239,6 +243,7 @@ const handleShowReport = (patientId) => {
 
           <div class="section">
             <div class="section-header">Patient Info</div>
+            <div class="field"><span class="field-title">Name:</span> <span class="field-value">${patientData.patientData.Name}</span></div>
             <div class="field"><span class="field-title">Date of Birth:</span> <span class="field-value">${new Date(patientData.patientData.patientDOB).toLocaleDateString()}</span></div>
             <div class="field"><span class="field-title">Sex:</span> <span class="field-value">${patientData.patientData.patientSex}</span></div>
             <div class="field"><span class="field-title">Exam Date:</span> <span class="field-value">${new Date(patientData.patientData.examDate).toLocaleDateString()}</span></div>
@@ -300,6 +305,18 @@ const handleShowReport = (patientId) => {
   }
 };
 
+  // Function to handle search input
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value); // Update search query state
+  };
+
+  const filteredExamData = useMemo(() => {
+    return Exam_data.filter((exam) =>
+      exam.patientData.patientid.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      exam.patientData.Name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [Exam_data, searchQuery]);
+  
 
   return (
     <>
@@ -309,36 +326,50 @@ const handleShowReport = (patientId) => {
           <Sidebar page="EMR" />
         </div>
         <div className="basis-[80%] flex flex-col gap-5 h-2/6">
+          {/* Search Bar Section */}
+          <div className="mt-6 px-4">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search by Patient ID or Name"
+              className="p-2 w-1/3 border border-gray-300 rounded"
+            />
+          </div>
+          {/* Table Section */}
           <div className="mt-6 px-4">
             <div className="overflow-x-auto" style={{ marginRight: '15%' }}>
               <table className="table-auto border-collapse border border-gray-300 w-full">
                 <thead>
                   <tr className="bg-slate-700 text-white">
                     <th className="border px-4 py-2 text-left">Patient ID</th>
+                    <th className="border px-4 py-2 text-left">Patient Name</th> {/* New column */}
                     <th className="border px-4 py-2 text-left">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {Exam_data.map((exam) => (
+                  {filteredExamData.map((exam) => (
                     <tr key={exam.patientData.patientid} className="hover:bg-gray-50">
                       <td className="bg-white border px-4 py-2 text-left">
                         {exam.patientData.patientid}
                       </td>
                       <td className="bg-white border px-4 py-2 text-left">
-  <Button
-    className=""
-    onClick={() => handleShowReport(exam.patientData.patientid)}
-  >
-    VIEW
-  </Button>
- <Button
-  className=""
-  onClick={() => generatePDF(exam, exam.patientData.patientid)}
->
-  <FontAwesomeIcon icon={faDownload} className="text-white" />
-</Button>
-</td>
-
+                        {exam.patientData.Name} {/* New row data for Patient Name */}
+                      </td>
+                      <td className="bg-white border px-4 py-2 text-left">
+                        <Button
+                          className=""
+                          onClick={() => handleShowReport(exam.patientData.patientid)}
+                        >
+                          <FontAwesomeIcon icon={faEye} className="text-white" /> {/* Eye icon for View */}
+                        </Button>
+                        <Button
+                          className=""
+                          onClick={() => generatePDF(exam, exam.patientData.patientid)}
+                        >
+                          <FontAwesomeIcon icon={faDownload} className="text-white" />
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
