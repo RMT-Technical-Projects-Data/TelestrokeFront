@@ -4,11 +4,12 @@ import { getAllAppointments } from "../utils/auth";
 import { getToken, createMeeting } from "../API";
 import { toast, ToastContainer } from "react-toastify"; // Import Toastify
 
+
 const AppointmentForm = ({ close }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCancelEnabled, setIsCancelEnabled] = useState(true);
   const [newAppointment, setNewAppointment] = useState({
-    Name: "",
+    DeviceID: "", // Change Name to DeviceID
     ID: "",
     AppointmentTime: "",
     AppointmentDate: "",
@@ -17,7 +18,7 @@ const AppointmentForm = ({ close }) => {
     meetingId: "",
     Doctor: "", // Add Doctor field in the state
   });
-
+  
   // Retrieve the doctor's name from localStorage
   useEffect(() => {
     const doctorName = localStorage.getItem("Doctor") || "Unknown Doctor";
@@ -176,21 +177,28 @@ const AppointmentForm = ({ close }) => {
   };
   
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md mr-52 mt-8">
-      <div className="mb-4">
-        <label className="block text-gray-700">
-          Patient Name <span className="text-red-600">*</span>
-        </label>
-        <input
-          type="text"
-          name="Name"
-          value={newAppointment.Name}
-          onChange={handleChange}
-          className="w-1/3 p-2 border rounded"
-          required
-          maxLength={30}
-        />
-      </div>
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md mr-52 mt-28">
+    <div className="mb-4">
+  <label className="block text-gray-700">
+    Device ID <span className="text-red-600">*</span>
+  </label>
+  <input
+    type="text"
+    name="DeviceID" // Changed to DeviceID
+    value={newAppointment.DeviceID}
+    onChange={handleChange}
+    className="w-small p-2 border rounded"
+    required
+    pattern="\d{4}" // Only 4 digits
+    title="Device ID must be exactly 4 digits"
+    maxLength={4} // Restrict to 4 characters
+    onInput={(e) => {
+      // Ensure the input is only digits by replacing non-digits
+      e.target.value = e.target.value.replace(/\D/g, '');
+    }}
+  />
+</div>
+
 
       <div className="mb-4">
         <label className="block text-gray-700">
@@ -201,7 +209,7 @@ const AppointmentForm = ({ close }) => {
           name="ID"
           value={newAppointment.ID}
           onChange={handleChange}
-          className="w-smalll p-2 border rounded"
+          className="w-smalll p-2 border rounded bg-gray-200"
           required
           readOnly
         />
@@ -264,13 +272,14 @@ const AppointmentForm = ({ close }) => {
       </div>
 
       <div className="flex justify">
-        <button
+      <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-[#3b4fdf] text-white px-4 py-2 rounded hover:bg-[#2f44c4] transition-colors duration-300"
           disabled={!isCancelEnabled}
         >
           Save Appointment
         </button>
+
         <button
           type="button"
           onClick={isCancelEnabled ? close : null}

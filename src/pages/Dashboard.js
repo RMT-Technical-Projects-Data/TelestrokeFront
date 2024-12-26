@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
+import ReactApexChart from 'react-apexcharts';
+import attended from "../assets/icon_attended.png";
+import scheduled from "../assets/icon_scheduled.png";
+import total from "../assets/icon_total.png"; 
 
 // Register required chart components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -16,6 +19,7 @@ function Dashboard() {
   const [scheduledAppointments, setScheduledAppointments] = useState(0); // State for scheduled appointments
 
 
+  
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
@@ -50,6 +54,17 @@ function Dashboard() {
   }, []);
   
   
+  const formatTime = (time) => {
+    if (!time) return '';
+    const [hour, minute] = time.split(':') || [];
+    if (!hour || !minute) return '';
+    const hourNum = parseInt(hour, 10);
+    const isPM = hourNum >= 12;
+    const formattedHour = hourNum % 12 || 12;
+    const amPm = isPM ? 'PM' : 'AM';
+    return `${formattedHour}:${minute} ${amPm}`;
+  };
+
 
   // Function to sort and group appointments by date and time
   const groupAndSortAppointments = () => {
@@ -98,130 +113,256 @@ function Dashboard() {
 
   const renderAppointments = () => {
     const groupedAppointments = groupAndSortAppointments();
-
+  
     const displayedAppointments = [
       ...groupedAppointments.dateTime,
       ...groupedAppointments.dateOnly,
       ...groupedAppointments.timeOnly,
       ...groupedAppointments.noDateTime,
     ];
-
-    return displayedAppointments.slice(0, 3).map((appointment) => {
+  
+    // Filter out appointments with Checkup_Status === "Complete"
+    const filteredAppointments = displayedAppointments.filter(
+      (appointment) => appointment.Checkup_Status !== "Complete"
+    );
+  
+    return filteredAppointments.slice(0, 4).map((appointment) => {
       const isMeetingAvailable = appointment.meetingId;
-
-      const handleJoin = (appointmentId, patientName) => {
-        localStorage.setItem("patientName", patientName);
+  
+      const handleJoin = (appointmentId) => {
+        // Handle join logic here
       };
-
+  
       return (
         <div
           key={appointment.ID}
-          className="bg-gray-200 p-5 rounded-md shadow-lg w-full max-w-lg flex justify-between items-center gap-4 transition ease-in-out animate-fadeIn"
+          className="flex items-center gap-4 w-full max-w-2xl transition ease-in-out animate-fadeIn border border-gray-300 rounded-md"
+
         >
-          <div>
-            <p className="text-lg">Patient ID: {appointment.ID}</p>
-            <p className="text-lg">Patient Name: {appointment.Name}</p>
-            <p className="text-lg">
-              Appointment Time:{" "}
-              {appointment.AppointmentTime ? appointment.AppointmentTime : "N/A"}
+         
+  {/* Appointment Card */}
+        <div className="bg-white p-8 pl-12 rounded-md shadow-lg flex-1 flex justify-between items-center gap-4">
+          <div className="text-black"> {/* Ensure the text color is black */}
+            <p className="text-2xl font-bold">
+              {" "}
+              {appointment.AppointmentTime ? formatTime(appointment.AppointmentTime) : "N/A"}
             </p>
-            <p className="text-lg">
-              Appointment Date:{" "}
+            <p className="text-xl font-bold ">
+              {" "}
               {appointment.AppointmentDate
                 ? new Date(appointment.AppointmentDate)
                     .toISOString()
                     .split("T")[0]
                 : "N/A"}
             </p>
+
+
+
+              <p className="text-lg color-grey mt-4">Device ID: {appointment.DeviceID}</p>
+            </div>
+            {isMeetingAvailable ? (
+              <Link to={`/emr/${appointment?.ID}/${appointment?.meetingId}`}>
+                <div
+                  className="bg-[#3b4fdf] text-white hover:bg-[#2f44c4] px-4 py-2 w-32 rounded-md shadow-lg text-center mr-10"
+
+                  onClick={() => handleJoin(appointment)}
+                >
+                  Join
+                </div>
+              </Link>
+            ) : (
+              <div className="text-gray-500">No Meeting Available</div>
+            )}
           </div>
-          {isMeetingAvailable ? (
-            <Link to={`/emr/${appointment?.ID}/${appointment?.meetingId}`}>
-              <div
-                className="bg-[#234ee8] text-white px-4 py-2 w-20 rounded-md shadow-lg mx-auto"
-                onClick={() => handleJoin(appointment.ID, appointment.Name)}
-              >
-                Join
-              </div>
-            </Link>
-          ) : (
-            <div className="text-gray-500">No Meeting Available</div>
-          )}
         </div>
       );
     });
   };
-
-  const pieData = {
-    labels: ["Appointments Attended", "Appointments Scheduled"],
-    datasets: [
-      {
-        data: [attendedAppointments, scheduledAppointments], // Only two categories
-        backgroundColor: ["#36A2EB", "#FFCE56"], // Blue and Yellow
-        hoverBackgroundColor: ["#36A2EB", "#FFCE56"],
-      },
-    ],
-  };
+  
   
 
+  const ChartThree = () => {
+    const series = [attendedAppointments, scheduledAppointments];
+    const options = {
+      chart: {
+        fontFamily: 'Satoshi, sans-serif',
+        type: 'donut',
+      },
+      colors: ['#3b4fdf', '#1c2434'],
+      labels: ['Appointments Attended', 'Appointments Scheduled'],
+      legend: {
+        show: false,
+        position: 'bottom',
+      },
+      plotOptions: {
+        pie: {
+          donut: {
+            size: '65%',
+            background: 'transparent',
+          },
+        },
+      },
+      dataLabels: {
+        enabled: false,
+      },
+      responsive: [
+        {
+          breakpoint: 2600,
+          options: {
+            chart: {
+              width: 380,
+            },
+          },
+        },
+        {
+          breakpoint: 640,
+          options: {
+            chart: {
+              width: 200,
+            },
+          },
+        },
+      ],
+    };
 
+    return (
+      <div className="sm:px-7.5 col-span-12 rounded-sm border border-stroke bg-white px-5 pb-5 pt-7.5 shadow-default dark:border-strokedark dark:bg-boxdark xl:col-span-5">
+        <div className="mb-3 justify-between gap-4 sm:flex">
+          <div>
+            <h5 className="text-xl font-semibold text-black dark:text-white">
+              Appointments Analytics
+            </h5>
+          </div>
+        </div>
+
+        <div className="mb-2">
+          <div id="chartThree" className="mx-auto flex justify-center">
+            <ReactApexChart options={options} series={series} type="donut" />
+          </div>
+        </div>
+
+        <div className="-mx-8 flex flex-wrap items-center justify-center gap-y-3">
+          {[{ label: 'Appointments Scheduled', value: scheduledAppointments, color: 'bg-[#1c2434]' },
+          { label: 'Appointments Attended', value: attendedAppointments, color: 'bg-[#3b4fdf]' },
+            
+          ].map((item, index) => (
+            <div key={index} className="sm:w-1/2 w-full px-8">
+              <div className="flex w-full items-center">
+                <span className={`mr-2 block h-3 w-full max-w-3 rounded-full ${item.color}`}></span>
+                <p className="flex w-full justify-between text-sm font-medium text-black dark:text-white">
+                  <span>{item.label}</span>
+                  <span>{item.value}</span>
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <>
       <NavBar />
       <div className="flex flex-row justify-between gap-2 mb-28">
         <div className="basis-[2%]">
-          <Sidebar page="DASHBOARD" />
+          {/* Sidebar with z-10 to ensure it's behind the navbar */}
+          <Sidebar page="DASHBOARD" className="z-10" />
         </div>
-        <div className="basis-[90%] p-6 space-y-6 transition ease-in-out animate-fadeIn">
+        <div className="basis-[90%] p-6 space-y-6 transition ease-in-out animate-fadeIn ml-[250px]">
+          {/* Added margin-left to shift content to the right */}
           {loading ? (
             <div className="text-center">Loading...</div>
           ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10 p-10 -ml-10">
-                <div className="flex flex-col gap-8 bg-green-500 text-white p-4 rounded-md shadow-lg h-20">
-                  <h2 className="text-3xl">Total Appointments: {totalAppointments}</h2>
-                  
-                </div>
-                <div className="flex flex-col gap-8 bg-blue-500 text-white p-4 rounded-md shadow-lg h-20">
-                  <h2 className="text-3xl">Appointments Attended: {attendedAppointments}</h2>
-                  
-                </div>
-                <div className="flex flex-col gap-8 bg-[#ECBA00] text-white p-4 rounded-md shadow-lg h-20">
-                  <h2 className="text-3xl">Appointments Scheduled: {scheduledAppointments}</h2>
-                 
-                </div>
-              </div>
-              <div className="flex flex-col gap-5">
-              <div className="flex gap-5">
-                <Link to="/meeting">
-                  <button className="bg-blue-600 text-white px-5 py-3 rounded-md text-lg hover:bg-blue-700">
-                    Create a Meeting
-                  </button>
-                </Link>
-                <Link to="/appointment">
-                  <button className="bg-blue-600 text-white px-5 py-3 rounded-md text-lg hover:bg-blue-700">
-                    Schedule an Appointment
-                  </button>
-                </Link>
-                </div>
-                </div>
 
-              <div className="flex flex-row gap-9 justify-between">
-                <div className="flex flex-col gap-7 w-1/2">
+            <div className="flex flex-col gap-10">
+
+            {/* First horizontal div with buttons and tiles */}
+
+      <div className="flex flex-row mb-10">
+
+        {/* Left section: Buttons */}
+        <div className="w-1/4 flex flex-col mt-[9%]">
+          {/* Updated button container */}
+          <div className="flex flex-col gap-5">
+            <Link to="/meeting">
+              <button className="bg-[#3b4fdf] text-white px-5 py-3 rounded-md text-lg w-[100%] hover:bg-[#2f44c4]">
+                Create a Meeting
+              </button>
+            </Link>
+            <Link to="/appointment">
+              <button className="bg-[#3b4fdf] text-white px-5 py-3 rounded-md text-lg w-[100%] hover:bg-[#2f44c4]">
+                Schedule an Appointment
+              </button>
+            </Link>
+          </div>
+        </div>
+
+   
+
+
+       {/* Right section: Tiles */}
+        <div className="w-full">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-10 mt-[6%]">
+            {/* Total Appointments Tile */}
+            <div className="flex flex-col bg-white text-black p-10 rounded-md shadow-lg justify-end items-end relative h-[200px]"> {/* Custom height */}
+              <img
+                src={total} // Custom icon for Total Appointments
+                alt="Total Appointments"
+                className="text-[#3b4fdf] absolute top-6 left-6 w-16 h-16" // Increased width and height
+              />
+              <p className="text-6xl font-bold text-center">{totalAppointments}</p>
+              <h2 className="text-xl text-center text-gray-500 mt-2">Total Appointments</h2>
+            </div>
+
+            {/* Appointments Attended Tile */}
+            <div className="flex flex-col bg-white text-black  p-10 rounded-md shadow-lg justify-end items-end relative h-[200px]">
+              <img
+                src={attended} // Custom icon for Appointments Attended
+                alt="Appointments Attended"
+                className="text-[#3b4fdf] absolute top-6 left-6 w-16 h-16" // Increased width and height
+              />
+              <p className="text-6xl font-bold text-center">{attendedAppointments}</p>
+              <h2 className="text-xl text-center text-gray-500 mt-2">Appointments Attended</h2>
+            </div>
+
+            {/* Appointments Scheduled Tile */}
+            <div className="flex flex-col bg-white text-black p-10 rounded-md shadow-lg justify-end items-end relative h-[200px]">
+              <img
+                src={scheduled} // Custom icon for Appointments Scheduled
+                alt="Appointments Scheduled"
+                className="text-[#3b4fdf] absolute top-6 left-6 w-16 h-16" // Increased width and height
+              />
+              <p className="text-6xl font-bold text-center">{scheduledAppointments}</p>
+              <h2 className="text-xl text-center text-gray-500 mt-2">Appointments Scheduled</h2>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+
+  
+              {/* Second horizontal div with upcoming appointments and chart */}
+              <div className="flex flex-row gap-6 items-start -mt-[5
+              %]">
+                {/* Left section: Upcoming Appointments */}
+                <div className="w-full flex p-10 bg-white flex-col gap-7">
                   <h2 className="text-2xl font-bold">Upcoming Appointments:</h2>
                   {renderAppointments()}
                 </div>
-                <div className="flex justify-center w-1/2">
-                  <div className="w-[500px] h-[500px]">
-                    <Pie data={pieData} />
-                  </div>
+  
+                {/* Right section: Chart */}
+                <div className="w-full flex justify-center">
+                  <ChartThree />
                 </div>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
     </>
   );
-}
-
+  
+}  
 export default Dashboard;

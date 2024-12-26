@@ -2,15 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap'); /* Add the Inter font import */
+
 body {
   margin: 0;
-  font-family: "Helvetica";
+  font-family: 'Inter', sans-serif; /* Changed to Inter */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: rgb(248, 250, 252);
+  background: rgb(241, 245, 249);
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }

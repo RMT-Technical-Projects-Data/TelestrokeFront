@@ -321,7 +321,7 @@ const handleShowReport = (patientId) => {
   return (
     <>
       <NavBar />
-      <div className="flex flex-row justify-between gap-2 mb-28 bg-slate-50">
+      <div className="flex flex-row justify-between gap-2 mb-28 mt-[5%]">
         <div className="basis-[5%]">
           <Sidebar page="EMR" />
         </div>

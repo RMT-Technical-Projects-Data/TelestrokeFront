@@ -5,7 +5,7 @@ const Button = (props) => {
   console.log('Button prop <---------------->',props.className);
   return (
     <button
-      className={props.className + " rounded bg-[#234ee8] p-2 text-white"}
+      className={props.className + " rounded bg-[#3b4fdf] hover:bg-[#2f44c4] p-2 text-white"}
       onClick={(event) => {
         props.onClick(event);
       }}

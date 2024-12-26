@@ -185,12 +185,12 @@ const EMRpage = () => {
 
   return (
     <>
-       <div>
-      <NavBar disableDashboardLink={true} />
-      {/* Your component content */}
-    </div>
+      <div>
+        <NavBar disableDashboardLink={true} />
+        {/* Your component content */}
+      </div>
   
-      <div className="flex flex-col h-full bg-slate-50 py-6 ml-32"> {/* Added ml-4 to move everything to the right */}
+      <div className="flex flex-col h-full bg-slate-50 py-6 ml-32 mt-20"> {/* Added mt-20 to move everything down */}
         {/* Main Content Area */}
         <div className="flex flex-col h-full">
           {meetingid ? (
@@ -325,26 +325,27 @@ const EMRpage = () => {
               {tab === 0 && <EMRPatientInfo />}
               {tab === 1 && <EMRBedSide />}
               {tab === 2 && <EMRTelestrokeExam />}
-
+  
             </>
           )}
   
           {/* Conditionally render buttons based on meetingJoined state */}
           {meetingJoined && (
-  <div className="flex flex-row-reverse gap-8 mx-8 mt-10">
-    <Button
-      onClick={handleSave}
-      className="scale-110 rounded-lg px-6 py-3"  // Increased size, rounded, and added padding
-    >
-      Save
-    </Button>
-  </div>
-)}
-
+            <div className="flex flex-row-reverse gap-8 mx-8 mt-10">
+              <Button
+                onClick={handleSave}
+                className="scale-110 rounded-lg px-6 py-3"  // Increased size, rounded, and added padding
+              >
+                Save
+              </Button>
+            </div>
+          )}
+  
         </div>
       </div>
     </>
   );
+  
   
   
 }

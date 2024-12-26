@@ -17,11 +17,10 @@ export default function EMR_PatientInfo() {
   });
 
   useEffect(() => {
-    const storedName = localStorage.getItem("patientName");
     const storedDoctor = localStorage.getItem("Doctor");
     setPatientEMR((prevState) => ({
       ...prevState,
-      Name: storedName || "",
+     
       Doctor: storedDoctor || ""
     }));
   }, []);
@@ -78,19 +77,19 @@ export default function EMR_PatientInfo() {
 
   return (
     <div className="flex flex-wrap gap-4">
-      {/* Name, Doctor, D.O.B, and Sex on a single line */}
-      <div className="flex flex-row gap-4 items-center">
-           <p className="font-bold text-lg">Patient</p> {/* Title on the left */}
-        <div>
-          <input
-            className="border-t-0 border-x-0 border-b-2"
-            type="text"
-            name="Name"
-            value={patientEMR.Name}
-            onChange={handleChange}
-            readOnly
-            placeholder="Name"
-          />
+    {/* Name, Doctor, D.O.B, and Sex on a single line */}
+    <div className="flex flex-row gap-4 items-center">
+      <p className="font-bold text-lg">Patient</p> {/* Title on the left */}
+      <div>
+        <input
+          className="border-t-0 border-x-0 border-b-2"
+          type="text"
+          name="Name"
+          value={patientEMR.Name}
+          onChange={handleChange}
+          maxLength={30} // Limit to 20 characters
+          placeholder="Name"
+        />
         </div>
         <div className="flex flex-row gap-4 items-center">
            <p className="font-bold text-lg">Doctor</p> {/* Title on the left */}

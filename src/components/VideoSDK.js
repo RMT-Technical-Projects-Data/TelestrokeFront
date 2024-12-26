@@ -7,7 +7,7 @@ import {
   useParticipant,
   createCameraVideoTrack,
 } from "@videosdk.live/react-sdk";
-import { authToken } from "../API";
+import { getAuthToken } from "../API";  // Import getAuthToken instead of authToken
 import { useNavigate, useParams } from 'react-router-dom';
 import ReactPlayer from "react-player";
 import Button from "./Button";
@@ -322,6 +322,7 @@ function VIDEOSDK(props) {
   const [customTrack, setCustomTrack] = useState(null);
   const [meetingId, setMeetingId] = useState(meetingid);
   const [patientId, setPatientId] = useState(patientid);
+  const [authToken, setAuthToken] = useState(null);  // Store the authToken in the state
   const navigate = useNavigate(); // Create a navigate instance
 
   const getTrack = async () => {
@@ -334,6 +335,12 @@ function VIDEOSDK(props) {
   };
 
   useEffect(() => {
+    // Fetch the authToken when the component mounts
+    const fetchToken = async () => {
+      const token = await getAuthToken();  // Get the authToken from the API
+      setAuthToken(token);  // Update state with the fetched token
+    };
+    fetchToken();
     getTrack();
   }, []);
 
@@ -353,7 +360,7 @@ function VIDEOSDK(props) {
         name: "Web-App",
         customCameraVideoTrack: customTrack,
       }}
-      token={authToken}
+      token={authToken}  // Use the token from the state
     >
       <MeetingView
         meetingId={meetingId}

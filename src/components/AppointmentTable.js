@@ -133,9 +133,8 @@ const AppointmentTable = ({ addAppointment }) => {
     setIsEditing(true);
   };
 
-  const handleJoin = (appointmentId, patientName) => {
-    localStorage.setItem('patientName', patientName);
-    toast.info(`Joining appointment with ${patientName}`);
+  const handleJoin = (appointmentId) => {
+    
   };
 
   // Function to handle search input
@@ -153,11 +152,11 @@ const AppointmentTable = ({ addAppointment }) => {
     <div className="w-full">
       {errorMessage && <div className="text-red-500">{errorMessage}</div>}
       <ToastContainer position="top-right" autoClose={3000} /> {/* Toast Container */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 mt-28">
         <h1 className="text-2xl font-bold">Appointments</h1>
         <button
           onClick={addAppointment}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg hover:bg-blue-700 mr-48"
+          className="bg-[#3b4fdf] text-white px-4 py-2 rounded-md shadow-lg hover:bg-[#2f44c4] mr-48"
         >
           Add Appointment
         </button>
@@ -173,55 +172,62 @@ const AppointmentTable = ({ addAppointment }) => {
         />
       </div>
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ minWidth: '1275px' }} className="bg-white border border-gray-200">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="px-4 py-2">Patient ID</th>
-              <th className="px-4 py-2">Patient Name</th>
-              <th className="px-4 py-2">Appointment Date</th>
-              <th className="px-4 py-2">Appointment Time</th>
-              <th className="px-4 py-2">Checkup Status</th>
-              <th className="px-4 py-2">Join</th>
-              <th className="px-4 py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredAppointmentsData.map((appointment) => (
-              <tr key={appointment?.ID ?? Math.random()}>
-                <td className="border px-4 py-2 text-center">{String(appointment?.ID ?? '00000').padStart(5, '0')}</td>
-                <td className="border px-4 py-2 text-center">{appointment?.Name ?? ''}</td>
-                <td className="border px-4 py-2 text-center">{formatDate(appointment?.AppointmentDate)}</td>
-                <td className="border px-4 py-2 text-center">{formatTime(appointment?.AppointmentTime)}</td>
-                <td className="border px-4 py-2 text-center">{appointment?.Checkup_Status ?? 'Pending'}</td>
-                <td className="border px-4 py-2 text-center">
-                  <Link to={`/emr/${appointment?.ID}/${appointment?.meetingId}`}>
-                    <div
-                      className="bg-[#234ee8] text-white px-4 py-2 w-20 rounded-md shadow-lg mx-auto"
-                      onClick={() => handleJoin(appointment.ID, appointment.Name)}
-                    >
-                      Join
-                    </div>
-                  </Link>
-                </td>
-                <td className="border px-4 py-2 text-center">
-                  <button
-                    onClick={() => openEditModal(appointment)}
-                    className="text-blue-600 mr-2"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(appointment?.ID)}
-                    className="text-red-600"
-                  >
-                    <FaTrash />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+  <table style={{ minWidth: '1275px' }} className="bg-white border border-gray-200">
+    <thead>
+      <tr className="bg-gray-200">
+        <th className="px-4 py-2">Patient ID</th>
+        <th className="px-4 py-2">Appointment Date</th>
+        <th className="px-4 py-2">Appointment Time</th>
+        <th className="px-4 py-2">Checkup Status</th>
+        <th className="px-4 py-2">Join</th>
+        <th className="px-4 py-2">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {filteredAppointmentsData.map((appointment) => (
+        <tr key={appointment?.ID ?? Math.random()}>
+          <td className="border px-4 py-2 text-center">{String(appointment?.ID ?? '00000').padStart(5, '0')}</td>
+          <td className="border px-4 py-2 text-center">{formatDate(appointment?.AppointmentDate)}</td>
+          <td className="border px-4 py-2 text-center">{formatTime(appointment?.AppointmentTime)}</td>
+          <td className="border px-4 py-2 text-center">
+            <div className={`flex justify-center items-center space-x-2`}>
+              {appointment?.Checkup_Status === "Complete" ? (
+                <div className="w-4 h-4 bg-green-600 rounded-full" />
+              ) : appointment?.Checkup_Status === "Pending" ? (
+                <div className="w-4 h-4 bg-red-600 rounded-full" />
+              ) : null}
+            </div>
+          </td>
+          <td className="border px-4 py-2 text-center">
+            <Link to={`/emr/${appointment?.ID}/${appointment?.meetingId}`}>
+              <div
+                className="bg-[#3b4fdf] text-white hover:bg-[#2f44c4] px-4 py-2 w-20 rounded-md shadow-lg mx-auto"
+                onClick={() => handleJoin(appointment)}
+              >
+                Join
+              </div>
+            </Link>
+          </td>
+          <td className="border px-4 py-2 text-center">
+            <button
+              onClick={() => openEditModal(appointment)}
+              className="text-[#3b4fdf] mr-2"
+            >
+              <FaEdit />
+            </button>
+            <button
+              onClick={() => handleDelete(appointment?.ID)}
+              className="text-red-600"
+            >
+              <FaTrash />
+            </button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
 
 
       {isEditing && (
@@ -249,7 +255,7 @@ const AppointmentTable = ({ addAppointment }) => {
             <div className="flex justify-end">
               <button 
                 onClick={handleUpdate} 
-                className="bg-blue-600 text-white px-4 py-2 rounded-md mr-2"
+                className="bg-[#3b4fdf] text-white hover:bg-[#2f44c4] px-4 py-2 rounded-md mr-2"
               >
                 Save
               </button>

@@ -13,6 +13,7 @@ const UserManagement = () => {
   const [newUser, setNewUser] = useState({ username: "", password: "" });
   const [createError, setCreateError] = useState("");
   const [editingUser, setEditingUser] = useState(null);
+  const [editedUsername, setEditedUsername] = useState(""); // New state for editing username
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState(""); // New state for confirm password
   const navigate = useNavigate();
@@ -112,38 +113,33 @@ const UserManagement = () => {
   
 
 
-  const handlePasswordEdit = (user) => {
+  const handleEditUser = (user) => {
     setEditingUser(user);
+    setEditedUsername(user.username); // Set current username for editing
     setNewPassword(""); // Reset password field
     setConfirmPassword(""); // Reset confirm password field
   };
-  
-  const handlePasswordChange = async () => {
-    // Check if the new password is between 8 and 16 characters
-    if (newPassword.length < 8 || newPassword.length > 16) {
-      toast.error("Password must be between 8 and 16 characters long.");
-      return;
+
+  const handleEditSubmit = async () => {
+    // Validate the new password if provided
+    if (newPassword) {
+      if (newPassword.length < 8 || newPassword.length > 16) {
+        toast.error("Password must be between 8 and 16 characters long.");
+        return;
+      }
+
+      const specialCharacterRegex = /[!@#$%^&*(),.?":{}|<>]/;
+      if (!specialCharacterRegex.test(newPassword)) {
+        toast.error("Password must contain at least one special character.");
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        toast.error("Passwords do not match.");
+        return;
+      }
     }
-  
-    // Check if the password contains at least one special character
-    const specialCharacterRegex = /[!@#$%^&*(),.?":{}|<>]/;
-    if (!specialCharacterRegex.test(newPassword)) {
-      toast.error("Password must contain at least one special character.");
-      return;
-    }
-  
-    // Check if both password fields are provided
-    if (!newPassword || !confirmPassword) {
-      toast.error("Both password fields are required.");
-      return;
-    }
-  
-    // Check if the passwords match
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match.");
-      return;
-    }
-  
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -151,27 +147,37 @@ const UserManagement = () => {
         handleLogout();
         return;
       }
-  
+
+      // Disable button while updating
+      setLoading(true);
+
       await axios.put(
         `${process.env.REACT_APP_BACKEND_URL}/api/users/edit`,
-        { username: editingUser.username, newPassword },
+        { 
+          currentUsername: editingUser.username, 
+          newUsername: editedUsername, 
+          newPassword: newPassword || null // Include password only if changed 
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-  
+
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/get`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
-  
+
       setEditingUser(null);
-      toast.success("Password updated successfully!");
+      toast.success("User updated successfully!");
     } catch (error) {
       if (error.response && error.response.status === 401) {
         toast.error("Expired or Invalid token. Please log in again.");
         handleLogout();
       } else {
-        toast.error("Error updating password: " + error.message);
+        toast.error("Error updating user: " + error.message);
       }
+    } finally {
+      // Re-enable button
+      setLoading(false);
     }
   };
   
@@ -269,10 +275,10 @@ const UserManagement = () => {
               <td className="py-2 px-4 border-b">{user.role}</td>
               <td className="py-2 px-4 border-b text-center">
                 <button
-                  onClick={() => handlePasswordEdit(user)}
+                  onClick={() => handleEditUser(user)}
                   className="py-1 px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
                 >
-                  Edit Password
+                  Edit User
                 </button>
               </td>
             </tr>
@@ -280,14 +286,22 @@ const UserManagement = () => {
         </tbody>
       </table>
 
+      {/* User editing modal */}
       {editingUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-bold mb-4">Edit Password</h2>
+            <h2 className="text-xl font-bold mb-4">Edit User</h2>
             <div className="flex flex-col gap-2">
               <input
+                type="text"
+                placeholder="New Username"
+                value={editedUsername}
+                onChange={(e) => setEditedUsername(e.target.value)}
+                className="border p-2 rounded"
+              />
+              <input
                 type="password"
-                placeholder="New Password"
+                placeholder="New Password (Optional)"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="border p-2 rounded"
@@ -299,12 +313,16 @@ const UserManagement = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="border p-2 rounded"
               />
-              <button
-                onClick={handlePasswordChange}
-                className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
-              >
-                Update Password
-              </button>
+              <div>
+                <button
+                  onClick={handleEditSubmit}
+                  disabled={loading}
+                  className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
+                >
+                  {loading ? "Updating..." : "Update User"}
+                </button>
+                {loading && <div className="loader"></div>}
+              </div>
               <button
                 onClick={() => setEditingUser(null)}
                 className="mt-2 py-2 px-4 bg-gray-400 text-white rounded-lg hover:bg-gray-300"
@@ -318,5 +336,4 @@ const UserManagement = () => {
     </div>
   );
 };
-
 export default UserManagement;

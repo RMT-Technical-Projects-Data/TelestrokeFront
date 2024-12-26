@@ -1,12 +1,8 @@
 import React from "react";
 import dashboard from "../assets/btn_dashboard.svg";
-import dashboard_selected from "../assets/btn_dashboard_selected.svg";
 import appointments from "../assets/btn_appointments.svg";
-import appointments_selected from "../assets/btn_appointments_selected.svg";
 import emr from "../assets/btn_EMR.svg";
-import emr_selected from "../assets/btn_EMR_selected.svg";
 import patient from "../assets/btn_patients.svg";
-import patient_selected from "../assets/btn_patients_selected.svg";
 import LogoutIcon from "../assets/btn_Logout.png"; // Import the Logout image
 import { Link, useNavigate } from "react-router-dom"; // Import useNavigate for programmatic navigation
 
@@ -26,7 +22,8 @@ const Sidebar = ({ page }) => {
   };
 
   return (
-    <div className="fixed flex flex-col justify-center rounded-r-xl px-4 bg-slate-800 h-[100%] text-white gap-10">
+    <div className="fixed top-0 left-0 flex flex-col justify-center rounded-r-xl px-4 bg-[#1c2434] h-[100vh] w-[250px] text-white gap-10 z-40">
+
       <Link to="/dashboard">
         <div
           className={
@@ -36,8 +33,8 @@ const Sidebar = ({ page }) => {
           }
         >
           <img
-            src={page === "DASHBOARD" ? dashboard_selected : dashboard}
-            width={60}
+            src={page === "DASHBOARD" ? dashboard : dashboard}
+            width={80}
             alt="dashboard"
           />
           <p className="hidden lg:inline"> Dashboard</p>
@@ -53,8 +50,8 @@ const Sidebar = ({ page }) => {
           }
         >
           <img
-            src={page === "APPOINTMENTS" ? appointments_selected : appointments}
-            width={60}
+            src={page === "APPOINTMENTS" ? appointments : appointments}
+            width={80}
             alt="appointments"
           />
           <p className="hidden lg:inline">Appointments</p>
@@ -69,7 +66,7 @@ const Sidebar = ({ page }) => {
               : "flex flex-col items-center p-2 cursor-pointer hover:bg-slate-600 hover:rounded-lg"
           }
         >
-          <img src={page === "EMR" ? emr_selected : emr} width={60} alt="emr" />
+          <img src={page === "EMR" ? emr : emr} width={80} alt="emr" />
           <p className="hidden lg:inline">EMR</p>
         </div>
       </Link>
@@ -83,8 +80,8 @@ const Sidebar = ({ page }) => {
           }
         >
           <img
-            src={page === "PATIENTS" ? patient_selected : patient}
-            width={60}
+            src={page === "PATIENTS" ? patient : patient}
+            width={80}
             alt="patient"
           />
           <p className="hidden lg:inline">Meeting</p>
@@ -96,7 +93,7 @@ const Sidebar = ({ page }) => {
         onClick={handleLogout} // Use the custom logout handler here
         className="flex flex-col items-center p-2 cursor-pointer hover:bg-slate-600 hover:rounded-lg"
       >
-        <img src={LogoutIcon} width={60} alt="logout" /> {/* Use the Logout image */}
+        <img src={LogoutIcon} width={80} alt="logout" /> {/* Use the Logout image */}
         <p className="hidden lg:inline">Logout</p>
       </div>
     </div>

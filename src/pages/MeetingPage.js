@@ -10,7 +10,7 @@ import { FaCopy } from "react-icons/fa";
 
 const MeetingPage = () => {
   const navigate = useNavigate();
-  const [patientName, setPatientName] = useState("");
+  const [DeviceID, setDeviceID] = useState("");
   const [patientID, setPatientID] = useState("");
   const [meetingId, setMeetingId] = useState("");
   const [, setToken] = useState("");
@@ -32,75 +32,85 @@ const MeetingPage = () => {
     );
   }, []);
 
-  // Generate Patient ID
-  useEffect(() => {
-    const generatePatientID = async () => {
-      try {
-        const appointments = await getAllAppointments();
-        let maxID = 0;
-        if (appointments && appointments.length > 0) {
-          maxID = Math.max(...appointments.map((appt) => parseInt(appt.ID, 10)));
-        }
-        const newID = String(maxID + 1).padStart(5, "0");
-        setPatientID(newID);
-      } catch (error) {
-        console.error("Error fetching appointments:", error);
-        toast.error("Error generating Patient ID. Please try again.");
-      }
-    };
-
-    generatePatientID();
-  }, []);
-
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-
+// In MeetingPage component
+useEffect(() => {
+  const generatePatientID = async () => {
     try {
-      const generatedToken = await getToken();
-      if (!generatedToken) {
-        toast.error("Failed to generate token. Please try again.");
-        setIsLoading(false);
-        return;
+      const appointments = await getAllAppointments(doctor); // Pass the doctor reference
+      let maxID = 0;
+      if (appointments && appointments.length > 0) {
+        maxID = Math.max(...appointments.map((appt) => parseInt(appt.ID, 10)));
       }
-      setToken(generatedToken);
-
-      const generatedMeetingId = await createMeeting();
-      if (!generatedMeetingId) {
-        toast.error("Failed to create meeting. Please try again.");
-        setIsLoading(false);
-        return;
-      }
-      setMeetingId(generatedMeetingId);
-      setIsMeetingCreated(true);
-
-      // Include Doctor in the meeting details
-      const meetingDetails = {
-        Name: patientName,
-        ID: patientID,
-        token: generatedToken,
-        meetingId: generatedMeetingId,
-        Doctor: doctor, // Add Doctor to the data being sent to the backend
-      };
-
-      const saveResponse = await AppointmentFormSubmit(meetingDetails);
-      if (saveResponse) {
-        toast.success("Meeting created successfully!");
-      } else {
-        toast.error("Failed to save meeting details.");
-      }
+      const newID = String(maxID + 1).padStart(5, "0");
+      setPatientID(newID);
     } catch (error) {
-      console.error("Error creating meeting:", error);
-      toast.error("Error creating meeting. Please try again.");
-    } finally {
-      setIsLoading(false);
+      console.error("Error fetching appointments:", error);
+      toast.error("Error generating Patient ID. Please try again.");
     }
   };
 
+  if (doctor) {
+    generatePatientID();
+  }
+}, [doctor]); // Add doctor as a dependency
+
+// Handle form submission
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
+
+  try {
+    const generatedToken = await getToken();
+    if (!generatedToken) {
+      toast.error("Failed to generate token. Please try again.");
+      setIsLoading(false);
+      return;
+    }
+    setToken(generatedToken);
+
+    const generatedMeetingId = await createMeeting();
+    if (!generatedMeetingId) {
+      toast.error("Failed to create meeting. Please try again.");
+      setIsLoading(false);
+      return;
+    }
+    setMeetingId(generatedMeetingId);
+    setIsMeetingCreated(true);
+
+    // Get current date and time
+    const currentDateTime = new Date();
+    const appointmentDate = currentDateTime.toISOString().split("T")[0]; // Format: YYYY-MM-DD
+    const appointmentTime = currentDateTime.toTimeString().split(" ")[0].slice(0, 5); // Format: HH:MM (removes seconds)
+
+    // Include Doctor and date/time in the meeting details
+    const meetingDetails = {
+      DeviceID: DeviceID,
+      ID: patientID,
+      token: generatedToken,
+      meetingId: generatedMeetingId,
+      Doctor: doctor,
+      AppointmentDate: appointmentDate, // Add current date
+      AppointmentTime: appointmentTime, // Add current time in HH:MM format
+      Checkup_Status: "Pending"
+    };
+
+    const saveResponse = await AppointmentFormSubmit(meetingDetails);
+    if (saveResponse) {
+      toast.success("Meeting created successfully!");
+    } else {
+      toast.error("Failed to save meeting details.");
+    }
+  } catch (error) {
+    console.error("Error creating meeting:", error);
+    toast.error("Error creating meeting. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
   const handleStartMeeting = () => {
     if (meetingId) {
-      localStorage.setItem("patientName", patientName);
       navigate(`/emr/${patientID}/${meetingId}`);
     }
   };
@@ -118,15 +128,16 @@ const MeetingPage = () => {
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label className="block text-gray-700">
-            Patient Name <span className="text-red-600">*</span>
+            Device ID <span className="text-red-600">*</span>
           </label>
           <input
             type="text"
-            value={patientName}
-            onChange={(e) => setPatientName(e.target.value)}
+            value={DeviceID}
+            onChange={(e) => setDeviceID(e.target.value)}
             className="w-full p-2 border rounded"
             required
-            maxLength={30} // Limit to 25 characters
+            minLength={4}
+            maxLength={4} // Limit to 25 characters
           />
         </div>
         <div className="mb-4">
@@ -161,7 +172,7 @@ const MeetingPage = () => {
                 <button
                   type="button"
                   onClick={handleCopyClick}
-                  className={`ml-2 ${copied ? "text-blue-600" : "text-gray-400"} hover:text-blue-600 focus:outline-none`}
+                  className={`ml-2 ${copied ? "text-bg-[#3b4fdf]" : "text-gray-400"} hover:bg-[#2f44c4] focus:outline-none`}
                   style={{ border: "none", background: "none" }}
                 >
                   <FaCopy size={20} />
@@ -174,7 +185,7 @@ const MeetingPage = () => {
           {!isMeetingCreated ? (
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="bg-[#3b4fdf] text-white px-4 py-2 rounded hover:bg-[#2f44c4]"
               disabled={isLoading}
             >
               {isLoading ? "Creating..." : "Create Meeting"}

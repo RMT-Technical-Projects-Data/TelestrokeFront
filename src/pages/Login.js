@@ -12,26 +12,24 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault(); // Prevent default form submission behavior
-
+  
     console.log(process.env.REACT_APP_BACKEND_URL);
-
+  
     try {
       // Call the backend API for login
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/login`, {
         username,
         password,
       });
-
-      
-
+  
       // Extract token and role from the response
       const { token, role } = response.data;
-
+  
       if (token) {
         // Store the token in localStorage
         localStorage.setItem("token", token);
         localStorage.setItem("Doctor", username); // Save the entered username
-
+  
         // Navigate based on the user's role
         if (role === "admin") {
           navigate("/userManagement");
@@ -47,17 +45,26 @@ const Login = () => {
       }
     } catch (error) {
       console.error("Login error:", error);
-
+  
       // Check if the error is due to invalid credentials or network issue
-      if (error.response && error.response.status === 401) {
-        // Unauthorized (invalid credentials)
-        toast.error("Invalid username or password. Please try again.");
+      if (error.response) {
+        if (error.response.status === 400) {
+          // Handle invalid credentials (bad request)
+          toast.error(error.response.data.message || "Invalid username or password. Please try again.");
+        } else if (error.response.status === 401) {
+          // Unauthorized (invalid credentials)
+          toast.error("Invalid username or password. Please try again.");
+        } else {
+          // Other server-side errors
+          toast.error("An error occurred while logging in. Please try again later.");
+        }
       } else {
-        // General error (server or network issue)
-        toast.error("An error occurred while logging in. Please try again later.");
+        // Network error or no response from the server
+        toast.error("Unable to connect to the server. Please check your network connection.");
       }
     }
   };
+  
 
   return (
     <div className="flex h-screen">

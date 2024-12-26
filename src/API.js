@@ -1,10 +1,12 @@
+// Initialize authToken as null (will be lazy-loaded)
+let authToken = null;
+
 // Function to fetch the auth token from the backend
 export const getToken = async () => {
   try {
     const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/get-token`, {
       method: "GET",
     });
-    // Extracting the token from the response
     const { token } = await res.json();
     console.log("Token received:", token);
     return token;
@@ -14,19 +16,26 @@ export const getToken = async () => {
   }
 };
 
-// Fetch the token for use in other API requests
-export const authToken = await getToken();
+// Function to ensure the token is loaded only when needed
+export const getAuthToken = async () => {
+  if (!authToken) {
+    console.log("Fetching token...");
+    authToken = await getToken();
+  }
+  return authToken;
+};
 
 // API call to create a meeting
 export const createMeeting = async (region = "us") => {
   try {
+    const token = await getAuthToken(); // Ensure token is loaded before the call
     const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/create-meeting/`, {
       method: "POST",
       headers: {
-        Authorization: authToken, // Use the token fetched from the backend
+        Authorization: token, // Use the fetched token
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ token: authToken, region }), // Pass the region and token
+      body: JSON.stringify({ token, region }),
     });
 
     const result = await res.json();
@@ -42,13 +51,14 @@ export const createMeeting = async (region = "us") => {
 // API call to validate a meeting
 export const validateMeeting = async (meetingId) => {
   try {
+    const token = await getAuthToken(); // Ensure token is loaded before the call
     const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/validate-meeting/${meetingId}`, {
       method: "POST",
       headers: {
-        Authorization: authToken, // Use the token fetched from the backend
+        Authorization: token, // Use the fetched token
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ token: authToken }), // Pass the token
+      body: JSON.stringify({ token }), // Pass the token
     });
 
     const result = await res.json();
