@@ -5,6 +5,7 @@ import telestroke from "../assets/eyeimage.png";
 import { toast, ToastContainer } from "react-toastify"; // Import toast and ToastContainer
 import "react-toastify/dist/ReactToastify.css"; // Import the CSS for react-toastify
 import logo from "../assets/Telestroke-logo.png";
+import background from "../assets/bg.jpg"
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -70,7 +71,7 @@ const Login = () => {
   return (
     <div
   className="relative w-screen h-screen bg-cover bg-center"
-  style={{ backgroundImage: `url(${require('../assets/eyeimage.png')})` }} // Replace with your desired background image URL
+  style={{ backgroundImage: `url(${require('../assets/bg.jpg')})` }} // Replace with your desired background image URL
 >
     {/* Main container */}
     <div className="flex items-center justify-center h-screen">
