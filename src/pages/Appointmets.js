@@ -36,7 +36,7 @@ const AppointmentsPage = () => {
         <div className="basis-[5%]">
           <Sidebar page="APPOINTMENTS" />
         </div>
-        <div className="basis-[80%] flex flex-col h-fit w-[70%] gap-3 p-4">
+        <div className="basis-[85%] flex flex-col h-fit w-[70%] gap-3 p-4">
           {!showForm && (
             <AppointmentTable
               appointments_data={appointments_data}

@@ -7,6 +7,7 @@ import Appointments from "./pages/Appointmets";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import UserManagement from "./pages/userManagement";
+import "./App.css";
 
 function App() {
   // Apply the useAuth function here to ensure authentication check happens globally

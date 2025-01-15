@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; // For API requests
-import LoginImage from "../assets/Login.jpg"; // Import the image
+import telestroke from "../assets/eyeimage.png";
 import { toast, ToastContainer } from "react-toastify"; // Import toast and ToastContainer
 import "react-toastify/dist/ReactToastify.css"; // Import the CSS for react-toastify
+import logo from "../assets/Telestroke-logo.png";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -67,49 +68,82 @@ const Login = () => {
   
 
   return (
-    <div className="flex h-screen">
-      {/* Left section with image */}
-      <div className="flex-[6]">
-        <img
-          src={LoginImage}
-          alt="Login"
-          className="w-full h-full object-cover"
-        />
-      </div>
-
-      {/* Right section with form */}
-      <div className="flex-[4] flex flex-col justify-center items-center bg-gray-100 p-8">
-        <h1 className="text-3xl font-bold mb-6 text-center">
-          Welcome to Telestroke WebApp
-        </h1>
-
-        <form onSubmit={handleLogin} className="w-3/4">
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="mb-4 p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+    <div
+  className="relative w-screen h-screen bg-cover bg-center"
+  style={{ backgroundImage: `url(${require('../assets/eyeimage.png')})` }} // Replace with your desired background image URL
+>
+    {/* Main container */}
+    <div className="flex items-center justify-center h-screen">
+      {/* Card */}
+      <div className="flex flex-col lg:flex-row bg-white rounded-2xl shadow-xl overflow-hidden max-w-4xl w-full p-10">
+        {/* Left Section: Logo/Illustration */}
+        <div className="flex-1 bg-gradient-to-br from-blue-400 to-blue-100 flex flex-col justify-center items-center p-12">
+          <img
+            src={logo} // Replace with your logo/image source
+            alt="Illustration"
+            className="w-3/4 mb-6"
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mb-4 p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="w-full py-3 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition"
-          >
-            Login
-          </button>
-        </form>
+          <h2 className="text-3xl font-semibold text-white text-center mb-4">
+            Remote Eyestroke Test App
+          </h2>
+          {/* Optional Icon or Image */}
+          <div className="text-center mb-4">
+            <img
+              src={telestroke} // Replace with your desired image source
+              alt="icon"
+              className="w-20 h-20 mx-auto"
+            />
+          </div>
+        </div>
+  
+        {/* Right Section: Login Form */}
+        <div className="flex-1 p-8 flex flex-col justify-center bg-gray-50 rounded-xl shadow-md">
+          <h1 className="text-4xl font-bold text-gray-800 mb-6 text-center">
+            Welcome
+          </h1>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label htmlFor="username" className="block text-gray-600 mb-2 font-medium">
+                Username or Email
+              </label>
+              <input
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-gray-600 mb-2 font-medium">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-md"
+            >
+              Login
+            </button>
+          </form>
+  
+        
+        </div>
       </div>
-
-      {/* Toast container to display toast notifications */}
-      <ToastContainer />
     </div>
+  
+    {/* Toast container */}
+    <ToastContainer />
+  </div>
+  
+  
   );
 };
 

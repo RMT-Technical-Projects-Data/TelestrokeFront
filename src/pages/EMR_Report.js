@@ -10,8 +10,10 @@ import { faEye, faDownload } from '@fortawesome/free-solid-svg-icons';
 const EMRReportpage = () => {
   const [Exam_data, setExamData] = useState([]);
   const [searchQuery, setSearchQuery] = useState(''); // State for search query
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 6;
   
-
+   
   useEffect(() => {
     const fetchExamData = async () => {
       try {
@@ -188,52 +190,94 @@ const handleShowReport = (patientId) => {
     reportWindow.document.write(`
       <html>
         <head>
-          <title>Patient Report - ${patientId}</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              margin: 20px;
-              line-height: 1.8;
-            }
-            h1 {
-              text-align: center;
-              font-size: 24px;
-            }
-            .header {
-              display: flex;
-              flex-direction: column; /* Stack elements vertically */
-              align-items: center; /* Center align the content */
-              margin-bottom: 20px;
-            }
-            .section {
-              margin-bottom: 30px;
-            }
-            .section-header {
-              font-weight: bold;
-              font-size: 20px;
-              margin-bottom: 10px;
-            }
-            .field-title {
-              font-weight: normal;
-            }
-            .field {
-              margin-bottom: 10px;
-            }
-            button {
-              display: block;
-              margin: 20px auto;
-              padding: 10px 20px;
-              font-size: 16px;
-              background-color: #007bff;
-              color: white;
-              border: none;
-              border-radius: 5px;
-              cursor: pointer;
-            }
-            button:hover {
-              background-color: #0056b3;
-            }
-          </style>
+                <style>
+          body {
+           font-family: 'Roboto', Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            background-color: #f9f9fb;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            align-content: center;
+            flex-wrap: wrap;
+            
+          }
+          h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #4f46e5; /* Soft blue for emphasis */
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+          }
+          .header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #d1d5db; /* Subtle border for separation */
+          }
+          .section {
+            margin-bottom: 40px;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+            width:80% !important;
+          }
+          .section-header {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1e40af; /* Darker blue for section headers */
+            margin-bottom: 15px;
+            border-left: 5px solid #4f46e5; /* Decorative left border */
+            padding-left: 10px;
+          }
+          .field {
+            margin-bottom: 12px;
+            font-size: 16px;
+            align-items: center; /* Align titles and values */
+            padding: 8px;
+            border-radius: 5px; /* Rounded edges */
+          }
+          
+          .field-title {
+            font-weight: bold;
+            color: #4b5563;
+            padding-left: 10px;
+          }
+          .field-value {
+            color: #111827; /* Darker tone for emphasis */
+          }
+          button {
+            display: block;
+            margin: 30px auto;
+            padding: 12px 24px;
+            font-size: 16px;
+            background-color: #4f46e5; /* Consistent blue for action */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s; /* Smooth animation */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add button shadow */
+          }
+          button:hover {
+            background-color: #3730a3; /* Slightly darker blue */
+            transform: scale(1.05); /* Subtle scaling effect on hover */
+          }
+          button:active {
+            transform: scale(0.95); /* Press effect */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Reduce shadow on press */
+          }
+        </style>
+
         </head>
         <body>
           <div class="header">
@@ -305,9 +349,11 @@ const handleShowReport = (patientId) => {
   }
 };
 
-  // Function to handle search input
+
+
   const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value); // Update search query state
+    setSearchQuery(event.target.value); 
+    setCurrentPage(1); 
   };
 
   const filteredExamData = useMemo(() => {
@@ -316,70 +362,103 @@ const handleShowReport = (patientId) => {
       exam.patientData.Name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [Exam_data, searchQuery]);
+
+
+  const totalPages = Math.ceil(filteredExamData.length / rowsPerPage);
+  const startRow = (currentPage - 1) * rowsPerPage;
+  const currentRows = filteredExamData.slice(startRow, startRow + rowsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   
 
   return (
-    <>
-      <NavBar />
-      <div className="flex flex-row justify-between gap-2 mb-28 mt-[5%]">
-        <div className="basis-[5%]">
-          <Sidebar page="EMR" />
-        </div>
-        <div className="basis-[80%] flex flex-col gap-5 h-2/6">
-          {/* Search Bar Section */}
-          <div className="mt-6 px-4">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="Search by Patient ID or Name"
-              className="p-2 w-1/3 border border-gray-300 rounded"
-            />
+   
+      <>
+        <NavBar />
+        <div className="flex flex-row justify-between gap-4 mb-32 mt-[8%]">
+          <div className="basis-[15%]">
+            <Sidebar page="EMR" />
           </div>
-          {/* Table Section */}
-          <div className="mt-6 px-4">
-            <div className="overflow-x-auto" style={{ marginRight: '15%' }}>
-              <table className="table-auto border-collapse border border-gray-300 w-full">
-                <thead>
-                  <tr className="bg-slate-700 text-white">
-                    <th className="border px-4 py-2 text-left">Patient ID</th>
-                    <th className="border px-4 py-2 text-left">Patient Name</th> {/* New column */}
-                    <th className="border px-4 py-2 text-left">Actions</th>
+          <div className="basis-[70%] flex flex-col gap-6 h-auto mr-auto">
+           
+            <div className="mt-6">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder="Search by Patient ID or Name"
+                className="p-3 w-1/2 sm:w-1/3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              />
+            </div>
+           
+            <table className="bg-white border border-gray-200 min-w-full shadow-lg rounded-lg">
+            <thead className="bg-indigo-50">
+                  <tr>
+                    <th className="px-6 py-4 text-center text-gray-700 font-medium">Patient ID</th>
+                    <th className="px-6 py-4 text-center text-gray-700 font-medium">Patient Name</th>
+                    <th className="px-6 py-4 text-center text-gray-700 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredExamData.map((exam) => (
-                    <tr key={exam.patientData.patientid} className="hover:bg-gray-50">
-                      <td className="bg-white border px-4 py-2 text-left">
-                        {exam.patientData.patientid}
-                      </td>
-                      <td className="bg-white border px-4 py-2 text-left">
-                        {exam.patientData.Name} {/* New row data for Patient Name */}
-                      </td>
-                      <td className="bg-white border px-4 py-2 text-left">
+                  {currentRows.map((exam) => (
+                    <tr  key={`${exam.patientData.patientid}-${exam.patientData.Name}`} className= "border-t border-gray-300 hover:bg-indigo-50 transition duration-150">
+                      <td className="px-6 py-4 text-center">{exam.patientData.patientid}</td>
+                      <td className="px-6 py-4 text-center">{exam.patientData.Name}</td>
+                      <td className="px-6 py-4 text-center">
                         <Button
-                          className=""
                           onClick={() => handleShowReport(exam.patientData.patientid)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all mr-2"
                         >
-                          <FontAwesomeIcon icon={faEye} className="text-white" /> {/* Eye icon for View */}
+                          <FontAwesomeIcon icon={faEye} />
                         </Button>
                         <Button
-                          className=""
                           onClick={() => generatePDF(exam, exam.patientData.patientid)}
+                          className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
                         >
-                          <FontAwesomeIcon icon={faDownload} className="text-white" />
+                          <FontAwesomeIcon icon={faDownload} />
                         </Button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+             
+              <div className="flex justify-center mt-4">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={`px-4 py-2 rounded-md mr-2 ${
+                    currentPage === 1
+                      ? 'bg-gray-400 text-gray-200'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  }`}
+                >
+                  Prev
+                </button>
+                <span className="text-gray-700 px-4 py-2">
+                  {currentPage} of {totalPages}
+                </span>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={`px-4 py-2 rounded-md ml-2 ${
+                    currentPage === totalPages
+                      ? 'bg-gray-400 text-gray-200'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+
+
             </div>
           </div>
-        </div>
-      </div>
-    </>
-  );
-};
-
+       
+      </>
+    );
+  };    
 export default EMRReportpage;

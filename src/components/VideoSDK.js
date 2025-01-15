@@ -77,7 +77,7 @@ function ParticipantView(props) {
               muted={false}
               playing={true}
               url={videoStream}
-              height="600px"
+              height="580px"
               width="800px"
               onError={(err) => {
                 console.log(err, "participant video error");
@@ -231,13 +231,18 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
     };
   }, [handlePopState]); // useCallback ensures handlePopState is stable
   
+ 
+  const handleToggleMic = () => {
+    // Toggling Mic
+    toggleMic();
+  }
 
   return (
-    <div className="controls-bar -mt-10">
+    <div className="controls-bar -mt-1" style={{ flexDirection: 'row' , zIndex: 0 , transform: 'translateX(-90%)' ,borderRadius: '20px', gap:"40px" , top:'110px'}}>
       <Button onClick={() => handleEndAppointment(false)} className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600">
         End Appointment
       </Button>
-      <Button onClick={() => toggleMic()}>
+      <Button  onClick={handleToggleMic}>
         <img
           src={localMicOn ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/microphone.png" : "https://img.icons8.com/ios-glyphs/50/FFFFFF/no-microphone.png"}
           width={25}
@@ -285,7 +290,7 @@ function MeetingView(props) {
     <div className="container">
       {joined && joined === "JOINED" ? (
         <div>
-          <div className="flex flex-row gap-4">
+          <div className="flex flex-row gap-4 flex justify-center">
             {[...participants.keys()].map((participantId, index) => (
               <ParticipantView
                 index={index}

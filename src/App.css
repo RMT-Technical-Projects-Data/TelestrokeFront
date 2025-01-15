@@ -1,10 +1,14 @@
 .App {
-  text-align: center;
+
 }
 
 .App-logo {
   height: 40vmin;
   pointer-events: none;
+}
+
+body, html { 
+  font-family: Arial, Helvetica, sans-serif !important;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -17,7 +21,9 @@ button{
   background: whitesmoke;
   border: #282c34;
   margin: 4px;
+
 }
+
 
 .App-header {
   background-color: #282c34;
@@ -72,4 +78,18 @@ button{
 .controls-bar button img {
   width: 25px;
   height: 25px;
+}
+
+
+@media (max-width: 1300px) {
+  .controls-bar {
+      transform: translateX(0); /* Ensure no translation for smaller screens */
+      gap: 20px; /* Reduce the gap between buttons for better alignment */
+      justify-content: space-between; /* Allow space between buttons */
+  }
+
+  .controls-bar button {
+      font-size: 14px; /* Make text slightly smaller */
+      padding: 10px 15px; /* Reduce padding for smaller screens */
+  }
 }

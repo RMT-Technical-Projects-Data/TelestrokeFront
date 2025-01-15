@@ -70,7 +70,8 @@ function EMR_TelestrokeExam() {
 
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="scrollable-container overflow-x-auto h-[250px]">
+    <div className="flex flex-col gap-4 ml-3">
       <div className="flex flex-row gap-8 justify-between">
         <div className="basis-2/4">
           <p className="font-bold text-lg inline mr-4">Smooth Pursuit and Saccades</p>
@@ -416,9 +417,10 @@ function EMR_TelestrokeExam() {
           </div>
         </div>
       </div>
-      <button className="mt-2 bg-blue-500 text-white px-2 py-1 rounded w-24 text-sm" onClick={handleSet}>
+      <button  className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-md w-28 text-sm  transition duration-300 ease-in-out transform hover:bg-blue-600 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400" onClick={handleSet}>
         Set
       </button>
+      </div>
       
       <ToastContainer />
     </div>

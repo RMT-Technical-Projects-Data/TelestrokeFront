@@ -122,93 +122,94 @@ const handleSubmit = async (e) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow-md max-w-lg mx-auto mt-8">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
-      <h2 className="text-2xl font-bold mb-4">Create an Instant Meeting</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700">
-            Device ID <span className="text-red-600">*</span>
-          </label>
-          <input
-            type="text"
-            value={DeviceID}
-            onChange={(e) => setDeviceID(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-            minLength={4}
-            maxLength={4} // Limit to 25 characters
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Patient ID</label>
-          <input
-            type="text"
-            value={patientID}
-            readOnly
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Doctor</label>
-          <input
-            type="text"
-            value={doctor}
-            readOnly
-            className="w-full p-2 border rounded bg-gray-100 text-gray-700"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Meeting ID</label>
-          <div className="flex items-center">
-            <input
-              type="text"
-              value={meetingId}
-              readOnly
-              className="w-full p-2 border rounded"
-            />
-            {isMeetingCreated && (
-              <CopyToClipboard text={meetingId}>
-                <button
-                  type="button"
-                  onClick={handleCopyClick}
-                  className={`ml-2 ${copied ? "text-bg-[#3b4fdf]" : "text-gray-400"} hover:bg-[#2f44c4] focus:outline-none`}
-                  style={{ border: "none", background: "none" }}
-                >
-                  <FaCopy size={20} />
-                </button>
-              </CopyToClipboard>
-            )}
-          </div>
-        </div>
-        <div className="flex justify-between">
-          {!isMeetingCreated ? (
-            <button
-              type="submit"
-              className="bg-[#3b4fdf] text-white px-4 py-2 rounded hover:bg-[#2f44c4]"
-              disabled={isLoading}
-            >
-              {isLoading ? "Creating..." : "Create Meeting"}
-            </button>
-          ) : (
+     
+    <div className="bg-white p-6 rounded-xl shadow-xl max-w-lg mx-auto mt-40">
+
+  <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+  <h2 className="text-2xl font-semibold text-gray-800 mb-5">Create an Instant Meeting</h2>
+  <form onSubmit={handleSubmit}>
+    <div className="mb-5">
+      <label className="text-gray-600 text-sm font-semibold">
+        Device ID <span className="text-red-600">*</span>
+      </label>
+      <input
+        type="text"
+        value={DeviceID}
+        onChange={(e) => setDeviceID(e.target.value)}
+        className="w-full p-3 mt-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300"
+        required
+        minLength={4}
+        maxLength={4}
+      />
+    </div>
+    <div className="mb-5">
+      <label className="text-gray-600 text-sm font-semibold">Patient ID</label>
+      <input
+        type="text"
+        value={patientID}
+        readOnly
+        className="w-full p-3 mt-1 border border-gray-300 rounded-lg text-gray-500 bg-gray-100"
+      />
+    </div>
+    <div className="mb-5">
+      <label className="text-gray-600 text-sm font-semibold">Doctor</label>
+      <input
+        type="text"
+        value={doctor}
+        readOnly
+        className="w-full p-3 mt-1 border border-gray-300 rounded-lg text-gray-500 bg-gray-100"
+      />
+    </div>
+    <div className="mb-5">
+      <label className="text-gray-600 text-sm font-semibold">Meeting ID</label>
+      <div className="flex items-center">
+        <input
+          type="text"
+          value={meetingId}
+          readOnly
+          className="w-full p-3 mt-1 border border-gray-300 rounded-lg text-gray-500 bg-gray-100"
+        />
+        {isMeetingCreated && (
+          <CopyToClipboard text={meetingId}>
             <button
               type="button"
-              onClick={handleStartMeeting}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              onClick={handleCopyClick}
+              className={`ml-2 ${copied ? "text-blue-500" : "text-gray-400"} hover:bg-indigo-500 transition-colors focus:outline-none p-2 rounded-md`}
             >
-              Start Meeting
+              <FaCopy size={20} />
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => navigate("/Dashboard")}
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+          </CopyToClipboard>
+        )}
+      </div>
     </div>
+    <div className="flex justify-between items-center">
+      {!isMeetingCreated ? (
+        <button
+          type="submit"
+          className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-200"
+          disabled={isLoading}
+        >
+          {isLoading ? "Creating..." : "Create Meeting"}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={handleStartMeeting}
+          className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-200"
+        >
+          Start Meeting
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => navigate("/Dashboard")}
+        className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition duration-200"
+      >
+        Cancel
+      </button>
+    </div>
+  </form>
+</div>
   );
 };
 

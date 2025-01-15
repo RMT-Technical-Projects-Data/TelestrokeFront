@@ -3,6 +3,10 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import NavBar from "../components/NavBar";
+import { FaList, FaThLarge } from "react-icons/fa";
+import { FaUserMd } from "react-icons/fa";
+import doctorImage from "../assets/doctor.png";
 
 
 const UserManagement = () => {
@@ -17,9 +21,10 @@ const UserManagement = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState(""); // New state for confirm password
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState("list"); // New state for toggling view
 
 
-
+  
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -45,7 +50,10 @@ const UserManagement = () => {
 
     fetchUsers();
   }, [navigate]);
-
+   
+  const handleToggleView = (mode) => {
+    setViewMode(mode);
+  };
  
 
   const handleLogout = () => {
@@ -201,90 +209,155 @@ const UserManagement = () => {
   }
 
   return (
+    <>
+    <NavBar disableDashboardLink={true} />
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">User Management</h1>
-      <ToastContainer />
-
-      <button
-        onClick={handleLogout}
-        className="mb-4 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-500"
-      >
-        Logout
-      </button>
-
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="mb-6 py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-500"
-      >
-        Create New User
-      </button>
-
-      {isModalOpen && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-      <h2 className="text-xl font-bold mb-4">Add New User</h2>
-      <div className="flex flex-col gap-2">
-        <input
-          type="text"
-          placeholder="Username"
-          value={newUser.username}
-          onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-          className="border p-2 rounded"
-          minLength={3}  // Username must be at least 3 characters
-          maxLength={30}  // Restrict username to 20 characters
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={newUser.password}
-          onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-          className="border p-2 rounded"
-          maxLength={16}  // Restrict password to 16 characters
-        />
+    <div className="flex items-center justify-between mb-6 mt-20">
+      <h1 className="text-2xl font-bold">User Management</h1>
+      <div className="flex gap-4">
         <button
-          onClick={handleCreateUser}
-          className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
+          onClick={handleLogout}
+          className="py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-500"
         >
-          Create User
+          Logout
         </button>
-        {createError && <p className="text-red-600">{createError}</p>}
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-500"
+        >
+          Create New User
+        </button>
       </div>
-      <button
-        onClick={() => setIsModalOpen(false)}
-        className="mt-4 py-2 px-4 bg-gray-400 text-white rounded-lg hover:bg-gray-300"
-      >
-        Cancel
-      </button>
     </div>
-  </div>
-)}
 
 
-      <table className="min-w-full bg-white border border-gray-300">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border-b text-left">Username</th>
-            <th className="py-2 px-4 border-b text-left">Role</th>
-            <th className="py-2 px-4 border-b text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user._id}>
-              <td className="py-2 px-4 border-b">{user.username}</td>
-              <td className="py-2 px-4 border-b">{user.role}</td>
-              <td className="py-2 px-4 border-b text-center">
+     {/* View Mode Toggle Icon */}
+     <div className="flex justify-end mb-4">
+        <button
+          onClick={() => setViewMode(viewMode === "list" ? "cards" : "list")}
+          className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
+          aria-label="Toggle View"
+        >
+          {viewMode === "list" ? (
+            <FaThLarge className="text-xl text-gray-700" />
+          ) : (
+            <FaList className="text-xl text-gray-700" />
+          )}
+        </button>
+      </div>
+
+      {/* Conditional Rendering for List or Card View */}
+      {viewMode === "list" ? (
+       <table className="w-full border-collapse bg-white shadow-lg rounded-lg overflow-hidden">
+       <thead>
+         <tr className="bg-gray-200 text-gray-700">
+           <th className="py-3 px-6 border-b border-gray-300 text-left font-semibold">Username</th>
+           <th className="py-3 px-6 border-b border-gray-300 text-left font-semibold">Role</th>
+           <th className="py-3 px-6 border-b border-gray-300 text-center font-semibold">Actions</th>
+         </tr>
+       </thead>
+       <tbody>
+         {users.map((user, index) => (
+           <tr
+             key={user._id}
+             className={`${
+               index % 2 === 0 ? "bg-gray-50" : "bg-white"
+             } hover:bg-blue-50 transition duration-200`}
+           >
+             <td className="py-3 px-6 border-b border-gray-300">{user.username}</td>
+             <td className="py-3 px-6 border-b border-gray-300">{user.role}</td>
+             <td className="py-3 px-6 border-b border-gray-300 text-center">
+               <button
+                 onClick={() => handleEditUser(user)}
+                 className="py-2 px-4 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-500 transition"
+               >
+                 Edit User
+               </button>
+             </td>
+           </tr>
+         ))}
+       </tbody>
+     </table>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {users.map((user) => (
+          <div
+            key={user._id}
+            className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">{user.username}</h3>
+                <p className="text-gray-600 mt-2">
+                  Role: <span className="font-medium text-gray-700">{user.role}</span>
+                </p>
                 <button
                   onClick={() => handleEditUser(user)}
-                  className="py-1 px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
+                  className="mt-4 py-2 px-5 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-500 hover:shadow-md transition-all duration-300"
                 >
                   Edit User
                 </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </div>
+              <div className="flex items-center justify-center">
+                <img
+                  src={doctorImage}
+                  alt="Doctor"
+                  className="w-40 h-25 object-cover rounded-full" // Styling for the image
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      )}
+
+
+{isModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <h2 className="text-xl font-bold mb-4">Add New User</h2>
+              <div className="flex flex-col gap-2">
+                <input
+                  type="text"
+                  placeholder="Username"
+                  value={newUser.username}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, username: e.target.value })
+                  }
+                  className="border p-2 rounded"
+                  minLength={3}
+                  maxLength={30}
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={newUser.password}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, password: e.target.value })
+                  }
+                  className="border p-2 rounded"
+                  maxLength={16}
+                />
+                <button
+                  onClick={handleCreateUser}
+                  className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
+                >
+                  Create User
+                </button>
+                {createError && <p className="text-red-600">{createError}</p>}
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="mt-4 py-2 px-4 bg-gray-400 text-white rounded-lg hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+
+      
 
       {/* User editing modal */}
       {editingUser && (
@@ -297,22 +370,19 @@ const UserManagement = () => {
                 placeholder="New Username"
                 value={editedUsername}
                 onChange={(e) => setEditedUsername(e.target.value)}
-                className="border p-2 rounded"
-              />
+                className="border p-2 rounded" />
               <input
                 type="password"
                 placeholder="New Password (Optional)"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="border p-2 rounded"
-              />
+                className="border p-2 rounded" />
               <input
                 type="password"
                 placeholder="Confirm Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="border p-2 rounded"
-              />
+                className="border p-2 rounded" />
               <div>
                 <button
                   onClick={handleEditSubmit}
@@ -333,7 +403,7 @@ const UserManagement = () => {
           </div>
         </div>
       )}
-    </div>
+    </div></>
   );
 };
 export default UserManagement;

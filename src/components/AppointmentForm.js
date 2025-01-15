@@ -3,6 +3,9 @@ import { AppointmentFormSubmit } from "../utils/auth";
 import { getAllAppointments } from "../utils/auth";
 import { getToken, createMeeting } from "../API";
 import { toast, ToastContainer } from "react-toastify"; // Import Toastify
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 
 
 const AppointmentForm = ({ close }) => {
@@ -177,121 +180,128 @@ const AppointmentForm = ({ close }) => {
   };
   
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md mr-52 mt-28">
-    <div className="mb-4">
-  <label className="block text-gray-700">
-    Device ID <span className="text-red-600">*</span>
-  </label>
-  <input
-    type="text"
-    name="DeviceID" // Changed to DeviceID
-    value={newAppointment.DeviceID}
-    onChange={handleChange}
-    className="w-small p-2 border rounded"
-    required
-    pattern="\d{4}" // Only 4 digits
-    title="Device ID must be exactly 4 digits"
-    maxLength={4} // Restrict to 4 characters
-    onInput={(e) => {
-      // Ensure the input is only digits by replacing non-digits
-      e.target.value = e.target.value.replace(/\D/g, '');
-    }}
-  />
-</div>
-
-
-      <div className="mb-4">
-        <label className="block text-gray-700">
-          Patient ID <span className="text-red-600">*</span>
-        </label>
-        <input
-          type="text"
-          name="ID"
-          value={newAppointment.ID}
-          onChange={handleChange}
-          className="w-smalll p-2 border rounded bg-gray-200"
-          required
-          readOnly
-        />
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-xl max-w-3xl w-full mx-4 space-y-8 border-4 border-[rgba(59, 130, 246, 0.5)]">
+      
+      {/* Header Section */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-blue-600">Create Appointment</h1>
+        <p className="text-gray-600 mt-2">Please fill out the details below to schedule an appointment.</p>
       </div>
-
-      <div className="mb-4">
-        <label className="block text-gray-700">
-          Doctor <span className="text-red-600">*</span>
-        </label>
-        <input
-          type="text"
-          name="Doctor"
-          value={newAppointment.Doctor}
-          className="w-medium p-2 border rounded bg-gray-200"
-          readOnly
-        />
+  
+      {/* Form Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Left Section */}
+        <div className="space-y-6">
+          <div>
+            <label className="block text-gray-800 font-semibold">Device ID <span className="text-red-600">*</span></label>
+            <input
+              type="text"
+              name="DeviceID"
+              value={newAppointment.DeviceID}
+              onChange={handleChange}
+              className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"
+              required
+              pattern="\d{4}"
+              title="Device ID must be exactly 4 digits"
+              maxLength={4}
+              onInput={(e) => {
+                e.target.value = e.target.value.replace(/\D/g, '');
+              }}
+            />
+          </div>
+  
+          <div>
+            <label className="block text-gray-800 font-semibold">Patient ID <span className="text-red-600">*</span></label>
+            <input
+              type="text"
+              name="ID"
+              value={newAppointment.ID}
+              onChange={handleChange}
+              className="w-full p-4 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+              required
+              readOnly
+            />
+          </div>
+  
+          <div>
+            <label className="block text-gray-800 font-semibold">Doctor <span className="text-red-600">*</span></label>
+            <input
+              type="text"
+              name="Doctor"
+              value={newAppointment.Doctor}
+              className="w-full p-4 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+              readOnly
+            />
+          </div>
+  
+          <div>
+            <label className="block text-gray-800 font-semibold">Checkup Status</label>
+            <select
+              name="Checkup_Status"
+              value={newAppointment.Checkup_Status}
+              onChange={(e) => setNewAppointment({ ...newAppointment, Checkup_Status: e.target.value })}
+              className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"
+              required
+            >
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+        </div>
+  
+        {/* Right Section */}
+        <div className="space-y-6">
+          <div>
+            <label className="block text-gray-800 font-semibold">Appointment Date <span className="text-red-600">*</span></label>
+            <input
+              type="date"
+              name="AppointmentDate"
+              value={newAppointment.AppointmentDate}
+              onChange={handleChange}
+              className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"
+              required
+            />
+          </div>
+  
+          <div>
+            <label className="block text-gray-800 font-semibold">Appointment Time <span className="text-red-600">*</span></label>
+            <input
+              type="time"
+              name="AppointmentTime"
+              value={newAppointment.AppointmentTime}
+              onChange={handleChange}
+              className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"
+              required
+            />
+          </div>
+        </div>
       </div>
-
-      <div className="mb-4">
-        <label className="block text-gray-700">
-          Appointment Date <span className="text-red-600">*</span>
-        </label>
-        <input
-          type="date"
-          name="AppointmentDate"
-          value={newAppointment.AppointmentDate}
-          onChange={handleChange}
-          className="w-small p-2 border rounded"
-          required
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block text-gray-700">
-          Appointment Time <span className="text-red-600">*</span>
-        </label>
-        <input
-          type="time"
-          name="AppointmentTime"
-          value={newAppointment.AppointmentTime}
-          onChange={handleChange}
-          className="w-small p-2 border rounded"
-          required
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block text-gray-700">Checkup Status</label>
-        <select
-          name="Checkup_Status"
-          value={newAppointment.Checkup_Status}
-          onChange={(e) =>
-            setNewAppointment({ ...newAppointment, Checkup_Status: e.target.value })
-          }
-          className="w-small p-2 border rounded"
-          required
-        >
-          <option value="Pending">Pending</option>
-        </select>
-      </div>
-
-      <div className="flex justify">
-      <button
+  
+      {/* Buttons */}
+      <div className="flex justify-between gap-4 items-center mt-8">
+        <button
           type="submit"
-          className="bg-[#3b4fdf] text-white px-4 py-2 rounded hover:bg-[#2f44c4] transition-colors duration-300"
+          className="bg-blue-600 text-white w-full sm:w-auto py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-400 transition-colors duration-200"
           disabled={!isCancelEnabled}
         >
           Save Appointment
         </button>
-
+  
         <button
           type="button"
           onClick={isCancelEnabled ? close : null}
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 ml-4"
+          className="bg-red-600 text-white w-full sm:w-auto py-3 px-6 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-400 transition-colors duration-200"
           disabled={!isCancelEnabled}
         >
           Cancel
         </button>
       </div>
-
+  
       <ToastContainer position="top-right" autoClose={3000} />
     </form>
+  </div>
+  
+  
   );
 };
 
