@@ -375,90 +375,116 @@ const handleShowReport = (patientId) => {
   
 
   return (
-   
-      <>
-        <NavBar />
-        <div className="flex flex-row justify-between gap-4 mb-32 mt-[8%]">
-          <div className="basis-[15%]">
-            <Sidebar page="EMR" />
-          </div>
-          <div className="basis-[70%] flex flex-col gap-6 h-auto mr-auto">
-           
-            <div className="mt-6">
+    <>
+      <NavBar />
+      <div className="flex flex-col lg:flex-row gap-4 mb-32 mt-[8%] px-4 lg:px-0">
+        {/* Sidebar */}
+        <div className="lg:w-[15%] w-full flex-shrink-0 bg-gray-100 lg:min-h-screen">
+          <Sidebar page="EMR" />
+        </div>
+        
+        {/* Main Content */}
+        <div className="flex-grow w-full lg:ml-7 flex flex-col items-center">
+        <div className="w-full max-w-5xl mt-4 px-4 sm:mt-6 sm:px-6 lg:mt-[2%] lg:px-10">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-4 text-center lg:text-left">
+              EMR Reports
+            </h1>
+            
+            {/* Search Bar */}
+            <div className="mb-6 flex justify-center lg:justify-start">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
                 placeholder="Search by Patient ID or Name"
-                className="p-3 w-1/2 sm:w-1/3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="p-3 w-full sm:w-1/3 lg:w-1/2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               />
             </div>
-           
-            <table className="bg-white border border-gray-200 min-w-full shadow-lg rounded-lg">
-            <thead className="bg-indigo-50">
-                  <tr>
-                    <th className="px-6 py-4 text-center text-gray-700 font-medium">Patient ID</th>
-                    <th className="px-6 py-4 text-center text-gray-700 font-medium">Patient Name</th>
-                    <th className="px-6 py-4 text-center text-gray-700 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentRows.map((exam) => (
-                    <tr  key={`${exam.patientData.patientid}-${exam.patientData.Name}`} className= "border-t border-gray-300 hover:bg-indigo-50 transition duration-150">
-                      <td className="px-6 py-4 text-center">{exam.patientData.patientid}</td>
-                      <td className="px-6 py-4 text-center">{exam.patientData.Name}</td>
-                      <td className="px-6 py-4 text-center">
-                        <Button
-                          onClick={() => handleShowReport(exam.patientData.patientid)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all mr-2"
-                        >
-                          <FontAwesomeIcon icon={faEye} />
-                        </Button>
-                        <Button
-                          onClick={() => generatePDF(exam, exam.patientData.patientid)}
-                          className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
-                        >
-                          <FontAwesomeIcon icon={faDownload} />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-             
-              <div className="flex justify-center mt-4">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  className={`px-4 py-2 rounded-md mr-2 ${
-                    currentPage === 1
-                      ? 'bg-gray-400 text-gray-200'
-                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  }`}
-                >
-                  Prev
-                </button>
-                <span className="text-gray-700 px-4 py-2">
-                  {currentPage} of {totalPages}
-                </span>
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  className={`px-4 py-2 rounded-md ml-2 ${
-                    currentPage === totalPages
-                      ? 'bg-gray-400 text-gray-200'
-                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  }`}
-                >
-                  Next
-                </button>
-              </div>
+                    
+                {/* Table */}
+<div className="overflow-x-auto">
+  <table className="table-auto bg-white border border-gray-200 sm:w-full w-auto shadow-lg rounded-lg sm:text-sm">
+    <thead className="bg-indigo-50">
+      <tr>
+        <th className="px-4 sm:px-6 py-3 sm:py-4 text-center text-gray-700 font-medium text-xs sm:text-sm">
+          Patient ID
+        </th>
+        <th className="px-4 sm:px-6 py-3 sm:py-4 text-center text-gray-700 font-medium text-xs sm:text-sm">
+          Patient Name
+        </th>
+        <th className="px-4 sm:px-6 py-3 sm:py-4 text-center text-gray-700 font-medium text-xs sm:text-sm">
+          Actions
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {currentRows.map((exam) => (
+        <tr
+          key={`${exam.patientData.patientid}-${exam.patientData.Name}`}
+          className="border-t border-gray-300 hover:bg-indigo-50 transition duration-150"
+        >
+          <td className="px-4 sm:px-6 py-2 sm:py-4 text-center text-xs sm:text-sm">
+            {exam.patientData.patientid}
+          </td>
+          <td className="px-4 sm:px-6 py-2 sm:py-4 text-center text-xs sm:text-sm">
+            {exam.patientData.Name}
+          </td>
+          <td className="px-4 sm:px-6 py-2 sm:py-4 text-center text-xs sm:text-sm">
+            <Button
+              onClick={() => handleShowReport(exam.patientData.patientid)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all mr-2 text-xs sm:text-sm"
+            >
+              <FontAwesomeIcon icon={faEye} />
+            </Button>
+            <Button
+              onClick={() => generatePDF(exam, exam.patientData.patientid)}
+              className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-all text-xs sm:text-sm"
+            >
+              <FontAwesomeIcon icon={faDownload} />
+            </Button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
 
 
+            
+            {/* Pagination */}
+            <div className="flex justify-center mt-4">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={`px-4 py-2 rounded-md mr-2 ${
+                  currentPage === 1
+                    ? 'bg-gray-400 text-gray-200'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                }`}
+              >
+                Prev
+              </button>
+              <span className="text-gray-700 px-4 py-2">
+                {currentPage} of {totalPages}
+              </span>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={`px-4 py-2 rounded-md ml-2 ${
+                  currentPage === totalPages
+                    ? 'bg-gray-400 text-gray-200'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                }`}
+              >
+                Next
+              </button>
             </div>
           </div>
-       
-      </>
-    );
+        </div>
+      </div>
+    </>
+  );
+  
+  
   };    
 export default EMRReportpage;

@@ -14,19 +14,17 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 function Dashboard() {
   const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true); // State to manage loading
-  const [totalAppointments, setTotalAppointments] = useState(0); // State to store total appointments
-  const [attendedAppointments, setAttendedAppointments] = useState(0); // State to store attended appointments
-  const [scheduledAppointments, setScheduledAppointments] = useState(0); // State for scheduled appointments
+  const [loading, setLoading] = useState(true);
+  const [totalAppointments, setTotalAppointments] = useState(0);
+  const [attendedAppointments, setAttendedAppointments] = useState(0);
+  const [scheduledAppointments, setScheduledAppointments] = useState(0);
 
-
-  
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const Doctor = localStorage.getItem("Doctor"); // Retrieve the Doctor from local storage
+        const Doctor = localStorage.getItem("Doctor");
         const url = Doctor ? `${process.env.REACT_APP_BACKEND_URL}/api/appointments?Doctor=${Doctor}` : `${process.env.REACT_APP_BACKEND_URL}/api/appointments`;
-  
+
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -34,15 +32,11 @@ function Dashboard() {
         const data = await response.json();
         setAppointments(data);
         setTotalAppointments(data.length);
-  
-        const attendedCount = data.filter(
-          (appointment) => appointment.Checkup_Status === "Complete"
-        ).length;
+
+        const attendedCount = data.filter((appointment) => appointment.Checkup_Status === "Complete").length;
         setAttendedAppointments(attendedCount);
-  
-        const scheduledCount = data.filter(
-          (appointment) => appointment.Checkup_Status !== "Complete"
-        ).length;
+
+        const scheduledCount = data.filter((appointment) => appointment.Checkup_Status !== "Complete").length;
         setScheduledAppointments(scheduledCount);
       } catch (error) {
         console.error("Error fetching appointments:", error);
@@ -50,11 +44,10 @@ function Dashboard() {
         setLoading(false);
       }
     };
-  
+
     fetchAppointments();
   }, []);
-  
-  
+
   const formatTime = (time) => {
     if (!time) return '';
     const [hour, minute] = time.split(':') || [];
@@ -66,8 +59,6 @@ function Dashboard() {
     return `${formattedHour}:${minute} ${amPm}`;
   };
 
-
-  // Function to sort and group appointments by date and time
   const groupAndSortAppointments = () => {
     const groupedAppointments = {
       dateTime: [],
@@ -98,10 +89,7 @@ function Dashboard() {
       return dateA - dateB || timeA - timeB;
     });
 
-    groupedAppointments.dateOnly.sort(
-      (a, b) => new Date(a.AppointmentDate) - new Date(b.AppointmentDate)
-    );
-
+    groupedAppointments.dateOnly.sort((a, b) => new Date(a.AppointmentDate) - new Date(b.AppointmentDate));
     groupedAppointments.timeOnly.sort((a, b) => {
       const today = new Date().toISOString().split("T")[0];
       const dateA = new Date(`${today}T${a.AppointmentTime}`);
@@ -114,51 +102,35 @@ function Dashboard() {
 
   const renderAppointments = () => {
     const groupedAppointments = groupAndSortAppointments();
-  
     const displayedAppointments = [
       ...groupedAppointments.dateTime,
       ...groupedAppointments.dateOnly,
       ...groupedAppointments.timeOnly,
       ...groupedAppointments.noDateTime,
     ];
-  
-    // Filter out appointments with Checkup_Status === "Complete"
+
     const filteredAppointments = displayedAppointments.filter(
       (appointment) => appointment.Checkup_Status !== "Complete"
     );
-  
+
     return filteredAppointments.slice(0, 4).map((appointment) => {
       const isMeetingAvailable = appointment.meetingId;
-  
+
       const handleJoin = (appointmentId) => {
         // Handle join logic here
       };
-  
+
       return (
         <div key={appointment.ID} className="flex items-center gap-4 w-full max-w-2xl transition ease-in-out animate-fadeIn border border-gray-300 rounded-md">
-          {/* Appointment Card */}
           <div className="bg-white p-8 pl-12 rounded-md shadow-lg flex-1 flex justify-between items-center gap-4">
-            <div className="text-black"> {/* Ensure the text color is black */}
-              <p className="text-2xl font-bold">
-                {" "}
-                {appointment.AppointmentTime ? formatTime(appointment.AppointmentTime) : "N/A"}
-              </p>
-              <p className="text-xl font-bold ">
-                {" "}
-                {appointment.AppointmentDate
-                  ? new Date(appointment.AppointmentDate)
-                      .toISOString()
-                      .split("T")[0]
-                  : "N/A"}
-              </p>
+            <div className="text-black">
+              <p className="text-2xl font-bold">{appointment.AppointmentTime ? formatTime(appointment.AppointmentTime) : "N/A"}</p>
+              <p className="text-xl font-bold">{appointment.AppointmentDate ? new Date(appointment.AppointmentDate).toISOString().split("T")[0] : "N/A"}</p>
               <p className="text-lg color-grey mt-4">Device ID: {appointment.DeviceID}</p>
             </div>
             {isMeetingAvailable ? (
               <Link to={`/emr/${appointment?.ID}/${appointment?.meetingId}`}>
-                <div
-                  className="bg-[#3b4fdf] text-white hover:bg-[#2f44c4] px-4 py-2 w-32 rounded-md shadow-lg text-center mr-10"
-                  onClick={() => handleJoin(appointment)}
-                >
+                <div className="bg-[#3b4fdf] text-white hover:bg-[#2f44c4] px-4 py-2 w-32 rounded-md shadow-lg text-center mr-10" onClick={() => handleJoin(appointment)}>
                   Join
                 </div>
               </Link>
@@ -168,12 +140,8 @@ function Dashboard() {
           </div>
         </div>
       );
-      
-      
     });
   };
-  
-  
 
   const ChartThree = () => {
     const series = [attendedAppointments, scheduledAppointments];
@@ -223,18 +191,16 @@ function Dashboard() {
       <div className="sm:px-7.5 col-span-12 rounded-sm border border-stroke bg-white px-5 pb-5 pt-7.5 shadow-default dark:border-strokedark dark:bg-boxdark xl:col-span-5">
         <div className="mb-3 justify-between gap-4 sm:flex">
           <div>
-            <h5 className="text-xl font-semibold text-black dark:text-white py-3">
-              Appointments Analytics
-            </h5>
+            <h5 className="text-xl font-semibold text-black dark:text-white py-3">Appointments Analytics</h5>
           </div>
         </div>
-    
+
         <div className="mb-2">
           <div id="chartThree" className="mx-auto flex justify-center">
             <ReactApexChart options={options} series={series} type="donut" />
           </div>
         </div>
-    
+
         <div className="-mx-8 flex flex-wrap items-center justify-center gap-y-3">
           {[{ label: 'Appointments Scheduled', value: scheduledAppointments, color: 'bg-[#1c2434]' },
             { label: 'Appointments Attended', value: attendedAppointments, color: 'bg-[#3b4fdf]' },
@@ -252,29 +218,21 @@ function Dashboard() {
         </div>
       </div>
     );
-    
-    
   };
-  
+
   return (
     <>
       <NavBar />
-      <div className="flex flex-row justify-between gap-2 mb-28">
-        <div className="basis-[2%]">
-          {/* Sidebar with z-10 to ensure it's behind the navbar */}
+      <div className="flex flex-col sm:flex-row justify-between gap-2 mb-28">
+        <div className="sm:basis-[2%]">
           <Sidebar page="DASHBOARD" className="z-10" />
         </div>
-        <div className="basis-[90%] p-6 space-y-6 transition ease-in-out animate-fadeIn ml-[250px]">
-          {/* Added margin-left to shift content to the right */}
+        <div className="basis-[100%] sm:basis-[90%] p-6 space-y-6 transition ease-in-out animate-fadeIn ml-[250px]">
           {loading ? (
             <div className="text-center">Loading...</div>
           ) : (
-            <div className="flex flex-col gap-10">
-  
-              {/* First horizontal div with buttons and tiles */}
-              <div className="flex flex-row mb-10">
-  
-                {/* Left section: Buttons */}
+            <div className="flex flex-col gap-10 px-4 sm:px-6 md:px-10 lg:px-12 xl:px-16">
+              <div className="flex flex-col sm:flex-row gap-6 mb-10">
                 <div className="w-full sm:w-1/4 flex flex-col mt-[9%]">
                   <div className="flex flex-col gap-5">
                     <Link to="/meeting">
@@ -290,54 +248,47 @@ function Dashboard() {
                   </div>
                 </div>
   
-                {/* Right section: Tiles */}
-                <div className="w-full">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-10 mt-[6%]">
-                    {/* Total Appointments Tile */}
-                    <div className="flex flex-col bg-white text-black p-10 rounded-md shadow-lg justify-end items-end relative h-[200px]">
-                      <img
-                        src={total}
-                        alt="Total Appointments"
-                        className="text-[#3b4fdf] absolute top-6 left-6 w-16 h-16"
-                      />
-                      <p className="text-6xl font-bold text-center">{totalAppointments}</p>
-                      <h2 className="text-xl text-center text-gray-500 mt-2">Total Appointments</h2>
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-10 mt-[6%] w-full">
+                  {/* Total Appointments Tile */}
+                  <div className="flex flex-col bg-white text-black p-10 rounded-md shadow-lg justify-end items-end relative h-[200px]">
+                    <img
+                      src={total}
+                      alt="Total Appointments"
+                      className="text-[#3b4fdf] absolute top-6 left-6 w-16 h-16"
+                    />
+                    <p className="text-6xl font-bold text-center">{totalAppointments}</p>
+                    <h2 className="text-xl text-center text-gray-500 mt-2">Total Appointments</h2>
+                  </div>
   
-                    {/* Appointments Attended Tile */}
-                    <div className="flex flex-col bg-white text-black  p-10 rounded-md shadow-lg justify-end items-end relative h-[200px]">
-                      <img
-                        src={attended}
-                        alt="Appointments Attended"
-                        className="text-[#3b4fdf] absolute top-6 left-6 w-16 h-16"
-                      />
-                      <p className="text-6xl font-bold text-center">{attendedAppointments}</p>
-                      <h2 className="text-xl text-center text-gray-500 mt-2">Appointments Attended</h2>
-                    </div>
+                  {/* Appointments Attended Tile */}
+                  <div className="flex flex-col bg-white text-black p-10 rounded-md shadow-lg justify-end items-end relative h-[200px]">
+                    <img
+                      src={attended}
+                      alt="Appointments Attended"
+                      className="text-[#3b4fdf] absolute top-6 left-6 w-16 h-16"
+                    />
+                    <p className="text-6xl font-bold text-center">{attendedAppointments}</p>
+                    <h2 className="text-xl text-center text-gray-500 mt-2">Appointments Attended</h2>
+                  </div>
   
-                    {/* Appointments Scheduled Tile */}
-                    <div className="flex flex-col bg-white text-black p-10 rounded-md shadow-lg justify-end items-end relative h-[200px]">
-                      <img
-                        src={scheduled}
-                        alt="Appointments Scheduled"
-                        className="text-[#3b4fdf] absolute top-6 left-6 w-16 h-16"
-                      />
-                      <p className="text-6xl font-bold text-center">{scheduledAppointments}</p>
-                      <h2 className="text-xl text-center text-gray-500 mt-2">Appointments Scheduled</h2>
-                    </div>
+                  {/* Appointments Scheduled Tile */}
+                  <div className="flex flex-col bg-white text-black p-10 rounded-md shadow-lg justify-end items-end relative h-[200px]">
+                    <img
+                      src={scheduled}
+                      alt="Appointments Scheduled"
+                      className="text-[#3b4fdf] absolute top-6 left-6 w-16 h-16"
+                    />
+                    <p className="text-6xl font-bold text-center">{scheduledAppointments}</p>
+                    <h2 className="text-xl text-center text-gray-500 mt-2">Appointments Scheduled</h2>
                   </div>
                 </div>
               </div>
   
-              {/* Second horizontal div with upcoming appointments and chart */}
-              <div className="flex flex-row gap-6 items-start -mt-[5%]">
-                {/* Left section: Upcoming Appointments */}
+              <div className="flex flex-col sm:flex-row gap-6 items-start -mt-[5%]">
                 <div className="w-full flex p-10 bg-white flex-col gap-7">
                   <h2 className="text-2xl font-bold">Upcoming Appointments:</h2>
                   {renderAppointments()}
                 </div>
-  
-                {/* Right section: Chart */}
                 <div className="w-full flex justify-center">
                   <ChartThree />
                 </div>
@@ -348,6 +299,6 @@ function Dashboard() {
       </div>
     </>
   );
-    
-}  
+  
+}
 export default Dashboard;

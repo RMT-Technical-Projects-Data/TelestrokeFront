@@ -238,21 +238,33 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
   }
 
   return (
-    <div className="controls-bar -mt-1" style={{ flexDirection: 'row' , zIndex: 0 , transform: 'translateX(-90%)' ,borderRadius: '20px', gap:"40px" , top:'110px'}}>
-      <Button onClick={() => handleEndAppointment(false)} className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600">
-        End Appointment
-      </Button>
-      <Button  onClick={handleToggleMic}>
-        <img
-          src={localMicOn ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/microphone.png" : "https://img.icons8.com/ios-glyphs/50/FFFFFF/no-microphone.png"}
-          width={25}
-          height={25}
-          alt={localMicOn ? "Microphone on" : "Microphone off"} // Added alt text for accessibility
-        />
-      </Button>
-      <Button onClick={() => handleToggleWebcam()}>Web Cam</Button>
-    </div>
-  );
+    <div
+  className="controls-bar -mt-1 flex flex-row gap-4 sm:gap-5 sm:top-[110px] sm:transform-none sm:z-0 sm:mt-0 sm:w-auto"
+  style={{
+    flexDirection: 'row', 
+    zIndex: 0, 
+    transform: 'translateX(-100%)', 
+    borderRadius: '20px', 
+    gap: '20px',
+    top: '85px',
+  }}
+>
+  <Button onClick={() => handleEndAppointment(false)} className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 text-xs sm:text-base">
+    End Appointment
+  </Button>
+  <Button onClick={handleToggleMic} className="text-xs sm:text-base">
+    <img
+      src={localMicOn ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/microphone.png" : "https://img.icons8.com/ios-glyphs/50/FFFFFF/no-microphone.png"}
+      width={25}
+      height={25}
+      alt={localMicOn ? "Microphone on" : "Microphone off"}
+    />
+  </Button>
+  <Button onClick={() => handleToggleWebcam()} className="text-xs sm:text-base">
+    Web Cam
+  </Button>
+</div>
+  )
 }  
 
 function MeetingView(props) {

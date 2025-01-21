@@ -70,7 +70,7 @@ const Login = () => {
   return (
     <div
   className="relative w-screen h-screen bg-cover bg-center"
-  style={{ backgroundImage: `url(${require('../assets/eyeimage.png')})` }} // Replace with your desired background image URL
+  style={{ backgroundImage: `url(${require('../assets/bg.jpg')})` }} // Replace with your desired background image URL
 >
     {/* Main container */}
     <div className="flex items-center justify-center h-screen">
@@ -79,17 +79,16 @@ const Login = () => {
         {/* Left Section: Logo/Illustration */}
         <div className="flex-1 bg-gradient-to-br from-blue-400 to-blue-100 flex flex-col justify-center items-center p-12">
           <img
-            src={logo} // Replace with your logo/image source
+            src={logo}
             alt="Illustration"
             className="w-3/4 mb-6"
           />
           <h2 className="text-3xl font-semibold text-white text-center mb-4">
             Remote Eyestroke Test App
           </h2>
-          {/* Optional Icon or Image */}
           <div className="text-center mb-4">
             <img
-              src={telestroke} // Replace with your desired image source
+              src={telestroke}
               alt="icon"
               className="w-20 h-20 mx-auto"
             />
