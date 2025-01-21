@@ -5,6 +5,7 @@ import telestroke from "../assets/eyeimage.png";
 import { toast, ToastContainer } from "react-toastify"; // Import toast and ToastContainer
 import "react-toastify/dist/ReactToastify.css"; // Import the CSS for react-toastify
 import logo from "../assets/Telestroke-logo.png";
+import background from "../assets/bg.jpg"
 
 const Login = () => {
   const [username, setUsername] = useState("");
