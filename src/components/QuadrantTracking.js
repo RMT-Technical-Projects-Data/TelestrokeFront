@@ -1,50 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-
-function QuadrantTracking({settings, updateSetting} ) {
+function QuadrantTracking({ settings, updateSetting }) {
+    const [selectedShape, setSelectedShape] = useState("circle");
     const gridSize = 5; // 5x5 matrix
 
-    // // Function to handle button clicks
-    // const handleButtonClick = (row, col) => {
-    //     const coordinates = { x: col * 80, y: row * 150 };
-        
-
-    //     // Send coordinates to the server via POST request
-    //     axios.post('http://localhost:5000/webhook', coordinates)
-    //         .then(response => {
-    //             console.log('Coordinates sent:', response.data);
-    //         })
-    //         .catch(error => {
-    //             console.error('There was an error sending the coordinates!', error);
-    //         });
-    // };
+    const handleShapeChange = (e) => {
+        const value = e.target.value;
+        setSelectedShape(value);
+        updateSetting("shape", value);
+    };
 
     const handleButtonClick = (row, col) => {
-    
-        // Assuming 5x5 grid and screen dimensions of 1920x1440
         const numRows = 4;
         const numCols = 4;
-        const screenWidth = 1920;
-        const screenHeight = 1080;
+        const screenWidth = 2880;
+        const screenHeight = 1440;
 
-        // Map matrix coordinates to screen coordinates
-        const screenX = (col / (numCols)) * (screenWidth); // Adjust for red dot width
-        const screenY = (row / (numRows)) * (screenHeight); // Adjust for red dot height
+        const screenX = (col / numCols) * screenWidth;
+        const screenY = (row / numRows) * screenHeight;
 
         const coordinates = { x: screenX, y: screenY };
-        updateSetting("coordinates", coordinates)
-        // Send coordinates to the server via POST request
-        // axios.post('http://localhost:5000/webhook', coordinates)
-        //     .then(response => {
-        //         console.log('Coordinates sent:', response.data);
-        //     })
-        //     .catch(error => {
-        //         console.error('There was an error sending the coordinates!', error);
-        //     });
+        updateSetting("coordinates", coordinates);
     };
 
     return (
         <div style={styles.container}>
+            <p className="font-bold text-lg">Select Quadrant Shape</p>
+            <select onChange={handleShapeChange} value={selectedShape}>
+                <option value="circle">Circle</option>
+                <option value="star">Star</option>
+                <option value="square">Square</option>
+            </select>
+
             <h1 className="font-bold text-lg">Button Matrix</h1>
             <div style={styles.matrix}>
                 {[...Array(gridSize)].map((_, row) => (
@@ -71,14 +58,13 @@ const styles = {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
- // Full viewport height
     },
     matrix: {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        margin_top:"90px"
+        marginTop: "10px"
     },
     row: {
         display: 'flex',
@@ -88,8 +74,8 @@ const styles = {
         color: 'white',
         border: '1px solid #ddd',
         fontSize: 16,
-        width: 40, // Fixed width
-        height: 40, // Fixed height
+        width: 40,
+        height: 40,
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',

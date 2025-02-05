@@ -2,17 +2,17 @@ import React, { useState } from "react";
 import Button from "./Button";
 
 const StimulusVideoController = ({ updateSetting }) => {
-  const [isPlaying, setIsPlaying] = useState(false); // State to track play/pause
+  const [isPlaying, setIsPlaying] = useState(false);
   const [videoSpeed, setVideoSpeed] = useState(2);
+  const [stimulusType, setStimulusType] = useState("");
+  const [shape, setShape] = useState("");
 
   const handleSpeedChange = (event) => {
     const value = event.target.value;
     setVideoSpeed(value);
-
     let speedLabel = "slow";
     if (value > 70) speedLabel = "high";
     else if (value > 40) speedLabel = "medium";
-
     updateSetting("speed", speedLabel);
   };
 
@@ -30,27 +30,43 @@ const StimulusVideoController = ({ updateSetting }) => {
   return (
     <div className="flex flex-col gap-2 items-left">
       <h1 className="font-bold text-lg">Video Control Panel</h1>
+      
+      {/* Stimulus Type Selection */}
       <p className="font-bold text-lg">Stimulus Type</p>
       <select
+        value={stimulusType}
         onChange={(e) => {
           const value = e.target.value;
+          setStimulusType(value);
           updateSetting("stimulus_type", value);
         }}
       >
+        <option value="" disabled>Select Type</option>
         <option value="2">Infinity</option>
         <option value="1">H-Shape</option>
       </select>
-
-      {/* Rectangle box with Play/Pause button and Slider */}
+      
+      {/* Shape Selection */}
+      <p className="font-bold text-lg">Shape</p>
+      <select
+        value={shape}
+        onChange={(e) => {
+          const value = e.target.value;
+          setShape(value);
+          updateSetting("shape", value);
+        }}
+      >
+        <option value="" disabled>Select Shape</option>
+        <option value="Circle">Circle</option>
+        <option value="Square">Square</option>
+        <option value="Star">Star</option>
+      </select>
+      
+      {/* Play/Pause and Speed Control */}
       <div className="flex items-center justify-between border border-gray-400 p-4 rounded-md" style={{ width: "300px" }}>
-        {/* Play/Pause Button */}
         <Button onClick={handlePlayPause} isPlaying={isPlaying}>
           <img
-            src={
-              isPlaying
-                ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/play.png"
-                : "https://img.icons8.com/ios-glyphs/50/FFFFFF/pause.png"
-            }
+            src={isPlaying ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/play.png" : "https://img.icons8.com/ios-glyphs/50/FFFFFF/pause.png"}
             width={25}
             height={25}
             alt={isPlaying ? "Pause" : "Play"}
@@ -65,44 +81,12 @@ const StimulusVideoController = ({ updateSetting }) => {
             max="100"
             step="1"
             value={videoSpeed}
-            className="w-28 slider" // Add a class for styling
+            className="w-28 slider"
             onChange={handleSpeedChange}
           />
           <label className="w-24 text-lg">{getSpeedLabel(videoSpeed)}</label>
         </div>
       </div>
-
-      {/* Slider Styling */}
-      <style jsx>{`
-        .slider {
-          -webkit-appearance: none;
-          width: 100%;
-          height: 8px;
-          background: #d3d3d3; /* Background color of the slider */
-          border-radius: 5px;
-          outline: none;
-          opacity: 0.9;
-          transition: opacity 0.2s;
-        }
-
-        .slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 20px; /* Width of the thumb */
-          height: 20px; /* Height of the thumb */
-          background: #6200ee; /* Same color as play/pause button */
-          border-radius: 50%;
-          cursor: pointer;
-        }
-
-        .slider::-moz-range-thumb {
-          width: 20px; /* Width of the thumb */
-          height: 20px; /* Height of the thumb */
-          background: #6200ee; /* Same color as play/pause button */
-          border-radius: 50%;
-          cursor: pointer;
-        }
-      `}</style>
     </div>
   );
 };

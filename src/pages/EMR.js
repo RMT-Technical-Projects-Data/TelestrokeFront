@@ -20,9 +20,9 @@ import { submitExamData } from "../utils/auth";
 const EMRpage = () => {
   const { patientid, meetingid } = useParams();
   // const [name, setName] = useState("");
-  const [selectedEye, setSelectedEye] = useState("left");
+  const [selectedEye, setSelectedEye] = useState(null);
   const [meetingJoined, setMeetingJoined] = useState(false);
-  const [centerFocus, setCenterFocus] = useState(true);
+  const [centerFocus, setCenterFocus] = useState(null);
   const [settings, setSettings] = useState({
     eye_camera_control: "",
     exam_mode: "",
@@ -206,6 +206,25 @@ const EMRpage = () => {
                           </h3>
                           <h3 className="font-bold text-lg">Eye Camera Controls</h3>
                           <div className="flex items-center">
+
+                          <input
+                              type="radio"
+                              id="right"
+                              name="eye"
+                              value="right"
+                              className="mr-2"
+                              checked={selectedEye === "right"}
+                              onChange={() => {
+                                setSelectedEye("right");
+                                updateSetting("eye_camera_control", "left");
+                              }}
+                            />
+                            <label htmlFor="right" className="mr-6 text-lg">
+                              Left
+                            </label>
+
+
+
                             <input
                               type="radio"
                               id="left"
@@ -218,59 +237,47 @@ const EMRpage = () => {
                                 updateSetting("eye_camera_control", "right");
                               }}
                             />
-                            <label htmlFor="left" className="mr-6 text-lg">
+                            <label htmlFor="left" className=" text-lg">
                               Right
                             </label>
-                            <input
-                              type="radio"
-                              id="right"
-                              name="eye"
-                              value="right"
-                              className="mr-2"
-                              checked={selectedEye === "right"}
-                              onChange={() => {
-                                setSelectedEye("right");
-                                updateSetting("eye_camera_control", "left");
-                              }}
-                            />
-                            <label htmlFor="right" className="text-lg">
-                              Left
-                            </label>
+                           
                           </div>
                           <label htmlFor="examMode" className="text-lg font-semibold mr-4">
                             Exam Mode
                           </label>
                           <div className="flex items-center">
-                            <input
-                              onChange={() => {
-                                updateSetting("exam_mode", "CenterFocus");
-                                setCenterFocus(true);
-                              }}
-                              type="radio"
-                              id="centerFocus"
-                              name="examMode"
-                              value="centerFocus"
-                              className="mr-2"
-                              checked={centerFocus}
-                            />
-                            <label htmlFor="centerFocus" className="mr-6 text-lg">
-                              Center Focus
-                            </label>
-                            <input
-                              onChange={() => {
-                                updateSetting("exam_mode", "Quadrant");
-                                setCenterFocus(false);
-                              }}
-                              type="radio"
-                              id="quadrant"
-                              name="examMode"
-                              value="quadrant"
-                              className="mr-2"
-                              checked={!centerFocus}
-                            />
-                            <label htmlFor="quadrant" className="text-lg">
-                              Quadrant
-                            </label>
+                          <input
+                            onChange={() => {
+                              updateSetting("exam_mode", "CenterFocus");
+                              setCenterFocus(true);
+                            }}
+                            type="radio"
+                            id="centerFocus"
+                            name="examMode"
+                            value="centerFocus"
+                            className="mr-2"
+                            checked={centerFocus === true} // Only check when explicitly true
+                          />
+                          <label htmlFor="centerFocus" className="mr-6 text-lg">
+                            Center Focus
+                          </label>
+
+                          <input
+                            onChange={() => {
+                              updateSetting("exam_mode", "Quadrant");
+                              setCenterFocus(false);
+                            }}
+                            type="radio"
+                            id="quadrant"
+                            name="examMode"
+                            value="quadrant"
+                            className="mr-2"
+                            checked={centerFocus === false} // Only check when explicitly false
+                          />
+                          <label htmlFor="quadrant" className="text-lg">
+                            Quadrant
+                          </label>
+
                           </div>
                           {centerFocus ? (
                             <StimulusVideoController
