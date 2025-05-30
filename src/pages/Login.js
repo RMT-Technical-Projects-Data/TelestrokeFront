@@ -5,7 +5,7 @@ import telestroke from "../assets/eyeimage.png";
 import { toast, ToastContainer } from "react-toastify"; // Import toast and ToastContainer
 import "react-toastify/dist/ReactToastify.css"; // Import the CSS for react-toastify
 import logo from "../assets/Telestroke-logo.png";
-// import background from "../assets/bg.jpg"
+// import background from "../assets/bg-blur.jpg"
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -71,12 +71,13 @@ const Login = () => {
   return (
     <div
   className="relative w-screen h-screen bg-cover bg-center"
-  style={{ backgroundImage: `url(${require('../assets/bg.jpg')})` }} // Replace with your desired background image URL
->
+   
+   style={{ backgroundImage: `url(${require('../assets/bg-blur.jpg')})` }} // Replace with your desired background image URL
+> 
     {/* Main container */}
     <div className="flex items-center justify-center h-screen">
       {/* Card */}
-      <div className="flex flex-col lg:flex-row bg-white rounded-2xl shadow-xl overflow-hidden max-w-4xl w-full p-10">
+      <div className="flex flex-col lg:flex-row bg-white rounded-2xl shadow-xl overflow-hidden max-w-4xl w-full p-0">
         {/* Left Section: Logo/Illustration */}
         <div className="flex-1 bg-gradient-to-br from-blue-400 to-blue-100 flex flex-col justify-center items-center p-12">
           <img
@@ -85,14 +86,14 @@ const Login = () => {
             className="w-3/4 mb-6"
           />
           <h2 className="text-3xl font-semibold text-white text-center mb-4">
-            Remote Eyestroke Test App
+            Remote Eyestroke Web App
           </h2>
-          <div className="text-center mb-4">
-            <img
+          <div className="text-center mb-4 h-20">
+            {/* <img
               src={telestroke}
               alt="icon"
               className="w-20 h-20 mx-auto"
-            />
+            /> */}
           </div>
         </div>
   
