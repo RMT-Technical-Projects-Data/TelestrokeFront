@@ -232,23 +232,23 @@ const PatientForm = ({ savePatient, close }) => {
             />
           </div>
           <div className="mb-4">
-  <label className="block text-gray-700">Duration:</label>
-  <select
-    name="Duration"
-    value={patientData.Duration}
-    onChange={(e) =>
-      setPatientData({ ...patientData, Duration: Number(e.target.value) })
-    }
-    className="w-small p-2 border rounded"
-    required
-  >
-    {Array.from({ length: 7 }, (_, i) => i * 10).map((minutes) => (
-      <option key={minutes} value={minutes}>
-        {minutes} mins
-      </option>
-    ))}
-  </select>
-</div>
+            <label className="block text-gray-700">Duration:</label>
+            <select
+              name="Duration"
+              value={patientData.Duration}
+              onChange={(e) =>
+                setPatientData({ ...patientData, Duration: Number(e.target.value) })
+              }
+              className="w-small p-2 border rounded"
+              required
+            >
+              {Array.from({ length: 7 }, (_, i) => i * 10).map((minutes) => (
+                <option key={minutes} value={minutes}>
+                  {minutes} mins
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div>
             <label className="block text-gray-700">Gender:</label>

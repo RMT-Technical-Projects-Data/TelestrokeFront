@@ -2,32 +2,28 @@ import React, { useState, useEffect } from "react";
 import { AppointmentFormSubmit } from "../utils/auth";
 import { getAllAppointments } from "../utils/auth";
 import { getToken, createMeeting } from "../API";
-import { toast, ToastContainer } from "react-toastify"; // Import Toastify
-// import DatePicker from "react-datepicker";
+import { toast, ToastContainer } from "react-toastify";
 import "react-datepicker/dist/react-datepicker.css";
-
-
 
 const AppointmentForm = ({ close }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCancelEnabled, setIsCancelEnabled] = useState(true);
   const [newAppointment, setNewAppointment] = useState({
-    DeviceID: "", // Change Name to DeviceID
+    DeviceID: "",
     ID: "",
     AppointmentTime: "",
     AppointmentDate: "",
     Checkup_Status: "Pending",
     token: "",
     meetingId: "",
-    Doctor: "", // Add Doctor field in the state
+    Doctor: "",
   });
-  
-  // Retrieve the doctor's name from localStorage
+
   useEffect(() => {
     const doctorName = localStorage.getItem("Doctor") || "Unknown Doctor";
     setNewAppointment((prev) => ({
       ...prev,
-      Doctor: doctorName, // Set the Doctor field
+      Doctor: doctorName,
     }));
   }, []);
 
@@ -35,9 +31,8 @@ const AppointmentForm = ({ close }) => {
     const today = new Date().toISOString().split("T")[0];
     const { name, value } = e.target;
 
-    // Check if the AppointmentDate is less than today's date
     if (name === "AppointmentDate" && value < today) {
-      toast.error("Please select today or a future date!"); // Show toast error notification
+      toast.error("Please select today or a future date!");
     } else {
       setNewAppointment((prev) => ({
         ...prev,
@@ -49,7 +44,7 @@ const AppointmentForm = ({ close }) => {
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return ''; // Handle invalid dates
+    if (isNaN(date.getTime())) return '';
     const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
     return date.toLocaleDateString(undefined, options);
   };
@@ -87,29 +82,25 @@ const AppointmentForm = ({ close }) => {
     try {
       const doctor = localStorage.getItem("Doctor");
       const appointments = await getAllAppointments(doctor);
-
-      // Format the appointment time and date of the new appointment
       const appointmentDate = newAppointment.AppointmentDate;
       const appointmentTime = newAppointment.AppointmentTime;
 
-      // Loop through existing appointments to check for a time clash
       for (const appt of appointments) {
-        const existingDate = appt.AppointmentDate; // e.g., "2024-12-18T00:00:00.000Z"
-        const existingTime = appt.AppointmentTime; // e.g., "08:30"
+        const existingDate = appt.AppointmentDate;
+        const existingTime = appt.AppointmentTime;
 
         const formattedExistingDate = formatDate(existingDate); 
         const formattedExistingTime = formatTime(existingTime);
-
         const formattedNewDate = formatDate(appointmentDate);
         const formattedNewTime = formatTime(appointmentTime);
 
         if (formattedExistingDate === formattedNewDate && formattedExistingTime === formattedNewTime) {
           toast.error("Appointment time clashes with an existing appointment.");
-          return false; // Conflict found
+          return false;
         }
       }
 
-      return true; // No conflicts
+      return true;
     } catch (error) {
       console.error("Error checking for conflicts:", error);
       toast.error("Error checking for appointment clashes.");
@@ -180,128 +171,160 @@ const AppointmentForm = ({ close }) => {
   };
   
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-xl max-w-3xl w-full mx-4 space-y-8 border-4 border-[rgba(59, 130, 246, 0.5)]">
-      
-      {/* Header Section */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-blue-600">Create Appointment</h1>
-        <p className="text-gray-600 mt-2">Please fill out the details below to schedule an appointment.</p>
-      </div>
-  
-      {/* Form Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left Section */}
-        <div className="space-y-6">
-          <div>
-            <label className="block text-gray-800 font-semibold">Device ID <span className="text-red-600">*</span></label>
-            <input
-              type="text"
-              name="DeviceID"
-              value={newAppointment.DeviceID}
-              onChange={handleChange}
-              className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"
-              required
-              pattern="\d{4}"
-              title="Device ID must be exactly 4 digits"
-              maxLength={4}
-              onInput={(e) => {
-                e.target.value = e.target.value.replace(/\D/g, '');
-              }}
-            />
-          </div>
-  
-          <div>
-            <label className="block text-gray-800 font-semibold">Patient ID <span className="text-red-600">*</span></label>
-            <input
-              type="text"
-              name="ID"
-              value={newAppointment.ID}
-              onChange={handleChange}
-              className="w-full p-4 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-              required
-              readOnly
-            />
-          </div>
-  
-          <div>
-            <label className="block text-gray-800 font-semibold">Doctor <span className="text-red-600">*</span></label>
-            <input
-              type="text"
-              name="Doctor"
-              value={newAppointment.Doctor}
-              className="w-full p-4 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-              readOnly
-            />
-          </div>
-  
-          <div>
-            <label className="block text-gray-800 font-semibold">Checkup Status</label>
-            <select
-              name="Checkup_Status"
-              value={newAppointment.Checkup_Status}
-              onChange={(e) => setNewAppointment({ ...newAppointment, Checkup_Status: e.target.value })}
-              className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"
-              required
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <form 
+        onSubmit={handleSubmit} 
+        className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
+        {/* Header Section */}
+        <div className="bg-blue-600 text-white p-6 rounded-t-xl">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold">Create Appointment</h1>
+            {/* <button
+              type="button"
+              onClick={isCancelEnabled ? close : null}
+              className="text-white hover:text-gray-200 text-2xl"
+              disabled={!isCancelEnabled}
             >
-              <option value="Pending">Pending</option>
-            </select>
+              &times;
+            </button> */}
+          </div>
+          <p className="text-blue-100 mt-1">Please fill out the details below to schedule an appointment.</p>
+        </div>
+
+        {/* Form Section */}
+        <div className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Device ID <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="DeviceID"
+                  value={newAppointment.DeviceID}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  required
+                  pattern="\d{4}"
+                  title="Device ID must be exactly 4 digits"
+                  maxLength={4}
+                  onInput={(e) => {
+                    e.target.value = e.target.value.replace(/\D/g, '');
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Patient ID <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="ID"
+                  value={newAppointment.ID}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                  required
+                  readOnly
+                />
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Doctor <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="Doctor"
+                  value={newAppointment.Doctor}
+                  className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                  readOnly
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Checkup Status
+                </label>
+                <select
+                  name="Checkup_Status"
+                  value={newAppointment.Checkup_Status}
+                  onChange={(e) => setNewAppointment({ ...newAppointment, Checkup_Status: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  required
+                >
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Appointment Date <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                name="AppointmentDate"
+                value={newAppointment.AppointmentDate}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Appointment Time <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                name="AppointmentTime"
+                value={newAppointment.AppointmentTime}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                required
+              />
+            </div>
           </div>
         </div>
-  
-        {/* Right Section */}
-        <div className="space-y-6">
-          <div>
-            <label className="block text-gray-800 font-semibold">Appointment Date <span className="text-red-600">*</span></label>
-            <input
-              type="date"
-              name="AppointmentDate"
-              value={newAppointment.AppointmentDate}
-              onChange={handleChange}
-              className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"
-              required
-            />
-          </div>
-  
-          <div>
-            <label className="block text-gray-800 font-semibold">Appointment Time <span className="text-red-600">*</span></label>
-            <input
-              type="time"
-              name="AppointmentTime"
-              value={newAppointment.AppointmentTime}
-              onChange={handleChange}
-              className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"
-              required
-            />
-          </div>
+
+        {/* Footer Buttons */}
+        <div className="bg-gray-50 px-6 py-4 rounded-b-xl flex flex-col sm:flex-row justify-end gap-3">
+          <button
+            type="button"
+            onClick={isCancelEnabled ? close : null}
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+              isCancelEnabled 
+                ? "bg-gray-300 hover:bg-gray-400 text-gray-800"
+                : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            }`}
+            disabled={!isCancelEnabled}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+              isCancelEnabled 
+                ? "bg-blue-600 hover:bg-blue-700 text-white"
+                : "bg-blue-400 text-white cursor-not-allowed"
+            }`}
+            disabled={!isCancelEnabled}
+          >
+            {isSubmitting ? "Saving..." : "Save Appointment"}
+          </button>
         </div>
-      </div>
-  
-      {/* Buttons */}
-      <div className="flex justify-between gap-4 items-center mt-8">
-        <button
-          type="submit"
-          className="bg-blue-600 text-white w-full sm:w-auto py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-400 transition-colors duration-200"
-          disabled={!isCancelEnabled}
-        >
-          Save Appointment
-        </button>
-  
-        <button
-          type="button"
-          onClick={isCancelEnabled ? close : null}
-          className="bg-red-600 text-white w-full sm:w-auto py-3 px-6 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-400 transition-colors duration-200"
-          disabled={!isCancelEnabled}
-        >
-          Cancel
-        </button>
-      </div>
-  
+      </form>
       <ToastContainer position="top-right" autoClose={3000} />
-    </form>
-  </div>
-  
-  
+    </div>
   );
 };
 

@@ -16,6 +16,7 @@ export default function EMR_PatientInfo() {
     AphasiaText: ""
   });
 
+  
   useEffect(() => {
     const storedDoctor = localStorage.getItem("Doctor");
     setPatientEMR((prevState) => ({

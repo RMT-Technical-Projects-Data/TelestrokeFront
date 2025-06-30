@@ -6,7 +6,7 @@
 
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif; /* Changed to Inter */
+  font-family: 'Helvetica', sans-serif; /* Changed to Inter */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: rgb(241, 245, 249);

@@ -9,7 +9,6 @@ import scheduled from "../assets/icon_scheduled.png";
 import total from "../assets/icon_total.png"; 
 import "../App.css";
 
-// Register required chart components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function Dashboard() {
@@ -24,20 +23,14 @@ function Dashboard() {
       try {
         const Doctor = localStorage.getItem("Doctor");
         const url = Doctor ? `${process.env.REACT_APP_BACKEND_URL}/api/appointments?Doctor=${Doctor}` : `${process.env.REACT_APP_BACKEND_URL}/api/appointments`;
-
         const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
+        if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
+
         setAppointments(data);
         setTotalAppointments(data.length);
-
-        const attendedCount = data.filter((appointment) => appointment.Checkup_Status === "Complete").length;
-        setAttendedAppointments(attendedCount);
-
-        const scheduledCount = data.filter((appointment) => appointment.Checkup_Status !== "Complete").length;
-        setScheduledAppointments(scheduledCount);
+        setAttendedAppointments(data.filter(a => a.Checkup_Status === "Complete").length);
+        setScheduledAppointments(data.filter(a => a.Checkup_Status !== "Complete").length);
       } catch (error) {
         console.error("Error fetching appointments:", error);
       } finally {
@@ -51,7 +44,6 @@ function Dashboard() {
   const formatTime = (time) => {
     if (!time) return '';
     const [hour, minute] = time.split(':') || [];
-    if (!hour || !minute) return '';
     const hourNum = parseInt(hour, 10);
     const isPM = hourNum >= 12;
     const formattedHour = hourNum % 12 || 12;
@@ -60,82 +52,53 @@ function Dashboard() {
   };
 
   const groupAndSortAppointments = () => {
-    const groupedAppointments = {
-      dateTime: [],
-      dateOnly: [],
-      timeOnly: [],
-      noDateTime: [],
-    };
-
-    appointments.forEach((appointment) => {
-      const { AppointmentDate, AppointmentTime } = appointment;
-
-      if (AppointmentDate && AppointmentTime) {
-        groupedAppointments.dateTime.push(appointment);
-      } else if (AppointmentDate) {
-        groupedAppointments.dateOnly.push(appointment);
-      } else if (AppointmentTime) {
-        groupedAppointments.timeOnly.push(appointment);
-      } else {
-        groupedAppointments.noDateTime.push(appointment);
-      }
+    const grouped = { dateTime: [], dateOnly: [], timeOnly: [], noDateTime: [] };
+    appointments.forEach(a => {
+      const { AppointmentDate, AppointmentTime } = a;
+      if (AppointmentDate && AppointmentTime) grouped.dateTime.push(a);
+      else if (AppointmentDate) grouped.dateOnly.push(a);
+      else if (AppointmentTime) grouped.timeOnly.push(a);
+      else grouped.noDateTime.push(a);
     });
 
-    groupedAppointments.dateTime.sort((a, b) => {
-      const dateA = new Date(a.AppointmentDate);
-      const dateB = new Date(b.AppointmentDate);
-      const timeA = new Date(`1970-01-01T${a.AppointmentTime}`);
-      const timeB = new Date(`1970-01-01T${b.AppointmentTime}`);
+    grouped.dateTime.sort((a, b) => {
+      const dateA = new Date(a.AppointmentDate), dateB = new Date(b.AppointmentDate);
+      const timeA = new Date(`1970-01-01T${a.AppointmentTime}`), timeB = new Date(`1970-01-01T${b.AppointmentTime}`);
       return dateA - dateB || timeA - timeB;
     });
 
-    groupedAppointments.dateOnly.sort((a, b) => new Date(a.AppointmentDate) - new Date(b.AppointmentDate));
-    groupedAppointments.timeOnly.sort((a, b) => {
+    grouped.dateOnly.sort((a, b) => new Date(a.AppointmentDate) - new Date(b.AppointmentDate));
+    grouped.timeOnly.sort((a, b) => {
       const today = new Date().toISOString().split("T")[0];
-      const dateA = new Date(`${today}T${a.AppointmentTime}`);
-      const dateB = new Date(`${today}T${b.AppointmentTime}`);
-      return dateA - dateB;
+      return new Date(`${today}T${a.AppointmentTime}`) - new Date(`${today}T${b.AppointmentTime}`);
     });
 
-    return groupedAppointments;
+    return grouped;
   };
 
   const renderAppointments = () => {
-    const groupedAppointments = groupAndSortAppointments();
-    const displayedAppointments = [
-      ...groupedAppointments.dateTime,
-      ...groupedAppointments.dateOnly,
-      ...groupedAppointments.timeOnly,
-      ...groupedAppointments.noDateTime,
-    ];
+    const grouped = groupAndSortAppointments();
+    const displayed = [...grouped.dateTime, ...grouped.dateOnly, ...grouped.timeOnly, ...grouped.noDateTime]
+      .filter(a => a.Checkup_Status !== "Complete")
+      .slice(0, 4);
 
-    const filteredAppointments = displayedAppointments.filter(
-      (appointment) => appointment.Checkup_Status !== "Complete"
-    );
-
-    return filteredAppointments.slice(0, 4).map((appointment) => {
-      const isMeetingAvailable = appointment.meetingId;
-
-      const handleJoin = (appointmentId) => {
-        // Handle join logic here
-      };
-
+    return displayed.map((a) => {
       return (
-        <div key={appointment.ID} className="flex items-center gap-4 w-full max-w-2xl transition ease-in-out animate-fadeIn border border-gray-300 rounded-md">
-          <div className="bg-white p-8 pl-12 rounded-md shadow-lg flex-1 flex justify-between items-center gap-4">
-            <div className="text-black">
-              <p className="text-2xl font-bold">{appointment.AppointmentTime ? formatTime(appointment.AppointmentTime) : "N/A"}</p>
-              <p className="text-xl font-bold">{appointment.AppointmentDate ? new Date(appointment.AppointmentDate).toISOString().split("T")[0] : "N/A"}</p>
-              <p className="text-lg color-grey mt-4">Device ID: {appointment.DeviceID}</p>
+        <div key={a.ID} className="w-full border border-gray-300 rounded-md mb-4 transition animate-fadeIn">
+          <div className="bg-white p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 rounded-md shadow-lg">
+            <div className="text-black w-full sm:w-auto">
+              <p className="text-xl sm:text-2xl font-bold">{a.AppointmentTime ? formatTime(a.AppointmentTime) : "N/A"}</p>
+              <p className="text-lg sm:text-xl font-bold">{a.AppointmentDate ? new Date(a.AppointmentDate).toISOString().split("T")[0] : "N/A"}</p>
+              <p className="text-base sm:text-lg text-gray-500 mt-2">Device ID: {a.DeviceID}</p>
             </div>
-            {isMeetingAvailable ? (
-              <Link to={`/emr/${appointment?.ID}/${appointment?.meetingId}`}>
-                <div className="bg-[#3b4fdf] text-white hover:bg-[#2f44c4] px-4 py-2 w-32 rounded-md shadow-lg text-center mr-10" onClick={() => handleJoin(appointment)}>
+            {a.meetingId ? (
+              <Link to={`/emr/${a.ID}/${a.meetingId}`} className="w-full sm:w-auto">
+                <div className="bg-[#3b4fdf] text-white hover:bg-[#2f44c4] px-4 py-2 w-full sm:w-32 text-center rounded-md shadow-md">
                   Join
                 </div>
               </Link>
             ) : (
-              <div className="text-gray-500">No Meeting Available</div>
+              <div className="text-gray-500 w-full sm:w-auto text-center">No Meeting Available</div>
             )}
           </div>
         </div>
@@ -146,73 +109,28 @@ function Dashboard() {
   const ChartThree = () => {
     const series = [attendedAppointments, scheduledAppointments];
     const options = {
-      chart: {
-        fontFamily: 'Satoshi, sans-serif',
-        type: 'donut',
-      },
+      chart: { fontFamily: 'Satoshi, sans-serif', type: 'donut' },
       colors: ['#3b4fdf', '#1c2434'],
       labels: ['Appointments Attended', 'Appointments Scheduled'],
-      legend: {
-        show: false,
-        position: 'bottom',
-      },
-      plotOptions: {
-        pie: {
-          donut: {
-            size: '65%',
-            background: 'transparent',
-          },
-        },
-      },
-      dataLabels: {
-        enabled: false,
-      },
-      responsive: [
-        {
-          breakpoint: 2600,
-          options: {
-            chart: {
-              width: 380,
-            },
-          },
-        },
-        {
-          breakpoint: 640,
-          options: {
-            chart: {
-              width: 200,
-            },
-          },
-        },
-      ],
+      legend: { show: false },
+      plotOptions: { pie: { donut: { size: '65%' } } },
+      dataLabels: { enabled: false },
+      responsive: [{ breakpoint: 640, options: { chart: { width: '100%' } } }],
     };
 
     return (
-      <div className="sm:px-7.5 col-span-12 rounded-sm border border-stroke bg-white px-5 pb-5 pt-7.5 shadow-default dark:border-strokedark dark:bg-boxdark xl:col-span-5">
-        <div className="mb-3 justify-between gap-4 sm:flex">
-          <div>
-            <h5 className="text-xl font-semibold text-black dark:text-white py-3">Appointments Analytics</h5>
-          </div>
+      <div className="w-full border border-gray-300 rounded-md bg-white shadow-md p-5">
+        <h5 className="text-xl font-semibold text-black mb-4">Appointments Analytics</h5>
+        <div className="flex justify-center">
+          <ReactApexChart options={options} series={series} type="donut" width="100%" />
         </div>
-
-        <div className="mb-2">
-          <div id="chartThree" className="mx-auto flex justify-center">
-            <ReactApexChart options={options} series={series} type="donut" />
-          </div>
-        </div>
-
-        <div className="-mx-8 flex flex-wrap items-center justify-center gap-y-3">
+        <div className="flex flex-col sm:flex-row justify-center items-center mt-4 gap-4">
           {[{ label: 'Appointments Scheduled', value: scheduledAppointments, color: 'bg-[#1c2434]' },
-            { label: 'Appointments Attended', value: attendedAppointments, color: 'bg-[#3b4fdf]' },
-          ].map((item, index) => (
-            <div key={index} className="sm:w-1/2 w-full px-8">
-              <div className="flex w-full items-center">
-                <span className={`mr-2 block h-3 w-full max-w-3 rounded-full ${item.color}`}></span>
-                <p className="flex w-full justify-between text-sm font-medium text-black dark:text-white">
-                  <span>{item.label}</span>
-                  <span>{item.value}</span>
-                </p>
-              </div>
+            { label: 'Appointments Attended', value: attendedAppointments, color: 'bg-[#3b4fdf]' }].map((item, i) => (
+            <div key={i} className="flex items-center w-full max-w-xs justify-between text-sm">
+              <span className={`inline-block w-4 h-4 mr-2 rounded-full ${item.color}`}></span>
+              <span className="text-gray-700">{item.label}</span>
+              <span className="font-bold">{item.value}</span>
             </div>
           ))}
         </div>
@@ -223,82 +141,58 @@ function Dashboard() {
   return (
     <>
       <NavBar />
-      <div className="flex flex-col sm:flex-row justify-between gap-2 mb-28">
-        <div className="sm:basis-[2%]">
-          <Sidebar page="DASHBOARD" className="z-10" />
-        </div>
-        <div className="basis-[100%] sm:basis-[90%] p-6 space-y-6 transition ease-in-out animate-fadeIn ml-[250px]">
+      <div className="flex flex-col sm:flex-row mb-28 pt-[60px] sm:pt-[80px]">
+
+        <Sidebar page="DASHBOARD" />
+        <main className="flex-1 sm:ml-[250px] p-4 sm:p-6 lg:p-10 space-y-6">
           {loading ? (
-            <div className="text-center">Loading...</div>
+            <div className="text-center text-lg">Loading...</div>
           ) : (
-            <div className="flex flex-col gap-10 px-4 sm:px-6 md:px-10 lg:px-12 xl:px-16">
-              <div className="flex flex-col sm:flex-row gap-6 mb-10">
-                <div className="w-full sm:w-1/4 flex flex-col mt-[9%]">
-                  <div className="flex flex-col gap-5">
-                    <Link to="/meeting">
-                      <button className="bg-[#3b4fdf] text-white px-5 py-3 rounded-md text-lg w-full hover:bg-[#2f44c4]">
-                        Create a Meeting
-                      </button>
-                    </Link>
-                    <Link to="/appointment">
-                      <button className="bg-[#3b4fdf] text-white px-5 py-3 rounded-md text-lg w-full hover:bg-[#2f44c4]">
-                        Schedule an Appointment
-                      </button>
-                    </Link>
-                  </div>
+            <div className="space-y-8">
+              <div className="flex flex-col lg:flex-row gap-6">
+                <div className="flex flex-col w-full lg:w-1/4 gap-4">
+                  <Link to="/meeting">
+                    <button className="bg-[#3b4fdf] text-white px-5 py-3 rounded-md w-full hover:bg-[#2f44c4]">
+                      Create a Meeting
+                    </button>
+                  </Link>
+                  <Link to="/appointment">
+                    <button className="bg-[#3b4fdf] text-white px-5 py-3 rounded-md w-full hover:bg-[#2f44c4]">
+                      Schedule an Appointment
+                    </button>
+                  </Link>
                 </div>
-  
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-10 mt-[6%] w-full">
-                  {/* Total Appointments Tile */}
-                  <div className="flex flex-col bg-white text-black p-10 rounded-md shadow-lg justify-end items-end relative h-[200px]">
-                    <img
-                      src={total}
-                      alt="Total Appointments"
-                      className="text-[#3b4fdf] absolute top-6 left-6 w-16 h-16"
-                    />
-                    <p className="text-6xl font-bold text-center">{totalAppointments}</p>
-                    <h2 className="text-xl text-center text-gray-500 mt-2">Total Appointments</h2>
-                  </div>
-  
-                  {/* Appointments Attended Tile */}
-                  <div className="flex flex-col bg-white text-black p-10 rounded-md shadow-lg justify-end items-end relative h-[200px]">
-                    <img
-                      src={attended}
-                      alt="Appointments Attended"
-                      className="text-[#3b4fdf] absolute top-6 left-6 w-16 h-16"
-                    />
-                    <p className="text-6xl font-bold text-center">{attendedAppointments}</p>
-                    <h2 className="text-xl text-center text-gray-500 mt-2">Appointments Attended</h2>
-                  </div>
-  
-                  {/* Appointments Scheduled Tile */}
-                  <div className="flex flex-col bg-white text-black p-10 rounded-md shadow-lg justify-end items-end relative h-[200px]">
-                    <img
-                      src={scheduled}
-                      alt="Appointments Scheduled"
-                      className="text-[#3b4fdf] absolute top-6 left-6 w-16 h-16"
-                    />
-                    <p className="text-6xl font-bold text-center">{scheduledAppointments}</p>
-                    <h2 className="text-xl text-center text-gray-500 mt-2">Appointments Scheduled</h2>
-                  </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+                  {[
+                    { count: totalAppointments, label: "Total Appointments", img: total },
+                    { count: attendedAppointments, label: "Appointments Attended", img: attended },
+                    { count: scheduledAppointments, label: "Appointments Scheduled", img: scheduled },
+                  ].map((tile, i) => (
+                    <div key={i} className="relative flex flex-col justify-end items-end bg-white p-6 sm:p-8 h-[180px] sm:h-[200px] rounded-md shadow-md">
+                      <img src={tile.img} alt={tile.label} className="absolute top-4 left-4 w-12 sm:w-16" />
+                      <p className="text-4xl sm:text-5xl font-bold">{tile.count}</p>
+                      <h2 className="text-sm sm:text-lg text-gray-500 mt-2 text-center w-full">{tile.label}</h2>
+                    </div>
+                  ))}
                 </div>
               </div>
-  
-              <div className="flex flex-col sm:flex-row gap-6 items-start -mt-[5%]">
-                <div className="w-full flex p-10 bg-white flex-col gap-7">
-                  <h2 className="text-2xl font-bold">Upcoming Appointments:</h2>
+
+              <div className="flex flex-col lg:flex-row gap-6">
+                <div className="w-full bg-white p-4 sm:p-6 rounded-md shadow-md">
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4">Upcoming Appointments:</h2>
                   {renderAppointments()}
                 </div>
-                <div className="w-full flex justify-center">
+                <div className="w-full lg:w-auto flex justify-center">
                   <ChartThree />
                 </div>
               </div>
             </div>
           )}
-        </div>
+        </main>
       </div>
     </>
   );
-  
 }
+
 export default Dashboard;

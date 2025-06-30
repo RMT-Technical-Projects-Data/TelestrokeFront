@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 function QuadrantTracking({ settings, updateSetting }) {
-    const [selectedShape, setSelectedShape] = useState("circle");
+    const [selectedShape, setSelectedShape] = useState("");
     const gridSize = 5; // 5x5 matrix
 
     const handleShapeChange = (e) => {
@@ -27,10 +27,18 @@ function QuadrantTracking({ settings, updateSetting }) {
         <div style={styles.container}>
             <p className="font-bold text-lg">Select Quadrant Shape</p>
             <select onChange={handleShapeChange} value={selectedShape}>
+            <option value="" disabled>
+                Select
+            </option>
+            <option value="circle">Circle</option>
+            <option value="star">Star</option>
+            <option value="square">Square</option>
+            </select>
+            {/* <select onChange={handleShapeChange} value={selectedShape}>
                 <option value="circle">Circle</option>
                 <option value="star">Star</option>
                 <option value="square">Square</option>
-            </select>
+            </select> */}
 
             <h1 className="font-bold text-lg">Button Matrix</h1>
             <div style={styles.matrix}>

@@ -5,22 +5,18 @@ import Button from "../components/Button";
 import client from "../api/client";
 import { jsPDF } from "jspdf";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faDownload } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faDownload, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 
 const EMRReportpage = () => {
   const [Exam_data, setExamData] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(''); // State for search query
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 6;
   
-   
   useEffect(() => {
     const fetchExamData = async () => {
       try {
-        // Get the doctor's information from local storage
         const Doctor = localStorage.getItem('Doctor');
-  
-        // If doctor is available in local storage, include it in the request
         if (Doctor) {
           const response = await client.get('/api/examdatas', {
             params: { Doctor }
@@ -33,12 +29,10 @@ const EMRReportpage = () => {
         console.error("Error fetching exam data:", error);
       }
     };
-  
     fetchExamData();
   }, []);
-  
 
-  const generatePDF = (patientData, patientId) => {
+ const generatePDF = (patientData, patientId) => {
     const doc = new jsPDF();
     const margin = 10;
     const pageHeight = doc.internal.pageSize.height;
@@ -192,7 +186,7 @@ const handleShowReport = (patientId) => {
         <head>
                 <style>
           body {
-           font-family: 'Roboto', Arial, sans-serif;
+           font-family: 'Helvetica', sans-serif;
             margin: 20px;
             line-height: 1.6;
             background-color: #f9f9fb;
@@ -350,10 +344,9 @@ const handleShowReport = (patientId) => {
 };
 
 
-
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value); 
-    setCurrentPage(1); 
+    setCurrentPage(1);
   };
 
   const filteredExamData = useMemo(() => {
@@ -363,128 +356,173 @@ const handleShowReport = (patientId) => {
     );
   }, [Exam_data, searchQuery]);
 
-
   const totalPages = Math.ceil(filteredExamData.length / rowsPerPage);
-  const startRow = (currentPage - 1) * rowsPerPage;
-  const currentRows = filteredExamData.slice(startRow, startRow + rowsPerPage);
+  const currentRows = filteredExamData.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
 
   const handlePageChange = (page) => {
-    setCurrentPage(page);
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
 
-  
-
   return (
-    <>
+    <div className="min-h-screen bg-gray-50">
       <NavBar />
-      <div className="flex flex-col lg:flex-row gap-4 mb-32 mt-[8%] px-4 lg:px-0">
-        {/* Sidebar */}
-        <div className="lg:w-[15%] w-full flex-shrink-0 bg-gray-100 lg:min-h-screen">
-          <Sidebar page="EMR" />
-        </div>
+      <div className="flex flex-col lg:flex-row pt-24">
+        {/* Sidebar - hidden on mobile (handled by Sidebar component) */}
+        <Sidebar page="EMR" />
         
         {/* Main Content */}
-        <div className="flex-grow w-full lg:ml-7 flex flex-col items-center">
-        <div className="w-full max-w-5xl mt-4 px-4 sm:mt-6 sm:px-6 lg:mt-[2%] lg:px-10">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-4 text-center lg:text-left">
-              EMR Reports
-            </h1>
-            
-            {/* Search Bar */}
-            <div className="mb-6 flex justify-center lg:justify-start">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                placeholder="Search by Patient ID or Name"
-                className="p-3 w-full sm:w-1/3 lg:w-1/2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              />
+        <main className="flex-1 lg:ml-[250px] p-4 sm:p-6">
+          <div className="max-w-7xl mx-auto">
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+                EMR Reports
+              </h1>
+              
+              {/* Search Bar */}
+              <div className="w-full sm:w-1/2 lg:w-1/3">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  placeholder="Search by Patient ID or Name"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                />
+              </div>
             </div>
-                    
-                {/* Table */}
-<div className="overflow-x-auto">
-  <table className="table-auto bg-white border border-gray-200 sm:w-full w-auto shadow-lg rounded-lg sm:text-sm">
-    <thead className="bg-indigo-50">
-      <tr>
-        <th className="px-4 sm:px-6 py-3 sm:py-4 text-center text-gray-700 font-medium text-xs sm:text-sm">
-          Patient ID
-        </th>
-        <th className="px-4 sm:px-6 py-3 sm:py-4 text-center text-gray-700 font-medium text-xs sm:text-sm">
-          Patient Name
-        </th>
-        <th className="px-4 sm:px-6 py-3 sm:py-4 text-center text-gray-700 font-medium text-xs sm:text-sm">
-          Actions
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      {currentRows.map((exam) => (
-        <tr
-          key={`${exam.patientData.patientid}-${exam.patientData.Name}`}
-          className="border-t border-gray-300 hover:bg-indigo-50 transition duration-150"
-        >
-          <td className="px-4 sm:px-6 py-2 sm:py-4 text-center text-xs sm:text-sm">
-            {exam.patientData.patientid}
-          </td>
-          <td className="px-4 sm:px-6 py-2 sm:py-4 text-center text-xs sm:text-sm">
-            {exam.patientData.Name}
-          </td>
-          <td className="px-4 sm:px-6 py-2 sm:py-4 text-center text-xs sm:text-sm">
-            <Button
-              onClick={() => handleShowReport(exam.patientData.patientid)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all mr-2 text-xs sm:text-sm"
-            >
-              <FontAwesomeIcon icon={faEye} />
-            </Button>
-            <Button
-              onClick={() => generatePDF(exam, exam.patientData.patientid)}
-              className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-all text-xs sm:text-sm"
-            >
-              <FontAwesomeIcon icon={faDownload} />
-            </Button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
 
+            {/* Table Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-indigo-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
+                        Patient ID
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
+                        Patient Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {currentRows.length > 0 ? (
+                      currentRows.map((exam) => (
+                        <tr key={`${exam.patientData.patientid}-${exam.patientData.Name}`} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {exam.patientData.patientid}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {exam.patientData.Name}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div className="flex space-x-2">
+                              <Button
+                                onClick={() => handleShowReport(exam.patientData.patientid)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                              >
+                                <FontAwesomeIcon icon={faEye} className="mr-1" />
+                                View
+                              </Button>
+                              <Button
+                                onClick={() => generatePDF(exam, exam.patientData.patientid)}
+                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                              >
+                                <FontAwesomeIcon icon={faDownload} className="mr-1" />
+                                Download
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
+                          No reports found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-            
-            {/* Pagination */}
-            <div className="flex justify-center mt-4">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => handlePageChange(currentPage - 1)}
-                className={`px-4 py-2 rounded-md mr-2 ${
-                  currentPage === 1
-                    ? 'bg-gray-400 text-gray-200'
-                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                }`}
-              >
-                Prev
-              </button>
-              <span className="text-gray-700 px-4 py-2">
-                {currentPage} of {totalPages}
-              </span>
-              <button
-                disabled={currentPage === totalPages}
-                onClick={() => handlePageChange(currentPage + 1)}
-                className={`px-4 py-2 rounded-md ml-2 ${
-                  currentPage === totalPages
-                    ? 'bg-gray-400 text-gray-200'
-                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                }`}
-              >
-                Next
-              </button>
+              {/* Pagination */}
+              {filteredExamData.length > rowsPerPage && (
+                <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-200">
+                  <div className="flex-1 flex justify-between items-center sm:hidden">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                        currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-700">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                        currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-700">
+                        Showing <span className="font-medium">{(currentPage - 1) * rowsPerPage + 1}</span> to{' '}
+                        <span className="font-medium">
+                          {Math.min(currentPage * rowsPerPage, filteredExamData.length)}
+                        </span>{' '}
+                        of <span className="font-medium">{filteredExamData.length}</span> results
+                      </p>
+                    </div>
+                    <div>
+                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <button
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
+                            currentPage === 1 ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
+                          }`}
+                        >
+                          <span className="sr-only">Previous</span>
+                          <FontAwesomeIcon icon={faChevronLeft} className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
+                            currentPage === totalPages ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
+                          }`}
+                        >
+                          <span className="sr-only">Next</span>
+                          <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4" />
+                        </button>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        </main>
       </div>
-    </>
+    </div>
   );
-  
-  
-  };    
+};
+
 export default EMRReportpage;

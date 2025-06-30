@@ -12,7 +12,7 @@ function JoinScreen({ getMeetingAndToken }) {
             setMeetingId(e.target.value);
           }}
         />
-        <button onClick={onClick}>Join</button>
+        <button onClick={onClick}>Join1</button>
         {" or "}
         <button onClick={onClick}>Create Meeting</button>
       </div>
