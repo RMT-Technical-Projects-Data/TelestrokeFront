@@ -75,6 +75,8 @@ const EMRpage = () => {
             frame: frameIndex++,
             angle_x: data.angle_x,
             angle_y: data.angle_y,
+            coords_x: data.coords_x,
+            coords_y: data.coords_y
           });
 
           // Limit the data to MAX_POINTS (ring buffer style)
