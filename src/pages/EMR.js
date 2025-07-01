@@ -70,13 +70,14 @@ const EMRpage = () => {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log(data)
         if (data.type === "eye_data") {
           rawData.push({
             frame: frameIndex++,
-            angle_x: data.angle_x,
-            angle_y: data.angle_y,
-            coords_x: data.coords_x,
-            coords_y: data.coords_y
+            angle_x: data?.angle_x || 0,
+            angle_y: data?.angle_y || 0,
+            coords_x: data?.coords_x || 0,
+            coords_y: data?.coords_y || 0
           });
 
           // Limit the data to MAX_POINTS (ring buffer style)
