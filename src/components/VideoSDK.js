@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {
   useEffect,
   useMemo,
@@ -77,7 +78,6 @@ function ParticipantView(props) {
         <div className="p-2">
           <audio ref={micRef} autoPlay playsInline muted={isLocal} />
           {webcamOn ? (
-            
             <ReactPlayer
               playsinline
               pip={false}
@@ -112,19 +112,6 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
   const { toggleMic, toggleWebcam, localMicOn } = useMeeting({
     onParticipantJoined,
   });
-
-  useEffect(() => {
-  navigator.mediaDevices
-    .getUserMedia({ audio: true })
-    .then((stream) => {
-      console.log("Mic permission granted manually.");
-      stream.getTracks().forEach(track => track.stop()); // cleanup
-    })
-    .catch((err) => {
-      console.error("Mic permission denied:", err);
-    });
-}, []);
-
   
 
   const handleToggleWebcam = () => {
@@ -271,43 +258,48 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
       window.removeEventListener("popstate", handlePopState);
     };
   }, [handlePopState]); // useCallback ensures handlePopState is stable
-  
+
   const handleToggleMic = async () => {
   try {
-    const result = await toggleMic();
-    console.log("Mic toggled:", result);
+    // Try to get mic access to trigger permission prompt
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    // If the user clicked "Allow", we got access
+    stream.getTracks().forEach(track => track.stop()); // Stop test stream
+    toggleMic(); // This will turn mic ON in VideoSDK
+    console.log(" Mic permission granted. Mic toggled ON.");
   } catch (error) {
-    console.error("Error toggling mic:", error);
+    console.error("Mic access denied or error:", error);
+
+    // If permission is blocked or user clicked "Block"
+    if (
+      error.name === "NotAllowedError" ||
+      error.name === "PermissionDeniedError"
+    ) {
+      alert(
+        "Microphone permission is blocked.\n\nTo enable it:\n1. Click the 🔒 padlock icon in your browser's address bar.\n2. Go to 'Site settings'.\n3. Set Microphone permission to 'Allow'.\n\nThen reload the page and try again."
+      );
+    } else {
+      alert("An unexpected error occurred while accessing microphone.");
+    }
   }
 };
 
+
   // const handleToggleMic = () => {
   //   // Toggling Mic
-  //   console.log(toggleMic());
+  //   // console.log(toggleMic());
 
   //   toggleMic();
   // };
 
   return (
     <div
-      className="controls-bar -mt-1 flex flex-row gap-4 sm:gap-5 sm:top-[110px] sm:transform-none sm:z-0 sm:mt-0 sm:w-auto "
-  //       style={{
-  //   position: "absolute",
-  //   top: "10px",
-  //   left: "50%",
-  //   transform: "translateX(-50%)",
-  //   display: "flex",
-  //   justifyContent: "center",
-  //   alignItems: "center",
-  //   gap: "20px",
-  //   zIndex: 10,
-  // }}
+      className="controls-bar -mt-1 flex flex-row gap-4 sm:gap-5 sm:top-[110px] sm:transform-none sm:z-0 sm:mt-0 sm:w-auto"
       style={{
         flexDirection: "row",
         left: "32%",
         zIndex: 0,
-        justifyContent: "center",
-    alignItems: "center",
         transform: "translateX(-100%)",
         borderRadius: "20px",
         gap: "20px",
@@ -320,24 +312,25 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
       >
         End Appointment
       </Button>
-      <Button onClick={handleToggleMic} className="text-xs sm:text-base">
-        <img
-          src={
-            localMicOn
-              ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/microphone.png"
-              : "https://img.icons8.com/ios-glyphs/50/FFFFFF/no-microphone.png"
-          }
-          width={25}
-          height={25}
-          alt={localMicOn ? "Microphone on" : "Microphone off"}
-        />
-      </Button>
-      <Button
+<Button onClick={handleToggleMic} className="text-xs sm:text-base">
+  <img
+    src={
+      localMicOn
+        ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/microphone.png"
+        : "https://img.icons8.com/ios-glyphs/50/FFFFFF/no-microphone.png"
+    }
+    width={25}
+    height={25}
+    alt={localMicOn ? "Microphone on" : "Microphone off"}
+  />
+</Button>
+
+      {/* <Button
         onClick={() => handleToggleWebcam()}
         className="text-xs sm:text-base"
       >
         Web Cam
-      </Button>
+      </Button> */}
     </div>
   );
 }
@@ -405,18 +398,9 @@ function MeetingView(props) {
           />
         </div>
       ) : (
-        // <div className="fixed inset-0 flex justify-center items-center bg-white z-50">
-        //   <Button 
-        //     onClick={joinMeeting} 
-        //     className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-2xl text-3xl font-extrabold shadow-2xl transition-transform transform hover:scale-110 duration-300"
-        //   >
-        //     Join Meeting
-        //   </Button>
-        // </div>
         <Button onClick={joinMeeting} className="ml-[47%] mt-[20%]">
           Join
         </Button>
-
       )}
     </div>
   );
