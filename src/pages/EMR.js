@@ -59,107 +59,122 @@ const EMRpage = () => {
   const MAX_POINTS = 30;
 
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:3001");
-    socket.onopen = () => console.log("WebSocket connected");
+  const socket = new WebSocket("ws://localhost:3001");
 
-    const rawData = [];
-    let frameIndex = 0;
-    const MAX_POINTS = 2000;      // Keep more history for smoother visualization
-    const SMOOTH_WINDOW = 5;      // Moving average window size
+  socket.onopen = () => console.log("[WebSocket] Connected to ws://localhost:3001");
+  socket.onerror = (error) => console.error("[WebSocket] Error:", error);
+  socket.onclose = () => console.log("[WebSocket] Disconnected");
 
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log(data)
-        if (data.type === "eye_data") {
-          rawData.push({
-            frame: frameIndex++,
-            angle_x: data?.angle_x || 0,
-            angle_y: data?.angle_y || 0,
-            coords_x: data?.coords_x || 0,
-            coords_y: data?.coords_y || 0
-          });
+  const rawData = [];
+  let frameIndex = 0;
+  const MAX_POINTS = 2000;
+  const SMOOTH_WINDOW = 5;
 
-          // Limit the data to MAX_POINTS (ring buffer style)
-          if (rawData.length > MAX_POINTS) {
-            rawData.shift();
-          }
+  socket.onmessage = (event) => {
+    console.log("[WebSocket] Message received:", event.data);
+
+    try {
+      const data = JSON.parse(event.data);
+      console.log("[WebSocket] Parsed data:", data);
+
+      if (data.type === "eye_data") {
+        const coords = data.coords || {};
+        console.log(
+          `[eye_data] angle_x=${data.angle_x}, angle_y=${data.angle_y}, coords_x=${coords.x}, coords_y=${coords.y}`
+        );
+
+        rawData.push({
+          frame: frameIndex++,
+          angle_x: data?.angle_x || 0,
+          angle_y: data?.angle_y || 0,
+          coords_x: coords?.x || 0,
+          coords_y: coords?.y || 0,
+        });
+
+        if (rawData.length > MAX_POINTS) {
+          rawData.shift(); // Remove oldest point to maintain buffer
         }
-      } catch (err) {
-        console.error("Error parsing WebSocket message:", err);
+      } else {
+        console.log("[WebSocket] Skipped non-eye_data type");
       }
-    };
-
-const interval = setInterval(() => {
-  if (rawData.length > SMOOTH_WINDOW) {
-    const smoothedAngleX = [];
-    const smoothedAngleY = [];
-    const smoothedCoordsX = [];
-    const smoothedCoordsY = [];
-    const labels = [];
-
-    for (let i = SMOOTH_WINDOW; i < rawData.length; i++) {
-      const window = rawData.slice(i - SMOOTH_WINDOW, i);
-
-      const avgAngleX = window.reduce((sum, p) => sum + p.angle_x, 0) / SMOOTH_WINDOW;
-      const avgAngleY = window.reduce((sum, p) => sum + p.angle_y, 0) / SMOOTH_WINDOW;
-      const avgCoordsX = window.reduce((sum, p) => sum + p.coords_x, 0) / SMOOTH_WINDOW;
-      const avgCoordsY = window.reduce((sum, p) => sum + p.coords_y, 0) / SMOOTH_WINDOW;
-
-      smoothedAngleX.push(avgAngleX);
-      smoothedAngleY.push(avgAngleY);
-      smoothedCoordsX.push(avgCoordsX);
-      smoothedCoordsY.push(avgCoordsY);
-
-      labels.push(rawData[i].frame);
+    } catch (err) {
+      console.error("[WebSocket] Error parsing message:", err);
     }
+  };
 
-    setChartData({
-      labels,
-      datasets: [
-        {
-          label: "Eye Angle X",
-          data: smoothedAngleX,
-          borderColor: "#1e40af", // blue
-          fill: false,
-          pointRadius: 0,
-          tension: 0.3,
-        },
-        {
-          label: "Stimulus X",
-          data: smoothedCoordsX,
-          borderColor: "#10b981", // green
-          fill: false,
-          pointRadius: 0,
-          tension: 0.3,
-        },
-        {
-          label: "Eye Angle Y",
-          data: smoothedAngleY,
-          borderColor: "#9d174d", // pink
-          fill: false,
-          pointRadius: 0,
-          tension: 0.3,
-        },
-        {
-          label: "Stimulus Y",
-          data: smoothedCoordsY,
-          borderColor: "#f97316", // orange
-          fill: false,
-          pointRadius: 0,
-          tension: 0.3,
-        },
-      ],
-    });
-  }
-}, 100);
+  const interval = setInterval(() => {
+    if (rawData.length > SMOOTH_WINDOW) {
+      const smoothedAngleX = [];
+      const smoothedAngleY = [];
+      const smoothedCoordsX = [];
+      const smoothedCoordsY = [];
+      const labels = [];
 
+      for (let i = SMOOTH_WINDOW; i < rawData.length; i++) {
+        const window = rawData.slice(i - SMOOTH_WINDOW, i);
 
-    return () => {
-      socket.close();
-      clearInterval(interval);
-    };
-  }, []);
+        const avgAngleX = window.reduce((sum, p) => sum + p.angle_x, 0) / SMOOTH_WINDOW;
+        const avgAngleY = window.reduce((sum, p) => sum + p.angle_y, 0) / SMOOTH_WINDOW;
+        const avgCoordsX = window.reduce((sum, p) => sum + p.coords_x, 0) / SMOOTH_WINDOW;
+        const avgCoordsY = window.reduce((sum, p) => sum + p.coords_y, 0) / SMOOTH_WINDOW;
+
+        smoothedAngleX.push(avgAngleX);
+        smoothedAngleY.push(avgAngleY);
+        smoothedCoordsX.push(avgCoordsX);
+        smoothedCoordsY.push(avgCoordsY);
+
+        labels.push(rawData[i].frame);
+      }
+
+      setChartData({
+        labels,
+        datasets: [
+          {
+            label: "Eye Angle X",
+            data: smoothedAngleX,
+            borderColor: "#1e40af", // blue
+            fill: false,
+            pointRadius: 0,
+            tension: 0.3,
+          },
+          {
+            label: "Stimulus X",
+            data: smoothedCoordsX,
+            borderColor: "#10b981", // green
+            fill: false,
+            pointRadius: 0,
+            tension: 0.3,
+          },
+          {
+            label: "Eye Angle Y",
+            data: smoothedAngleY,
+            borderColor: "#9d174d", // pink
+            fill: false,
+            pointRadius: 0,
+            tension: 0.3,
+          },
+          {
+            label: "Stimulus Y",
+            data: smoothedCoordsY,
+            borderColor: "#f97316", // orange
+            fill: false,
+            pointRadius: 0,
+            tension: 0.3,
+          },
+        ],
+      });
+
+      console.log("[Chart Update] Data refreshed");
+    }
+  }, 100);
+
+  return () => {
+    console.log("[Cleanup] Closing socket and clearing interval");
+    socket.close();
+    clearInterval(interval);
+  };
+}, []);
+
 
   const [tab, setTab] = useState(0);
   // const videoSpeedArr = ["Slow", "Medium", "High"];
