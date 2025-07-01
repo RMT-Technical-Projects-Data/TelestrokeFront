@@ -89,44 +89,70 @@ const EMRpage = () => {
       }
     };
 
-    const interval = setInterval(() => {
-      if (rawData.length > SMOOTH_WINDOW) {
-        const smoothedX = [];
-        const smoothedY = [];
-        const labels = [];
+const interval = setInterval(() => {
+  if (rawData.length > SMOOTH_WINDOW) {
+    const smoothedAngleX = [];
+    const smoothedAngleY = [];
+    const smoothedCoordsX = [];
+    const smoothedCoordsY = [];
+    const labels = [];
 
-        for (let i = SMOOTH_WINDOW; i < rawData.length; i++) {
-          const windowSlice = rawData.slice(i - SMOOTH_WINDOW, i);
-          const avgX = windowSlice.reduce((sum, p) => sum + p.angle_x, 0) / SMOOTH_WINDOW;
-          const avgY = windowSlice.reduce((sum, p) => sum + p.angle_y, 0) / SMOOTH_WINDOW;
-          smoothedX.push(avgX);
-          smoothedY.push(avgY);
-          labels.push(rawData[i].frame);
-        }
+    for (let i = SMOOTH_WINDOW; i < rawData.length; i++) {
+      const window = rawData.slice(i - SMOOTH_WINDOW, i);
 
-        setChartData({
-          labels,
-          datasets: [
-            {
-              label: "",
-              data: smoothedX,
-              borderColor: "rgba(75,192,192,1)",
-              fill: false,
-              pointRadius: 0,
-              tension: 0.3, // smooth lines
-            },
-            {
-              label: "",
-              data: smoothedY,
-              borderColor: "rgba(192,75,192,1)",
-              fill: false,
-              pointRadius: 0,
-              tension: 0.3, // smooth lines
-            },
-          ],
-        });
-      }
-    }, 100); // fast refresh for smooth movement
+      const avgAngleX = window.reduce((sum, p) => sum + p.angle_x, 0) / SMOOTH_WINDOW;
+      const avgAngleY = window.reduce((sum, p) => sum + p.angle_y, 0) / SMOOTH_WINDOW;
+      const avgCoordsX = window.reduce((sum, p) => sum + p.coords_x, 0) / SMOOTH_WINDOW;
+      const avgCoordsY = window.reduce((sum, p) => sum + p.coords_y, 0) / SMOOTH_WINDOW;
+
+      smoothedAngleX.push(avgAngleX);
+      smoothedAngleY.push(avgAngleY);
+      smoothedCoordsX.push(avgCoordsX);
+      smoothedCoordsY.push(avgCoordsY);
+
+      labels.push(rawData[i].frame);
+    }
+
+    setChartData({
+      labels,
+      datasets: [
+        {
+          label: "Eye Angle X",
+          data: smoothedAngleX,
+          borderColor: "#1e40af", // blue
+          fill: false,
+          pointRadius: 0,
+          tension: 0.3,
+        },
+        {
+          label: "Stimulus X",
+          data: smoothedCoordsX,
+          borderColor: "#10b981", // green
+          fill: false,
+          pointRadius: 0,
+          tension: 0.3,
+        },
+        {
+          label: "Eye Angle Y",
+          data: smoothedAngleY,
+          borderColor: "#9d174d", // pink
+          fill: false,
+          pointRadius: 0,
+          tension: 0.3,
+        },
+        {
+          label: "Stimulus Y",
+          data: smoothedCoordsY,
+          borderColor: "#f97316", // orange
+          fill: false,
+          pointRadius: 0,
+          tension: 0.3,
+        },
+      ],
+    });
+  }
+}, 100);
+
 
     return () => {
       socket.close();
@@ -269,172 +295,151 @@ const EMRpage = () => {
                       {/* <h3 className="text-center font-bold text-xl text-blue-800">
                         Live Eye Tracking
                       </h3> */}
-<div className="w-full h-[500px] flex flex-col gap-5">
-  {/* Horizontal (X-axis) movement chart */}
-  <div className="h-1/2 bg-white p-2 rounded-md shadow-sm ">
-    <h4 className="text-center font-semibold text-black mb-1">Horizontal Eye Movement (X-axis)</h4>
-    <Line 
-      data={{
-        labels: chartData.labels.map((_, index) => index), // Simple numeric labels
-        datasets: [{
-          ...chartData.datasets[0],
-          borderColor: '#1e40af', // Darker blue
-          borderWidth: 2, // Thicker line
-          pointRadius: 0 // No points
-        }]
-      }}
-      options={{
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: { duration: 0 },
-        hover: { animationDuration: 0 },
-        responsiveAnimationDuration: 0,
-
-        scales: {
-          x: {
-            grid: { 
-              color: 'rgba(0, 0, 0, 0.15)', // Darker grid
-              drawBorder: true
-            },
-            title: {
-              display: true,
-              text: 'Time (frames)'
-            },
-            ticks: {
-              callback: (value) => {
-                // Show timestamp every second (assuming 10 frames per second)
-                return value % 10 === 0 ? `${value/10}s` : '';
-              }
-            }
-          },
-          y: {
-            grid: { 
-              color: 'rgba(0, 0, 0, 0.15)', // Darker grid
-              drawBorder: true
-            },
-            min: -30,
-            max: 30,
-            title: {
-              display: true,
-              text: 'Angle (degrees)'
-            }
-          }
-        }
-      }}
-    />
-  </div>
-  
-  {/* Vertical (Y-axis) movement chart */}
-  <div className="h-1/2 bg-white p-2 rounded-md shadow-sm">
-    <h4 className="text-center font-semibold text-black mb-1">Vertical Eye Movement (Y-axis)</h4>
-    <Line 
-      data={{
-        labels: chartData.labels.map((_, index) => index), // Simple numeric labels
-        datasets: [{
-          ...chartData.datasets[1],
-          borderColor: '#9d174d', // Darker pink
-          borderWidth: 2, // Thicker line
-          pointRadius: 0 // No points
-        }]
-      }}
-      options={{
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: { duration: 0 },
-        hover: { animationDuration: 0 },
-        responsiveAnimationDuration: 0,
-
-
-        scales: {
-          x: {
-            
-            grid: { 
-              color: 'rgba(0, 0, 0, 0.15)', // Darker grid
-              drawBorder: true
-            },
-            title: {
-              display: true,
-              text: 'Time (frames)'
-            },
-            ticks: {
-              callback: (value) => {
-                // Show timestamp every second (assuming 10 frames per second)
-                return value % 10 === 0 ? `${value/10}s` : '';
-              }
-            }
-          },
-          y: {
-            grid: { 
-              color: 'rgba(0, 0, 0, 0.15)', // Darker grid
-              drawBorder: true
-            },
-            min: -30,
-            max: 30,
-            title: {
-              display: true,
-              text: 'Angle (degrees)'
-            }
-          }
-        }
-      }}
-    />
-  </div>
-
-
-                      {/* <Line 
-                        ref={chartRef} 
-                        data={chartData}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          animation: {
-                            duration: 0
-                          },
-                          hover: {
-                            animationDuration: 0
-                          },
-                          responsiveAnimationDuration: 0,
-                          scales: {
-                            x: {
-                              grid: {
-                                color: 'rgba(100, 100, 100, 0.5)',  // Dark gray with 50% opacity
-                                lineWidth: 1,                       // Ensure consistent line width
-                                drawOnChartArea: true,              // Make sure lines are drawn
-                                drawTicks: true                     // Make sure ticks are drawn
+                      <div className="w-full h-[500px] flex flex-col gap-5">
+                        {/* Horizontal (X-axis) movement chart */}
+                      <div className="h-1/2 bg-white p-2 rounded-md shadow-sm">
+                          <h4 className="text-center font-semibold text-black mb-1">
+                            Horizontal Eye Movement (X-axis)
+                          </h4>
+                          <Line
+                            data={{
+                              labels: chartData.labels.map((_, index) => index),
+                              datasets: [
+                                {
+                                  ...chartData.datasets[0], // Eye Angle X
+                                  label: 'Eye Angle X',
+                                  borderColor: '#1e40af', // Blue
+                                  borderWidth: 2,
+                                  pointRadius: 0,
+                                },
+                                {
+                                  ...chartData.datasets[1], // Stimulus X
+                                  label: 'Stimulus X',
+                                  borderColor: '#10b981', // Green
+                                  borderWidth: 2,
+                                  pointRadius: 0,
+                                },
+                              ],
+                            }}
+                            options={{
+                              responsive: true,
+                              maintainAspectRatio: false,
+                              animation: { duration: 0 },
+                              hover: { animationDuration: 0 },
+                              responsiveAnimationDuration: 0,
+                              plugins: {
+                                legend: {
+                                  display: true,
+                                  position: 'top',
+                                  labels: {
+                                    color: '#000',
+                                    boxWidth: 12,
+                                    padding: 15,
+                                  },
+                                },
                               },
-                              ticks: {
-                                display: true                       // Ensure ticks are visible
-                              }
-                            },
-                            y: {
-                              grid: {
-                                color: 'rgba(100, 100, 100, 0.5)',  // Dark gray with 50% opacity
-                                lineWidth: 1,                       // Ensure consistent line width
-                                drawOnChartArea: true,              // Make sure lines are drawn
-                                drawTicks: true                     // Make sure ticks are drawn
+                              scales: {
+                                x: {
+                                  grid: {
+                                    color: 'rgba(0, 0, 0, 0.15)',
+                                    drawBorder: true,
+                                  },
+                                  title: {
+                                    display: true,
+                                    text: 'Time (frames)',
+                                  },
+                                  ticks: {
+                                    callback: (value) => (value % 10 === 0 ? `${value / 10}s` : ''),
+                                  },
+                                },
+                                y: {
+                                  grid: {
+                                    color: 'rgba(0, 0, 0, 0.15)',
+                                    drawBorder: true,
+                                  },
+                                  min: -30,
+                                  max: 100, // increase range to accommodate stimulus x values
+                                  title: {
+                                    display: true,
+                                    text: 'Angle / Stimulus (X)',
+                                  },
+                                },
                               },
-                              ticks: {
-                                display: true                       // Ensure ticks are visible
-                              }
-                            }
-                          }
-                        }}
-                      /> */}
-                        {/* <Line 
-                          ref={chartRef} 
-                          data={chartData}
+                            }}
+                          />
+                        </div>
+                        
+                        {/* Vertical (Y-axis) movement chart */}
+                      <div className="h-1/2 bg-white p-2 rounded-md shadow-sm">
+                        <h4 className="text-center font-semibold text-black mb-1">Vertical Eye Movement (Y-axis)</h4>
+                        <Line 
+                          data={{
+                            labels: chartData.labels.map((_, index) => index),
+                            datasets: [
+                              {
+                                ...chartData.datasets[2], // Eye Angle Y
+                                label: 'Eye Angle Y',
+                                borderColor: '#9d174d', // Pink
+                                borderWidth: 2,
+                                pointRadius: 0,
+                              },
+                              {
+                                ...chartData.datasets[3], // Stimulus Y
+                                label: 'Stimulus Y',
+                                borderColor: '#f97316', // Orange
+                                borderWidth: 2,
+                                pointRadius: 0,
+                              },
+                            ],
+                          }}
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            animation: {
-                              duration: 0 // general animation time
+                            animation: { duration: 0 },
+                            hover: { animationDuration: 0 },
+                            responsiveAnimationDuration: 0,
+                            plugins: {
+                              legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                  color: '#000',
+                                  boxWidth: 12,
+                                  padding: 15,
+                                },
+                              },
                             },
-                            hover: {
-                              animationDuration: 0 // duration of animations when hovering an item
+                            scales: {
+                              x: {
+                                grid: {
+                                  color: 'rgba(0, 0, 0, 0.15)',
+                                  drawBorder: true,
+                                },
+                                title: {
+                                  display: true,
+                                  text: 'Time (frames)',
+                                },
+                                ticks: {
+                                  callback: (value) => (value % 10 === 0 ? `${value / 10}s` : ''),
+                                },
+                              },
+                              y: {
+                                grid: {
+                                  color: 'rgba(0, 0, 0, 0.15)',
+                                  drawBorder: true,
+                                },
+                                min: -30,
+                                max: 500, // Increased for coords_y range
+                                title: {
+                                  display: true,
+                                  text: 'Angle / Stimulus (Y)',
+                                },
+                              },
                             },
-                            responsiveAnimationDuration: 0 // animation duration after a resize
                           }}
-                        /> */}
+                        />
+                      </div>
+
                       </div>
                     </div>
                   )}
