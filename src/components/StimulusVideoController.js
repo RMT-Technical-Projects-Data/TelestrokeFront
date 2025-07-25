@@ -29,7 +29,7 @@ const StimulusVideoController = ({ updateSetting }) => {
 
   return (
     <div className="flex flex-col gap-2 items-left">
-      <h1 className="font-bold text-lg">Video Control Panel</h1>
+      {/* <h1 className="font-bold text-lg">Video Control Panel</h1> */}
       
       {/* Stimulus Type Selection */}
       <p className="font-bold text-lg">Stimulus Type</p>
@@ -42,7 +42,8 @@ const StimulusVideoController = ({ updateSetting }) => {
         }}
       >
         <option value="" disabled>Select Type</option>
-        <option value="2">Infinity</option>
+        <option value="3">Horizontal</option>
+        <option value="2">Vertical</option>
         <option value="1">H-Shape</option>
       </select>
       
@@ -63,7 +64,9 @@ const StimulusVideoController = ({ updateSetting }) => {
       </select>
       
       {/* Play/Pause and Speed Control */}
-      <div className="flex items-center justify-between border border-gray-400 p-4 rounded-md" style={{ width: "300px" }}>
+      {/* <div className="flex items-center justify-between border border-gray-400 p-4 rounded-md w-full" > */}
+      <div className="flex items-center justify-between border border-gray-400 p-4 rounded-md w-full max-w-full overflow-x-hidden">
+
         <Button onClick={handlePlayPause} isPlaying={isPlaying}>
           <img
             src={isPlaying ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/play.png" : "https://img.icons8.com/ios-glyphs/50/FFFFFF/pause.png"}
@@ -81,7 +84,7 @@ const StimulusVideoController = ({ updateSetting }) => {
             max="100"
             step="1"
             value={videoSpeed}
-            className="w-28 slider"
+            className="w-full max-w-[120px] slider"
             onChange={handleSpeedChange}
           />
           <label className="w-24 text-lg">{getSpeedLabel(videoSpeed)}</label>

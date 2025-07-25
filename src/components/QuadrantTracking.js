@@ -13,8 +13,8 @@ function QuadrantTracking({ settings, updateSetting }) {
     const handleButtonClick = (row, col) => {
         const numRows = 4;
         const numCols = 4;
-        const screenWidth = 2880;
-        const screenHeight = 1440;
+        const screenWidth = 2800;
+        const screenHeight = 1360;
 
         const screenX = (col / numCols) * screenWidth;
         const screenY = (row / numRows) * screenHeight;
