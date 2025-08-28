@@ -59,7 +59,8 @@ const EMRpage = () => {
   const MAX_POINTS = 30;
 
   useEffect(() => {
-    const socket = new WebSocket("ws://43.204.220.68:3001");
+    const socket = new WebSocket("ws://65.2.78.181:3002");
+    // const socket = new WebSocket("ws://localhost:3001");
     socket.onopen = () => console.log("WebSocket connected");
 
     const rawData = [];
@@ -70,7 +71,7 @@ const EMRpage = () => {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log(data)
+        console.log("sdsad",data)
         if (data.type === "eye_data") {
           rawData.push({
             frame: frameIndex++,
@@ -79,6 +80,7 @@ const EMRpage = () => {
             coords_x: data?.coords_x || 0,
             coords_y: data?.coords_y || 0
           });
+          console.log("Raw Data Length:", rawData);
 
           // Limit the data to MAX_POINTS (ring buffer style)
           if (rawData.length > MAX_POINTS) {
@@ -109,6 +111,8 @@ const interval = setInterval(() => {
       smoothedAngleX.push(avgAngleX);
       smoothedAngleY.push(avgAngleY);
       smoothedCoordsX.push(avgCoordsX);
+      // smoothedCoordsX.push(avgCoordsX/100);
+      // smoothedCoordsY.push(avgCoordsY/100);
       smoothedCoordsY.push(avgCoordsY);
 
       labels.push(rawData[i].frame);
@@ -358,8 +362,8 @@ const interval = setInterval(() => {
                                     color: 'rgba(0, 0, 0, 0.15)',
                                     drawBorder: true,
                                   },
-                                  min: -30,
-                                  max: 100, // increase range to accommodate stimulus x values
+                                  min: -300,
+                                  max: 1000, // increase range to accommodate stimulus x values
                                   title: {
                                     display: true,
                                     text: 'Angle / Stimulus (X)',
@@ -429,8 +433,8 @@ const interval = setInterval(() => {
                                   color: 'rgba(0, 0, 0, 0.15)',
                                   drawBorder: true,
                                 },
-                                min: -30,
-                                max: 500, // Increased for coords_y range
+                                min: -300,
+                                max: 1000, // Increased for coords_y range
                                 title: {
                                   display: true,
                                   text: 'Angle / Stimulus (Y)',
@@ -506,8 +510,8 @@ const interval = setInterval(() => {
                         </div>
 
 
-
-                        <label htmlFor="examMode" className="text-lg font-semibold mr-4">
+                            {!(selectedEye == 'both') &&  <>
+                            <label htmlFor="examMode" className="text-lg font-semibold mr-4">
                           Exam Mode
                         </label>
                         <div className="flex items-center">
@@ -552,7 +556,8 @@ const interval = setInterval(() => {
                             settings={settings}
                             updateSetting={updateSetting}
                           />
-                        )}
+                        )}</>}
+                        
                       </div>
                     </div>
                   )}
