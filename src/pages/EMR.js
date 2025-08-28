@@ -59,7 +59,7 @@ const EMRpage = () => {
   const MAX_POINTS = 30;
 
   useEffect(() => {
-    const socket = new WebSocket("ws://65.2.78.181:3002");
+    const socket = new WebSocket("ws://65.2.78.181:3001");
     // const socket = new WebSocket("ws://localhost:3001");
     socket.onopen = () => console.log("WebSocket connected");
 
