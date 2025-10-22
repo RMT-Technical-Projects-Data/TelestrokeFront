@@ -12,7 +12,7 @@ import StimulusVideoController from "../components/StimulusVideoController";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Line } from "react-chartjs-2";
-import Chart from "chart.js/auto";
+// import Chart from "chart.js/auto";
 import { submitExamData, submitTrackingSession } from "../utils/auth";
 import Papa from 'papaparse';
 
@@ -87,7 +87,7 @@ const EMRpage = () => {
 
   const chartRef = useRef(null);
   const MAX_POINTS = 1000;
-  const PLOTTING_INTERVAL = 100;
+  // const PLOTTING_INTERVAL = 100;
   const SESSION_SAVE_INTERVAL = 30000;
   const csvDataLoaded = useRef(false);
   const stimulusXData = useRef([]);
@@ -123,6 +123,8 @@ const EMRpage = () => {
         const data = JSON.parse(event.data);
 
         if (data.type === "eye_data") {
+          // console.log("data",data);
+          
           const timestamp = data?.timestamp || Date.now();
           lastEyeTimestamp.current = timestamp;
 
@@ -141,7 +143,7 @@ const EMRpage = () => {
               dataPoints: []
             });
             sessionStarted.current = true;
-            console.log("Started new session on first eye data");
+            // console.log("Started new session on first eye data");
           }
 
           // Add raw data to buffer
@@ -420,65 +422,70 @@ const EMRpage = () => {
   }, [centerFocus, settings.stimulus_type, settings.shape, csvDataLoaded.current, lastEyeTimestamp.current, selectedEye]);
 
   // Process stimulus data
-  useEffect(() => {
-    if (!plottingEnabled || !currentSession) return;
+ useEffect(() => {
+  if (!plottingEnabled || !currentSession) return;
 
-    const intervalRef = setInterval(() => {
-      let newStimX = null;
-      let newStimY = null;
+  let lastStimulusTime = Date.now();
+  const EYE_DATA_INTERVAL = 35; // Match your eye data rate (~35ms based on your logs)
+  let stimulusIndex = 0;
 
-      if (plottingData.stimX.length > 0) {
-        if (currentDataIndex.current >= plottingData.stimX.length) {
-          currentDataIndex.current = 0;
-          stimulusStartTime.current = Date.now();
-          console.log("Stimulus data looping back to start");
-        }
+  const intervalRef = setInterval(() => {
+    const now = Date.now();
+    
+    if (plottingData.stimX.length > 0 && plottingData.stimY.length > 0) {
+      // Use modulo to loop through stimulus data
+      stimulusIndex = stimulusIndex % plottingData.stimX.length;
+      
+      const newStimX = plottingData.stimX[stimulusIndex];
+      const newStimY = plottingData.stimY[stimulusIndex];
+      stimulusIndex += 1;
 
-        const index = currentDataIndex.current;
-        newStimX = plottingData.stimX[index];
-        newStimY = plottingData.stimY[index];
-        currentDataIndex.current += 1;
+      // Update cumulative data
+      cumulativeData.current = {
+        ...cumulativeData.current,
+        stimX: [...cumulativeData.current.stimX, newStimX],
+        stimY: [...cumulativeData.current.stimY, newStimY],
+      };
 
-        cumulativeData.current = {
-          ...cumulativeData.current,
-          stimX: [...cumulativeData.current.stimX, newStimX],
-          stimY: [...cumulativeData.current.stimY, newStimY],
-        };
-
-        if (cumulativeData.current.labels.length > MAX_POINTS) {
-          cumulativeData.current.labels.shift();
-          cumulativeData.current.eyeX.shift();
-          cumulativeData.current.eyeY.shift();
-          cumulativeData.current.stimX.shift();
-          cumulativeData.current.stimY.shift();
-        }
-
-        setChartData(prev => ({
-          ...prev,
-          labels: cumulativeData.current.labels,
-          datasets: [
-            { ...prev.datasets[0], data: cumulativeData.current.eyeX },
-            { ...prev.datasets[1], data: cumulativeData.current.stimX },
-            { ...prev.datasets[2], data: cumulativeData.current.eyeY },
-            { ...prev.datasets[3], data: cumulativeData.current.stimY },
-          ],
-        }));
-
-        const dataPoint = {
-          timestamp: new Date(lastEyeTimestamp.current || Date.now()),
-          relativeTime: ((lastEyeTimestamp.current || Date.now()) - currentSession.sessionStart.getTime()) / 1000,
-          eyeX: lastValidEyeData.current.eyeX,
-          eyeY: lastValidEyeData.current.eyeY,
-          stimX: newStimX,
-          stimY: newStimY,
-          stimulusType: currentSession.stimulusType
-        };
-        sessionDataPoints.current = [...sessionDataPoints.current, dataPoint];
+      // Trim data to maintain performance
+      if (cumulativeData.current.labels.length > MAX_POINTS) {
+        cumulativeData.current.labels.shift();
+        cumulativeData.current.eyeX.shift();
+        cumulativeData.current.eyeY.shift();
+        cumulativeData.current.stimX.shift();
+        cumulativeData.current.stimY.shift();
       }
-    }, PLOTTING_INTERVAL);
 
-    return () => clearInterval(intervalRef);
-  }, [plottingEnabled, currentSession, plottingData]);
+      // Update chart data
+      setChartData(prev => ({
+        ...prev,
+        labels: cumulativeData.current.labels,
+        datasets: [
+          { ...prev.datasets[0], data: cumulativeData.current.eyeX },
+          { ...prev.datasets[1], data: cumulativeData.current.stimX },
+          { ...prev.datasets[2], data: cumulativeData.current.eyeY },
+          { ...prev.datasets[3], data: cumulativeData.current.stimY },
+        ],
+      }));
+
+      // Save data point
+      const dataPoint = {
+        timestamp: new Date(now),
+        relativeTime: (now - currentSession.sessionStart.getTime()) / 1000,
+        eyeX: lastValidEyeData.current.eyeX,
+        eyeY: lastValidEyeData.current.eyeY,
+        stimX: newStimX,
+        stimY: newStimY,
+        stimulusType: currentSession.stimulusType
+      };
+      sessionDataPoints.current = [...sessionDataPoints.current, dataPoint];
+      
+      lastStimulusTime = now;
+    }
+  }, EYE_DATA_INTERVAL); // Match the eye data frequency
+
+  return () => clearInterval(intervalRef);
+}, [plottingEnabled, currentSession, plottingData]);
 
   // Load CSV data for stimulus
   const loadCSVData = async (shape, stimulusType) => {
@@ -588,13 +595,14 @@ const EMRpage = () => {
     }
   };
 
-  const handleResetCalibration = () => {
-    if (selectedEye) {
-      setCalibrateCounts(prev => ({ ...prev, [selectedEye]: 0 }));
-      updateSetting("calibrate", { eye: selectedEye, count: 0 });
-      toast.success(`Calibration reset for ${selectedEye} eye`);
-    }
-  };
+ const handleResetCalibration = () => {
+  if (selectedEye) {
+    setCalibrateCounts(prev => ({ ...prev, [selectedEye]: 0 }));  
+    // Send reset command to server
+    updateSetting("calibrate", { eye: selectedEye, count: 0 });
+    toast.success(`Calibration reset for ${selectedEye} eye`);
+  }
+};
 
   const handleSave = async () => {
     try {
@@ -667,7 +675,7 @@ const EMRpage = () => {
       console.log(`Submitting exam data, size: ${payloadSize.toFixed(2)} KB`);
 
       const response = await submitExamData(dataToSend);
-      console.log("Data saved successfully:", response);
+      // console.log("Data saved successfully:", response);
 
       if (response.error) {
         toast.error(response.error);
