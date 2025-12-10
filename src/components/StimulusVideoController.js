@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import Button from "./Button";
 
-const StimulusVideoController = ({ updateSetting }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+const StimulusVideoController = ({ updateSetting, isPaused, setIsPaused }) => {
   const [videoSpeed, setVideoSpeed] = useState(2);
   const [stimulusType, setStimulusType] = useState("");
   const [shape, setShape] = useState("");
@@ -23,15 +22,13 @@ const StimulusVideoController = ({ updateSetting }) => {
   };
 
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    updateSetting("stop", !isPlaying);
+    const newPausedState = !isPaused;
+    setIsPaused(newPausedState);
+    updateSetting("stop", newPausedState);
   };
 
   return (
     <div className="flex flex-col gap-2 items-left">
-      {/* <h1 className="font-bold text-lg">Video Control Panel</h1> */}
-      
-      {/* Stimulus Type Selection */}
       <p className="font-bold text-lg">Stimulus Type</p>
       <select
         value={stimulusType}
@@ -40,6 +37,7 @@ const StimulusVideoController = ({ updateSetting }) => {
           setStimulusType(value);
           updateSetting("stimulus_type", value);
         }}
+        className="w-full max-w-full p-2 border border-gray-300 rounded-md"
       >
         <option value="" disabled>Select Type</option>
         <option value="3">Horizontal</option>
@@ -47,7 +45,6 @@ const StimulusVideoController = ({ updateSetting }) => {
         <option value="1">H-Shape</option>
       </select>
       
-      {/* Shape Selection */}
       <p className="font-bold text-lg">Shape</p>
       <select
         value={shape}
@@ -56,6 +53,7 @@ const StimulusVideoController = ({ updateSetting }) => {
           setShape(value);
           updateSetting("shape", value);
         }}
+        className="w-full max-w-full p-2 border border-gray-300 rounded-md"
       >
         <option value="" disabled>Select Shape</option>
         <option value="Circle">Circle</option>
@@ -63,20 +61,17 @@ const StimulusVideoController = ({ updateSetting }) => {
         <option value="Star">Star</option>
       </select>
       
-      {/* Play/Pause and Speed Control */}
-      {/* <div className="flex items-center justify-between border border-gray-400 p-4 rounded-md w-full" > */}
-      <div className="flex items-center justify-between border border-gray-400 p-4 rounded-md w-full max-w-full overflow-x-hidden">
+     <div className="flex items-center justify-between border border-gray-400 p-4 rounded-md w-full max-w-full overflow-x-hidden">
 
-        <Button onClick={handlePlayPause} isPlaying={isPlaying}>
+        <Button onClick={handlePlayPause} isPlaying={isPaused}>
           <img
-            src={isPlaying ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/play.png" : "https://img.icons8.com/ios-glyphs/50/FFFFFF/pause.png"}
+            src={isPaused ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/play.png" : "https://img.icons8.com/ios-glyphs/50/FFFFFF/pause.png"}
             width={25}
             height={25}
-            alt={isPlaying ? "Pause" : "Play"}
+            alt={isPaused ? "Pause" : "Play"}
           />
         </Button>
 
-        {/* Speed Slider */}
         <div className="flex items-center space-x-2">
           <input
             type="range"
