@@ -4362,7 +4362,7 @@ const EMRpage = () => {
     webSocketRef.current.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-
+console.log("eye data ",data)
         if (data.type === "eye_data") {
           const timestamp = data?.timestamp || Date.now();
           lastEyeTimestamp.current = timestamp;
