@@ -4352,7 +4352,7 @@ const EMRpage = () => {
     }
 
     // webSocketRef.current = new WebSocket("ws://localhost:3001");
-    webSocketRef.current = new WebSocket("ws://13.233.6.224:5000");
+    webSocketRef.current = new WebSocket("ws://13.233.6.224:3001");
 
     webSocketRef.current.onopen = () => {
       console.log("WebSocket connected for eye data");
@@ -4362,7 +4362,7 @@ const EMRpage = () => {
     webSocketRef.current.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-console.log("eye data ",data)
+        console.log("eye data ", data);
         if (data.type === "eye_data") {
           const timestamp = data?.timestamp || Date.now();
           lastEyeTimestamp.current = timestamp;
