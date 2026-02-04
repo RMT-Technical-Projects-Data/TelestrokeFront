@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Button from "./Button";
+import { Play, Pause } from "lucide-react";
 
 const StimulusVideoController = ({ updateSetting, isPaused, setIsPaused }) => {
   const [videoSpeed, setVideoSpeed] = useState(2);
@@ -44,7 +45,7 @@ const StimulusVideoController = ({ updateSetting, isPaused, setIsPaused }) => {
         <option value="2">Vertical</option>
         <option value="1">H-Shape</option>
       </select>
-      
+
       <p className="font-bold text-lg">Shape</p>
       <select
         value={shape}
@@ -60,16 +61,15 @@ const StimulusVideoController = ({ updateSetting, isPaused, setIsPaused }) => {
         <option value="Square">Square</option>
         <option value="Star">Star</option>
       </select>
-      
-     <div className="flex items-center justify-between border border-gray-400 p-4 rounded-md w-full max-w-full overflow-x-hidden">
+
+      <div className="flex items-center justify-between border border-gray-400 p-4 rounded-md w-full max-w-full overflow-x-hidden">
 
         <Button onClick={handlePlayPause} isPlaying={isPaused}>
-          <img
-            src={isPaused ? "https://img.icons8.com/ios-glyphs/50/FFFFFF/play.png" : "https://img.icons8.com/ios-glyphs/50/FFFFFF/pause.png"}
-            width={25}
-            height={25}
-            alt={isPaused ? "Pause" : "Play"}
-          />
+          {isPaused ? (
+            <Play size={22} color="white" />
+          ) : (
+            <Pause size={22} color="white" />
+          )}
         </Button>
 
         <div className="flex items-center space-x-2">
