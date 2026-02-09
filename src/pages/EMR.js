@@ -164,8 +164,8 @@ const EMRpage = () => {
       return;
     }
 
-    // webSocketRef.current = new WebSocket("ws://localhost:3001");
-    webSocketRef.current = new WebSocket("ws://13.233.6.224:3001");
+    webSocketRef.current = new WebSocket("ws://localhost:3001");
+    // webSocketRef.current = new WebSocket("ws://13.233.6.224:3001");
 
     webSocketRef.current.onopen = () => {
       console.log("WebSocket connected for eye data");
@@ -328,23 +328,31 @@ const EMRpage = () => {
       lastValidEyeData.current = { eyeX: newEyeX, eyeY: newEyeY };
     }
 
+    // Capture latest stimulus data to keep arrays synchronized
+    const currentStimX = (plottingEnabled && !stimulusDataComplete.current && currentDataIndex.current < plottingData.stimX.length)
+      ? (plottingData.stimX[currentDataIndex.current] || null)
+      : null;
+    const currentStimY = (plottingEnabled && !stimulusDataComplete.current && currentDataIndex.current < plottingData.stimY.length)
+      ? (plottingData.stimY[currentDataIndex.current] || null)
+      : null;
+
     // Update cumulative data for plotting
     cumulativeData.current = {
       ...cumulativeData.current,
       labels: [...cumulativeData.current.labels, newLabel],
       eyeX: [...cumulativeData.current.eyeX, newEyeX],
       eyeY: [...cumulativeData.current.eyeY, newEyeY],
+      stimX: [...cumulativeData.current.stimX, currentStimX],
+      stimY: [...cumulativeData.current.stimY, currentStimY],
     };
 
-    // Trim cumulative data
+    // Trim cumulative data (ALWAYS shift all arrays to keep them in sync)
     if (cumulativeData.current.labels.length > MAX_POINTS) {
       cumulativeData.current.labels.shift();
       cumulativeData.current.eyeX.shift();
       cumulativeData.current.eyeY.shift();
-      if (cumulativeData.current.stimX.length > 0) {
-        cumulativeData.current.stimX.shift();
-        cumulativeData.current.stimY.shift();
-      }
+      cumulativeData.current.stimX.shift();
+      cumulativeData.current.stimY.shift();
     }
 
     // Update chart data
@@ -388,12 +396,16 @@ const EMRpage = () => {
       stimY: [],
       labels: prev.labels,
     }));
+
+    // Pad stimX and stimY with null to match the current length of eye data
+    // This ensures the stimulus starts from the "now" point on the graph
+    const currentLength = cumulativeData.current.labels.length;
     cumulativeData.current = {
       labels: cumulativeData.current.labels,
       eyeX: cumulativeData.current.eyeX,
       eyeY: cumulativeData.current.eyeY,
-      stimX: [],
-      stimY: [],
+      stimX: new Array(currentLength).fill(null),
+      stimY: new Array(currentLength).fill(null),
     };
     currentDataIndex.current = 0;
     csvDataLoaded.current = false;
@@ -451,8 +463,7 @@ const EMRpage = () => {
 
     const payloadSize = JSON.stringify(sessionToSave).length / 1024;
     console.log(
-      `Saving session with ${validDataPoints.length} data points (${
-        pairedDataPoints.length
+      `Saving session with ${validDataPoints.length} data points (${pairedDataPoints.length
       } paired), size: ${payloadSize.toFixed(2)} KB`
     );
 
@@ -648,8 +659,12 @@ const EMRpage = () => {
           const stimulusTime = now + i * (EYE_DATA_INTERVAL / pointsToProcess);
 
           // Update cumulative data for plotting
+          // TO KEEP SYNC: Add label and latest eye data for each stimulus point
           cumulativeData.current = {
             ...cumulativeData.current,
+            labels: [...cumulativeData.current.labels, stimulusTime / 1000],
+            eyeX: [...cumulativeData.current.eyeX, lastValidEyeData.current.eyeX],
+            eyeY: [...cumulativeData.current.eyeY, lastValidEyeData.current.eyeY],
             stimX: [...cumulativeData.current.stimX, newStimX],
             stimY: [...cumulativeData.current.stimY, newStimY],
           };
@@ -696,7 +711,7 @@ const EMRpage = () => {
         // Increment index for next iteration
         currentDataIndex.current = currentDataIndex.current + pointsToProcess;
 
-        // Trim data to maintain performance
+        // Trim data to maintain performance (ALWAYS shift all arrays to keep them in sync)
         if (cumulativeData.current.labels.length > MAX_POINTS) {
           cumulativeData.current.labels.shift();
           cumulativeData.current.eyeX.shift();
@@ -1000,26 +1015,26 @@ const EMRpage = () => {
           emrBedSideData.od?.ruq === "pass"
             ? "Pass"
             : emrBedSideData.od?.ruq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         visualFieldsODRLQ:
           emrBedSideData.od?.rlq === "pass"
             ? "Pass"
             : emrBedSideData.od?.rlq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         visualFieldsODLUQ:
           emrBedSideData.od?.luq === "pass"
             ? "Pass"
             : emrBedSideData.od?.luq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         visualFieldsODLLQ:
           emrBedSideData.od?.llq === "pass"
             ? "Pass"
             : emrBedSideData.od?.llq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         extraocularMovementResult: emrBedSideData.extraocularMovementResult,
         extraocularMovementDescription:
           emrBedSideData.extraocularMovementDescription,
@@ -1029,26 +1044,26 @@ const EMRpage = () => {
           emrBedSideData.os?.ruq === "pass"
             ? "Pass"
             : emrBedSideData.os?.ruq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         visualFieldsOSRLQ:
           emrBedSideData.os?.rlq === "pass"
             ? "Pass"
             : emrBedSideData.os?.rlq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         visualFieldsOSLUQ:
           emrBedSideData.os?.luq === "pass"
             ? "Pass"
             : emrBedSideData.os?.luq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         visualFieldsOSLLQ:
           emrBedSideData.os?.llq === "pass"
             ? "Pass"
             : emrBedSideData.os?.llq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
       };
 
       const teleStrokeExamData = {
@@ -1062,26 +1077,26 @@ const EMRpage = () => {
           emrTelestrokeExam.od?.ruq === "pass"
             ? "Pass"
             : emrTelestrokeExam.od?.ruq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         tele_visualFieldsODRLQ:
           emrTelestrokeExam.od?.rlq === "pass"
             ? "Pass"
             : emrTelestrokeExam.od?.rlq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         tele_visualFieldsODLUQ:
           emrTelestrokeExam.od?.luq === "pass"
             ? "Pass"
             : emrTelestrokeExam.od?.luq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         tele_visualFieldsODLLQ:
           emrTelestrokeExam.od?.llq === "pass"
             ? "Pass"
             : emrTelestrokeExam.od?.llq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         tele_extraocularMovementResult:
           emrTelestrokeExam.extraocularMovementResult,
         tele_extraocularMovementDescription:
@@ -1092,26 +1107,26 @@ const EMRpage = () => {
           emrTelestrokeExam.os?.ruq === "pass"
             ? "Pass"
             : emrTelestrokeExam.os?.ruq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         tele_visualFieldsOSRLQ:
           emrTelestrokeExam.os?.rlq === "pass"
             ? "Pass"
             : emrTelestrokeExam.os?.rlq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         tele_visualFieldsOSLUQ:
           emrTelestrokeExam.os?.luq === "pass"
             ? "Pass"
             : emrTelestrokeExam.os?.luq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
         tele_visualFieldsOSLLQ:
           emrTelestrokeExam.os?.llq === "pass"
             ? "Pass"
             : emrTelestrokeExam.os?.llq
-            ? "Fail"
-            : null,
+              ? "Fail"
+              : null,
       };
 
       const dataToSend = {
@@ -1496,31 +1511,28 @@ const EMRpage = () => {
                   <>
                     <div className="flex flex-row gap-1 ml-2 mt-4">
                       <button
-                        className={`rounded-b-none rounded-t-md border-b-0 text-sm ${
-                          tab === 0
-                            ? "bg-[rgb(5,60,212)] text-white"
-                            : "bg-gray-200"
-                        }`}
+                        className={`rounded-b-none rounded-t-md border-b-0 text-sm ${tab === 0
+                          ? "bg-[rgb(5,60,212)] text-white"
+                          : "bg-gray-200"
+                          }`}
                         onClick={() => setTab(0)}
                       >
                         Patient Info
                       </button>
                       <button
-                        className={`rounded-b-none rounded-t-md border-b-0 text-sm ${
-                          tab === 1
-                            ? "bg-[rgb(5,60,212)] text-white"
-                            : "bg-gray-200"
-                        }`}
+                        className={`rounded-b-none rounded-t-md border-b-0 text-sm ${tab === 1
+                          ? "bg-[rgb(5,60,212)] text-white"
+                          : "bg-gray-200"
+                          }`}
                         onClick={() => setTab(1)}
                       >
                         Bedside Exam
                       </button>
                       <button
-                        className={`rounded-b-none rounded-t-md border-b-0 text-sm ${
-                          tab === 2
-                            ? "bg-[rgb(5,60,212)] text-white"
-                            : "bg-gray-200"
-                        }`}
+                        className={`rounded-b-none rounded-t-md border-b-0 text-sm ${tab === 2
+                          ? "bg-[rgb(5,60,212)] text-white"
+                          : "bg-gray-200"
+                          }`}
                         onClick={() => setTab(2)}
                       >
                         Telestroke Exam
