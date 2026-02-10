@@ -28,7 +28,7 @@ const EMRpage = () => {
     eye_camera_control: "",
     exam_mode: "",
     stimulus_type: "",
-    speed: "",
+    speed: "slow",
     stop: "",
     coordinates: "",
     shape: "",
@@ -56,6 +56,7 @@ const EMRpage = () => {
         data: [],
         pointRadius: 0,
         tension: 0.3,
+        spanGaps: true,
       },
       {
         label: "Stimulus X",
@@ -65,6 +66,7 @@ const EMRpage = () => {
         data: [],
         pointRadius: 0,
         tension: 0.3,
+        spanGaps: true,
       },
       {
         label: "Eye Angle Y",
@@ -74,6 +76,7 @@ const EMRpage = () => {
         data: [],
         pointRadius: 0,
         tension: 0.3,
+        spanGaps: true,
       },
       {
         label: "Stimulus Y",
@@ -83,6 +86,7 @@ const EMRpage = () => {
         data: [],
         pointRadius: 0,
         tension: 0.3,
+        spanGaps: true,
       },
     ],
   });
@@ -109,6 +113,7 @@ const EMRpage = () => {
   const lastEyeTimestamp = useRef(null);
   const stimulusStartTime = useRef(null);
   const sessionStarted = useRef(false);
+  const pauseStartTime = useRef(null);
   const [calibrateCounts, setCalibrateCounts] = useState({ left: 0, right: 0 });
 
   // Pause state
@@ -141,13 +146,14 @@ const EMRpage = () => {
 
   // Start session when stimulus becomes active
   useEffect(() => {
-    isStimulusActive.current = !!(settings.stimulus_type && settings.shape);
+    isStimulusActive.current = !!(settings.stimulus_type && settings.shape && settings.speed);
     console.log("Stimulus active:", isStimulusActive.current, {
       stimulus_type: settings.stimulus_type,
       shape: settings.shape,
+      speed: settings.speed,
     });
 
-    // START SESSION WHEN STIMULUS BECOMES ACTIVE (not waiting for eye data)
+    // START SESSION WHEN STIMULUS BECOMES ACTIVE
     if (
       isStimulusActive.current &&
       !currentSession &&
@@ -156,7 +162,7 @@ const EMRpage = () => {
       console.log("Stimulus is ON - starting new session");
       startNewStimulusSession();
     }
-  }, [settings.stimulus_type, settings.shape]);
+  }, [settings.stimulus_type, settings.shape, settings.speed]);
 
   // Initialize WebSocket for eye data
   useEffect(() => {
@@ -204,7 +210,10 @@ const EMRpage = () => {
             eyeDataBuffer.current.shift();
           }
 
-          processAndPlotEyeData();
+          // ONLY plot eye data directly if stimulus plotting IS NOT driving the graph
+          if (!plottingEnabled || isPaused) {
+            processAndPlotEyeData();
+          }
 
           // Store eye-only data points when stimulus is active
           if (
@@ -261,15 +270,8 @@ const EMRpage = () => {
       const newPaused = !prev;
 
       if (newPaused) {
-        // PAUSING: Save current session if stimulus was active
-        if (
-          isStimulusActive.current &&
-          currentSession &&
-          sessionDataPoints.current.length > 0
-        ) {
-          shouldSaveOnPause.current = true;
-          console.log("Pausing - will save current session");
-        }
+        // Track when we paused to adjust stimulus start time on resume
+        pauseStartTime.current = Date.now();
 
         // Stop eye data processing
         eyeDataBuffer.current = [];
@@ -282,15 +284,12 @@ const EMRpage = () => {
 
         console.log("⛔ PAUSED: Eye + Stimulus plotting stopped");
       } else {
-        // RESUMING: Save previous session if needed and start new session
-        if (shouldSaveOnPause.current) {
-          saveCurrentSession(false).then(() => {
-            // After saving, start new session if stimulus is still active
-            if (isStimulusActive.current && !stimulusDataComplete.current) {
-              startNewStimulusSession();
-            }
-          });
-          shouldSaveOnPause.current = false;
+        // RESUMING: Adjust stimulus start time to account for pause duration
+        if (pauseStartTime.current && stimulusStartTime.current) {
+          const pauseDuration = Date.now() - pauseStartTime.current;
+          stimulusStartTime.current += pauseDuration;
+          pauseStartTime.current = null;
+          console.log(`Adjusted stimulus start time by ${pauseDuration}ms`);
         }
 
         // Restart stimulus plotting when resuming
@@ -311,7 +310,11 @@ const EMRpage = () => {
 
     let newEyeX = null;
     let newEyeY = null;
-    let newLabel = (lastEyeTimestamp.current || Date.now()) / 1000;
+
+    // Relative time label for continuity (if stimulus is active)
+    let newLabel = stimulusStartTime.current
+      ? (Date.now() - stimulusStartTime.current) / 1000
+      : (lastEyeTimestamp.current || Date.now()) / 1000;
 
     // Smooth for plotting only
     if (eyeDataBuffer.current.length >= SMOOTH_WINDOW) {
@@ -390,23 +393,32 @@ const EMRpage = () => {
   // Reset stimulus plotting state
   const resetPlottingState = () => {
     console.log("Resetting stimulus plotting state");
+
+    // Clear all cumulative data to ensure graph starts from the beginning
+    cumulativeData.current = {
+      labels: [],
+      eyeX: [],
+      eyeY: [],
+      stimX: [],
+      stimY: [],
+    };
+
+    // Reset chart data state immediately to clear the UI
+    setChartData((prev) => ({
+      ...prev,
+      labels: [],
+      datasets: prev.datasets.map(dataset => ({
+        ...dataset,
+        data: []
+      }))
+    }));
+
     setPlottingData((prev) => ({
       ...prev,
       stimX: [],
       stimY: [],
-      labels: prev.labels,
     }));
 
-    // Pad stimX and stimY with null to match the current length of eye data
-    // This ensures the stimulus starts from the "now" point on the graph
-    const currentLength = cumulativeData.current.labels.length;
-    cumulativeData.current = {
-      labels: cumulativeData.current.labels,
-      eyeX: cumulativeData.current.eyeX,
-      eyeY: cumulativeData.current.eyeY,
-      stimX: new Array(currentLength).fill(null),
-      stimY: new Array(currentLength).fill(null),
-    };
     currentDataIndex.current = 0;
     csvDataLoaded.current = false;
     stimulusStartTime.current = null;
@@ -517,23 +529,26 @@ const EMRpage = () => {
   };
 
   // Start new session for stimulus
-  const startNewStimulusSession = () => {
+  const startNewStimulusSession = (resetGraph = true) => {
     if (
       settings.shape &&
       settings.stimulus_type &&
       selectedEye &&
-      settings.exam_mode
+      settings.exam_mode &&
+      settings.speed
     ) {
       const newSession = {
         sessionStart: new Date(),
         selectedEye: selectedEye.toLowerCase(),
         stimulusType: settings.stimulus_type,
         stimulusShape: settings.shape,
+        speed: settings.speed,
         examMode: settings.exam_mode,
         settingsHistory: [
           {
             stimulusType: settings.stimulus_type,
             stimulusShape: settings.shape,
+            speed: settings.speed,
             examMode: settings.exam_mode,
             timestamp: new Date(),
           },
@@ -548,11 +563,14 @@ const EMRpage = () => {
       console.log("Started new stimulus session:", newSession);
 
       // Load CSV data for the stimulus
-      loadCSVData(settings.shape, settings.stimulus_type);
+      if (resetGraph) {
+        loadCSVData(settings.shape, settings.stimulus_type);
+      }
     } else {
       console.log("Cannot start session - missing required settings:", {
         shape: settings.shape,
         stimulus_type: settings.stimulus_type,
+        speed: settings.speed,
         selectedEye,
         exam_mode: settings.exam_mode,
       });
@@ -570,7 +588,8 @@ const EMRpage = () => {
       if (
         !currentSession ||
         currentSession.stimulusType !== settings.stimulus_type ||
-        currentSession.stimulusShape !== settings.shape
+        currentSession.stimulusShape !== settings.shape ||
+        currentSession.speed !== settings.speed
       ) {
         // Save existing session if it has data
         if (
@@ -599,7 +618,7 @@ const EMRpage = () => {
       sessionStarted.current = false;
       stimulusDataComplete.current = false;
     }
-  }, [settings.shape, settings.stimulus_type, selectedEye, settings.exam_mode]);
+  }, [settings.shape, settings.stimulus_type, selectedEye, settings.exam_mode, settings.speed]);
 
   // Process stimulus data - PAIR WITH EYE DATA
   const startStimulusPlotting = () => {
@@ -618,100 +637,72 @@ const EMRpage = () => {
       clearInterval(stimulusIntervalRef.current);
     }
 
-    const EYE_DATA_INTERVAL = 5;
-    const POINTS_PER_INTERVAL = 4;
+    const TICK_INTERVAL = 10; // High frequency for smooth plotting
 
     console.log(
-      `Starting stimulus plotting with ${plottingData.stimX.length} points, starting from index: ${currentDataIndex.current}`
+      `Starting stimulus plotting with ${stimulusXData.current.length} points, starting from index: ${currentDataIndex.current}`
     );
 
     stimulusIntervalRef.current = setInterval(() => {
-      const now = Date.now();
+      if (isPaused || !plottingEnabled || !currentSession || stimulusDataComplete.current) return;
 
-      // Check if we've reached the end BEFORE processing
-      if (currentDataIndex.current >= plottingData.stimX.length) {
-        console.log("Stimulus data plotting completed - all points processed");
-        stimulusDataComplete.current = true;
-        sessionSavedDueToCSVComplete.current = true;
-        stopStimulusPlotting();
-        setPlottingEnabled(false);
-
-        // Save session when CSV plotting is complete
-        if (currentSession && sessionDataPoints.current.length > 0) {
-          console.log("Saving session due to CSV completion");
-          saveCurrentSession(false);
-        }
-        return;
+      if (!stimulusStartTime.current) {
+        stimulusStartTime.current = Date.now();
       }
 
-      if (plottingData.stimX.length > 0 && plottingData.stimY.length > 0) {
-        // Calculate how many points to process this interval
-        const remainingPoints =
-          plottingData.stimX.length - currentDataIndex.current;
-        const pointsToProcess = Math.min(POINTS_PER_INTERVAL, remainingPoints);
+      const elapsedTime = (Date.now() - stimulusStartTime.current) / 1000;
+      let pointsProcessed = 0;
 
-        // Process multiple points in this interval
-        for (let i = 0; i < pointsToProcess; i++) {
-          const stimulusIndex = currentDataIndex.current + i;
+      // Process all points that should have occurred by now according to CSV time
+      while (
+        currentDataIndex.current < stimulusXData.current.length &&
+        stimulusXData.current[currentDataIndex.current].time <= elapsedTime
+      ) {
+        const stimulusIndex = currentDataIndex.current;
+        const newStimX = stimulusXData.current[stimulusIndex].value;
+        const newStimY = stimulusYData.current[stimulusIndex].value;
+        const stimulusTime = stimulusXData.current[stimulusIndex].time;
 
-          const newStimX = plottingData.stimX[stimulusIndex];
-          const newStimY = plottingData.stimY[stimulusIndex];
-          const stimulusTime = now + i * (EYE_DATA_INTERVAL / pointsToProcess);
+        // Update cumulative data for plotting
+        cumulativeData.current = {
+          ...cumulativeData.current,
+          labels: [...cumulativeData.current.labels, stimulusTime],
+          eyeX: [...cumulativeData.current.eyeX, lastValidEyeData.current.eyeX],
+          eyeY: [...cumulativeData.current.eyeY, lastValidEyeData.current.eyeY],
+          stimX: [...cumulativeData.current.stimX, newStimX],
+          stimY: [...cumulativeData.current.stimY, newStimY],
+        };
 
-          // Update cumulative data for plotting
-          // TO KEEP SYNC: Add label and latest eye data for each stimulus point
-          cumulativeData.current = {
-            ...cumulativeData.current,
-            labels: [...cumulativeData.current.labels, stimulusTime / 1000],
-            eyeX: [...cumulativeData.current.eyeX, lastValidEyeData.current.eyeX],
-            eyeY: [...cumulativeData.current.eyeY, lastValidEyeData.current.eyeY],
-            stimX: [...cumulativeData.current.stimX, newStimX],
-            stimY: [...cumulativeData.current.stimY, newStimY],
+        // **PAIR STIMULUS DATA WITH EYE DATA**
+        if (isStimulusActive.current && !isPaused && currentSession) {
+          const {
+            eyeX,
+            eyeY,
+            timestamp: eyeTimestamp,
+          } = latestEyeDataForStimulus.current;
+
+          const dataPoint = {
+            timestamp: new Date(stimulusTime),
+            relativeTime: stimulusXData.current[stimulusIndex].time,
+            eyeX: eyeX,
+            eyeY: eyeY,
+            stimX: newStimX,
+            stimY: newStimY,
+            stimulusType: currentSession.stimulusType,
+            isPaired: true,
+            eyeTimestamp: eyeTimestamp,
           };
 
-          // **PAIR STIMULUS DATA WITH EYE DATA**
-          if (isStimulusActive.current && !isPaused && currentSession) {
-            // Get the latest eye data for pairing
-            const {
-              eyeX,
-              eyeY,
-              timestamp: eyeTimestamp,
-            } = latestEyeDataForStimulus.current;
-
-            // Create a data point with BOTH eye AND stimulus data
-            const dataPoint = {
-              timestamp: new Date(stimulusTime),
-              relativeTime:
-                (stimulusTime - currentSession.sessionStart.getTime()) / 1000,
-              eyeX: eyeX, // Latest eye X position
-              eyeY: eyeY, // Latest eye Y position
-              stimX: newStimX, // Current stimulus X position
-              stimY: newStimY, // Current stimulus Y position
-              stimulusType: currentSession.stimulusType,
-              isPaired: true, // Mark as paired data
-              eyeTimestamp: eyeTimestamp, // When the eye data was captured
-            };
-
-            // Add to session data points
-            sessionDataPoints.current = [
-              ...sessionDataPoints.current,
-              dataPoint,
-            ];
-
-            console.log(
-              `Paired data point ${stimulusIndex}: Eye(${eyeX?.toFixed(
-                2
-              )}, ${eyeY?.toFixed(2)}) Stim(${newStimX?.toFixed(
-                2
-              )}, ${newStimY?.toFixed(2)})`
-            );
-          }
+          sessionDataPoints.current = [
+            ...sessionDataPoints.current,
+            dataPoint,
+          ];
         }
 
-        // Increment index for next iteration
-        currentDataIndex.current = currentDataIndex.current + pointsToProcess;
+        currentDataIndex.current++;
+        pointsProcessed++;
 
-        // Trim data to maintain performance (ALWAYS shift all arrays to keep them in sync)
+        // Trim data to maintain performance
         if (cumulativeData.current.labels.length > MAX_POINTS) {
           cumulativeData.current.labels.shift();
           cumulativeData.current.eyeX.shift();
@@ -719,7 +710,9 @@ const EMRpage = () => {
           cumulativeData.current.stimX.shift();
           cumulativeData.current.stimY.shift();
         }
+      }
 
+      if (pointsProcessed > 0) {
         // Update chart data
         setChartData((prev) => ({
           ...prev,
@@ -731,24 +724,25 @@ const EMRpage = () => {
             { ...prev.datasets[3], data: cumulativeData.current.stimY },
           ],
         }));
-
-        // Final check after processing - if we just processed the last points
-        if (currentDataIndex.current >= plottingData.stimX.length) {
-          console.log("Final points processed - completing stimulus plotting");
-          stimulusDataComplete.current = true;
-          sessionSavedDueToCSVComplete.current = true;
-          stopStimulusPlotting();
-          setPlottingEnabled(false);
-
-          // Save session when CSV plotting is complete
-          if (currentSession && sessionDataPoints.current.length > 0) {
-            console.log("Saving session due to CSV completion (final check)");
-            saveCurrentSession(false);
-          }
-          return;
-        }
       }
-    }, EYE_DATA_INTERVAL);
+
+      // Check for completion
+      if (currentDataIndex.current >= stimulusXData.current.length) {
+        console.log("Stimulus data plotting completed - all points processed");
+        stimulusDataComplete.current = true;
+        sessionSavedDueToCSVComplete.current = true;
+        stopStimulusPlotting();
+        setPlottingEnabled(false);
+
+        if (currentSession && sessionDataPoints.current.length > 0) {
+          saveCurrentSession(false);
+        }
+
+        // Reset settings to restart UI selection
+        updateSetting("stimulus_type", "");
+        updateSetting("shape", "");
+      }
+    }, TICK_INTERVAL);
   };
 
   // Stop stimulus plotting
@@ -830,61 +824,41 @@ const EMRpage = () => {
   // Load CSV data for stimulus
   const loadCSVData = async (shape, stimulusType) => {
     try {
+      const speed = settings.speed || "slow";
       console.log(
-        `Loading CSV data for shape: ${shape}, stimulus_type: ${stimulusType}`
+        `Loading CSV data for shape: ${shape}, stimulus_type: ${stimulusType}, speed: ${speed}`
       );
 
       // Reset stimulus state when loading new CSV data
       resetPlottingState();
 
-      let csvPaths;
-      if (stimulusType === "2") {
-        csvPaths = {
-          x: "/ShapesGraph/Vx.csv",
-          y: "/ShapesGraph/Vy.csv",
-        };
+      let csvPath = "";
+      if (stimulusType === "1") {
+        // H-Shape
+        csvPath = `/ShapesGraph/H-Shape/H_shape_${speed}.csv`;
       } else if (stimulusType === "3") {
-        csvPaths = {
-          x: "/ShapesGraph/HorizX.csv",
-          y: "/ShapesGraph/HorizY.csv",
-        };
-      } else if (stimulusType === "1") {
-        csvPaths = {
-          x: "/ShapesGraph/Hx.csv",
-          y: "/ShapesGraph/Hy.csv",
-        };
+        // Horizontal
+        csvPath = `/ShapesGraph/Horizontal-Shape/Horizontal_${speed}.csv`;
+      } else if (stimulusType === "2") {
+        // Vertical
+        csvPath = `/ShapesGraph/Vertical-Shape/Vertical_${speed}.csv`;
       } else {
-        console.warn(`No CSV paths defined for stimulus type: ${stimulusType}`);
+        console.warn(`No CSV path defined for stimulus type: ${stimulusType}`);
         return;
       }
 
-      const [xResponse, yResponse] = await Promise.all([
-        fetch(csvPaths.x),
-        fetch(csvPaths.y),
-      ]);
-
-      if (!xResponse.ok || !yResponse.ok) {
-        throw new Error(
-          `Failed to fetch CSV files: X(${xResponse.status}), Y(${yResponse.status})`
-        );
+      const response = await fetch(csvPath);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch CSV file: ${csvPath} (${response.status})`);
       }
 
-      const xText = await xResponse.text();
-      const yText = await yResponse.text();
+      const csvText = await response.text();
+      const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
 
-      const xParsed = Papa.parse(xText, { header: true, skipEmptyLines: true });
-      const yParsed = Papa.parse(yText, { header: true, skipEmptyLines: true });
-
-      const xData = xParsed.data
+      const xData = parsed.data
         .map((row) => {
-          const timeValue = row["Time (s)"] || row["Time"] || row["time"] || 0;
-          const xValue =
-            row["X Position (pixels)"] ||
-            row["X Position"] ||
-            row["X"] ||
-            row["x"] ||
-            0;
-
+          const timeValue = row["Time(s)"] || row["Time (s)"] || row["Time"] || row["time"] || 0;
+          const xValue = row["X"] || row["X Position (pixels)"] || row["X Position"] || row["x"] || 0;
           return {
             time: parseFloat(timeValue) || 0,
             value: parseFloat(xValue) || 0,
@@ -892,16 +866,10 @@ const EMRpage = () => {
         })
         .filter((item) => !isNaN(item.time) && !isNaN(item.value));
 
-      const yData = yParsed.data
+      const yData = parsed.data
         .map((row) => {
-          const timeValue = row["Time (s)"] || row["Time"] || row["time"] || 0;
-          const yValue =
-            row["Y Position (pixels)"] ||
-            row["Y Position"] ||
-            row["Y"] ||
-            row["y"] ||
-            0;
-
+          const timeValue = row["Time(s)"] || row["Time (s)"] || row["Time"] || row["time"] || 0;
+          const yValue = row["Y"] || row["Y Position (pixels)"] || row["Y Position"] || row["y"] || 0;
           return {
             time: parseFloat(timeValue) || 0,
             value: parseFloat(yValue) || 0,

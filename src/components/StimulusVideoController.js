@@ -2,40 +2,36 @@ import React, { useState } from "react";
 import Button from "./Button";
 import { Play, Pause } from "lucide-react";
 
-const StimulusVideoController = ({ updateSetting, isPaused, setIsPaused }) => {
+const StimulusVideoController = ({ settings, updateSetting, isPaused, setIsPaused, togglePause }) => {
   const [videoSpeed, setVideoSpeed] = useState(2);
-  const [stimulusType, setStimulusType] = useState("");
-  const [shape, setShape] = useState("");
 
   const handleSpeedChange = (event) => {
     const value = event.target.value;
     setVideoSpeed(value);
     let speedLabel = "slow";
-    if (value > 70) speedLabel = "high";
+    if (value > 70) speedLabel = "fast";
     else if (value > 40) speedLabel = "medium";
     updateSetting("speed", speedLabel);
   };
 
   const getSpeedLabel = (value) => {
-    if (value > 70) return "high";
+    if (value > 70) return "fast";
     else if (value > 40) return "medium";
     return "slow";
   };
 
   const handlePlayPause = () => {
-    const newPausedState = !isPaused;
-    setIsPaused(newPausedState);
-    updateSetting("stop", newPausedState);
+    togglePause();
+    updateSetting("stop", !isPaused);
   };
 
   return (
     <div className="flex flex-col gap-2 items-left">
       <p className="font-bold text-lg">Stimulus Type</p>
       <select
-        value={stimulusType}
+        value={settings.stimulus_type || ""}
         onChange={(e) => {
           const value = e.target.value;
-          setStimulusType(value);
           updateSetting("stimulus_type", value);
         }}
         className="w-full max-w-full p-2 border border-gray-300 rounded-md"
@@ -48,10 +44,9 @@ const StimulusVideoController = ({ updateSetting, isPaused, setIsPaused }) => {
 
       <p className="font-bold text-lg">Shape</p>
       <select
-        value={shape}
+        value={settings.shape || ""}
         onChange={(e) => {
           const value = e.target.value;
-          setShape(value);
           updateSetting("shape", value);
         }}
         className="w-full max-w-full p-2 border border-gray-300 rounded-md"
