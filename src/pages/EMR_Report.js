@@ -45,7 +45,7 @@ const EMRReportpage = () => {
         setLoading(false);
       }
     };
-    
+
     const loadStimulusTemplates = async () => {
       try {
         console.log("Loading stimulus templates for reports...");
@@ -99,7 +99,7 @@ const EMRReportpage = () => {
 
       const xText = await xResponse.text();
       const yText = await yResponse.text();
-      
+
       const xParsed = Papa.parse(xText, { header: true, skipEmptyLines: true });
       const yParsed = Papa.parse(yText, { header: true, skipEmptyLines: true });
 
@@ -107,7 +107,7 @@ const EMRReportpage = () => {
         const xValue = row['X Position (pixels)'] || row['X Position'] || row['X'] || row['x'] || 0;
         return parseFloat(xValue) || 0;
       }).filter(value => !isNaN(value));
-      
+
       const yData = yParsed.data.map(row => {
         const yValue = row['Y Position (pixels)'] || row['Y Position'] || row['Y'] || row['y'] || 0;
         return parseFloat(yValue) || 0;
@@ -186,15 +186,17 @@ const EMRReportpage = () => {
           borderWidth: 2,
           tension: 0.1,
         },
-        // Stimulus X
+        // Stimulus XManage and view patient examination records
+
+
         {
           label: "Stimulus Trajectory X",
           borderColor: "#10b981",
           backgroundColor: "rgba(16, 185, 129, 0.1)",
           fill: false,
-          data: alignedStimulusData.x,
+          data: dataPoints.map(dp => dp.stimX),
           pointRadius: 0,
-          borderWidth: 1,
+          borderWidth: 2, // Thicker for better visibility
           tension: 0.3,
           borderDash: [5, 5],
         },
@@ -215,9 +217,9 @@ const EMRReportpage = () => {
           borderColor: "#f97316",
           backgroundColor: "rgba(249, 115, 22, 0.1)",
           fill: false,
-          data: alignedStimulusData.y,
+          data: dataPoints.map(dp => dp.stimY),
           pointRadius: 0,
-          borderWidth: 1,
+          borderWidth: 2, // Thicker for better visibility
           tension: 0.3,
           borderDash: [5, 5],
         },
@@ -238,7 +240,7 @@ const EMRReportpage = () => {
     eyeDataPoints.forEach((eyePoint, index) => {
       // Use modulo to loop through stimulus data if eye data is longer
       const stimulusIndex = index % Math.min(stimulusTemplate.x.length, stimulusTemplate.y.length);
-      
+
       alignedX.push(stimulusTemplate.x[stimulusIndex] || 0);
       alignedY.push(stimulusTemplate.y[stimulusIndex] || 0);
     });
@@ -266,7 +268,7 @@ const EMRReportpage = () => {
     const leftMargin = margins.left;
     const rightMargin = margins.right;
     const tableWidth = pageWidth - leftMargin - rightMargin;
-    
+
     const rowHeight = 8;
     const headerHeight = 10;
     let currentY = startY;
@@ -274,7 +276,7 @@ const EMRReportpage = () => {
     // Draw table headers with background
     doc.setFillColor(44, 90, 160); // Primary blue
     doc.rect(leftMargin, currentY, tableWidth, headerHeight, 'F');
-    
+
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
@@ -303,16 +305,16 @@ const EMRReportpage = () => {
       xPosition = leftMargin;
       row.forEach((cell, cellIndex) => {
         const width = columnWidths[cellIndex] * tableWidth;
-        
+
         // Draw cell border
         doc.setDrawColor(200, 200, 200);
         doc.rect(xPosition, currentY, width, rowHeight);
-        
+
         // Add cell text
         const text = String(cell || 'N/A');
         const lines = doc.splitTextToSize(text, width - 4);
         doc.text(lines, xPosition + 2, currentY + 5);
-        
+
         xPosition += width;
       });
 
@@ -325,25 +327,26 @@ const EMRReportpage = () => {
   // Improved chart generation with better quality
   const generateHighQualityChart = async (chartData, title, isEyeOnly, sessionCount, chartType) => {
     const container = document.createElement("div");
-    container.style.width = "800px"; // Increased width for better quality
-    container.style.height = "400px";
+    container.style.width = "1200px"; // Increased width for much better quality
+    container.style.height = "600px";
     container.style.position = "absolute";
     container.style.left = "-9999px";
     container.style.top = "-9999px";
     container.style.background = "#ffffff";
-    container.style.padding = "20px";
+    container.style.padding = "40px"; // More padding for cleaner look
     container.style.border = "1px solid #ddd";
     document.body.appendChild(container);
 
     try {
       container.innerHTML = '<canvas id="highQualityChart"></canvas>';
       const canvas = container.querySelector('#highQualityChart');
-      canvas.width = 800; // Higher resolution
-      canvas.height = 400;
-      canvas.style.width = "800px";
-      canvas.style.height = "400px";
+      // Set high internal resolution
+      canvas.width = 2400;
+      canvas.height = 1200;
+      canvas.style.width = "1200px";
+      canvas.style.height = "600px";
 
-      const datasets = chartType === 'horizontal' 
+      const datasets = chartType === 'horizontal'
         ? (isEyeOnly ? [chartData.datasets[0]] : [chartData.datasets[0], chartData.datasets[1]])
         : (isEyeOnly ? [chartData.datasets[1]] : [chartData.datasets[2], chartData.datasets[3]]);
 
@@ -358,60 +361,66 @@ const EMRReportpage = () => {
           maintainAspectRatio: false,
           animation: { duration: 0 },
           plugins: {
-            legend: { 
-              display: true, 
+            legend: {
+              display: true,
               position: 'top',
-              labels: { 
-                font: { 
-                  size: 12, // Larger font for better readability
+              labels: {
+                font: {
+                  size: 16, // Larger font for better readability
+                  weight: 'bold',
                   family: "'Helvetica', 'Arial', sans-serif"
-                } 
+                },
+                usePointStyle: true,
+                padding: 20
               }
             },
-            title: { 
-              display: true, 
+            title: {
+              display: true,
               text: title,
-              font: { 
-                size: 14,
+              font: {
+                size: 20,
                 weight: 'bold',
                 family: "'Helvetica', 'Arial', sans-serif"
-              }
+              },
+              padding: { bottom: 20 }
             },
           },
           scales: {
-            x: { 
+            x: {
               type: 'linear',
-              title: { 
-                display: true, 
-                text: 'Time (s)', 
-                font: { 
-                  size: 11,
+              title: {
+                display: true,
+                text: 'Time (seconds)',
+                font: {
+                  size: 14,
+                  weight: 'bold',
                   family: "'Helvetica', 'Arial', sans-serif"
-                } 
+                }
               },
-              ticks: { 
-                font: { 
-                  size: 10,
+              ticks: {
+                font: {
+                  size: 12,
                   family: "'Helvetica', 'Arial', sans-serif"
-                } 
+                }
               }
             },
-            y: { 
+            y: {
               min: chartType === 'horizontal' ? -70 : -40,
               max: chartType === 'horizontal' ? 70 : 40,
-              title: { 
-                display: true, 
-                text: chartType === 'horizontal' ? 'Position X' : 'Position Y', 
-                font: { 
-                  size: 11,
+              title: {
+                display: true,
+                text: chartType === 'horizontal' ? 'Horizontal Position' : 'Vertical Position',
+                font: {
+                  size: 14,
+                  weight: 'bold',
                   family: "'Helvetica', 'Arial', sans-serif"
-                } 
+                }
               },
-              ticks: { 
-                font: { 
-                  size: 10,
+              ticks: {
+                font: {
+                  size: 12,
                   family: "'Helvetica', 'Arial', sans-serif"
-                } 
+                }
               }
             },
           },
@@ -431,17 +440,17 @@ const EMRReportpage = () => {
 
       // Generate high-quality image
       const chartImage = await html2canvas(container, {
-        scale: 2, // Double the scale for high resolution
+        scale: 3, // Triple the scale for ultra-high resolution
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
-        width: 800,
-        height: 400,
+        width: 1200,
+        height: 600,
         onclone: (clonedDoc) => {
           const clonedCanvas = clonedDoc.querySelector('#highQualityChart');
           if (clonedCanvas) {
-            clonedCanvas.style.width = '800px';
-            clonedCanvas.style.height = '400px';
+            clonedCanvas.style.width = '1200px';
+            clonedCanvas.style.height = '600px';
           }
         }
       });
@@ -459,10 +468,10 @@ const EMRReportpage = () => {
   const generatePDF = async (patientData, patientId, rowIndex) => {
     // Create a unique key for this specific row
     const rowKey = `${patientId}-${rowIndex}`;
-    
+
     // Set generating state for this specific row
     setGeneratingPDFs(prev => ({ ...prev, [rowKey]: true }));
-    
+
     try {
       const doc = new jsPDF();
       const margin = 15;
@@ -476,12 +485,12 @@ const EMRReportpage = () => {
       // Title Section with professional styling
       doc.setFillColor(...primaryColor);
       doc.rect(0, 0, pageWidth, 50, 'F');
-      
+
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
       doc.text("OCULOMOTOR EXAMINATION REPORT", pageWidth / 2, 25, { align: "center" });
-      
+
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
       doc.text(`Patient ID: ${patientId}`, pageWidth / 2, 35, { align: "center" });
@@ -640,7 +649,7 @@ const EMRReportpage = () => {
               if (chartData) {
                 // Generate high-quality X Chart
                 const xChartImage = await generateHighQualityChart(
-                  chartData, 
+                  chartData,
                   `Horizontal Eye Movement - Session ${sessionCount}`,
                   isEyeOnly,
                   sessionCount,
@@ -656,16 +665,16 @@ const EMRReportpage = () => {
                 doc.setTextColor(100, 100, 100);
                 doc.text(`Horizontal Movement Chart - Session ${sessionCount}`, margin, yPosition);
                 yPosition += 6;
-                
+
                 // Add high-quality image with better dimensions
                 const chartWidth = pageWidth - (2 * margin);
-                const chartHeight = (chartWidth * 400) / 800; // Maintain aspect ratio
+                const chartHeight = (chartWidth * 600) / 1200; // Maintain 2:1 aspect ratio
                 doc.addImage(xChartImage, 'PNG', margin, yPosition, chartWidth, chartHeight);
                 yPosition += chartHeight + 10;
 
                 // Generate high-quality Y Chart
                 const yChartImage = await generateHighQualityChart(
-                  chartData, 
+                  chartData,
                   `Vertical Eye Movement - Session ${sessionCount}`,
                   isEyeOnly,
                   sessionCount,
@@ -681,7 +690,7 @@ const EMRReportpage = () => {
                 doc.setTextColor(100, 100, 100);
                 doc.text(`Vertical Movement Chart - Session ${sessionCount}`, margin, yPosition);
                 yPosition += 6;
-                
+
                 // Add high-quality image with better dimensions
                 doc.addImage(yChartImage, 'PNG', margin, yPosition, chartWidth, chartHeight);
                 yPosition += chartHeight + 10;
@@ -723,7 +732,7 @@ const EMRReportpage = () => {
 
       doc.save(`Patient_${patientId}_Report.pdf`);
       toast.success("PDF report generated successfully");
-      
+
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error("Failed to generate PDF report");
@@ -733,7 +742,7 @@ const EMRReportpage = () => {
     }
   };
 
-  const handleShowReport = (patientId) => {
+  const handleShowReport = async (patientId) => {
     const patientData = examData.find((exam) => exam.patientData.patientid === patientId);
     if (!patientData) {
       console.error(`No patient data found for ID: ${patientId}`);
@@ -743,136 +752,228 @@ const EMRReportpage = () => {
 
     const reportWindow = window.open("", "_blank");
     if (!reportWindow) {
-      console.error("Failed to open new window for report");
-      toast.error("Failed to open report window");
+      toast.error("Please allow popups to view the report");
       return;
     }
 
-    // Simple HTML report without complex chart scripting
     reportWindow.document.write(`
-      <!DOCTYPE html>
       <html>
         <head>
-          <title>Patient Report - ${patientId}</title>
+          <title>Loading Report...</title>
           <style>
+            body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f8fafc; }
+            .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+          </style>
+        </head>
+        <body>
+          <div style="text-align: center;">
+            <div class="loader" style="margin: 0 auto 20px;"></div>
+            <p>Generating high-quality report with charts...</p>
+          </div>
+        </body>
+      </html>
+    `);
+
+    // Generate chart images for all sessions
+    const sessionCharts = [];
+    if (patientData.trackingSessions) {
+      for (let i = 0; i < patientData.trackingSessions.length; i++) {
+        const session = patientData.trackingSessions[i];
+        const isEyeOnly = session.stimulusType === "none";
+        const chartData = generateChartData(session, isEyeOnly);
+
+        if (chartData) {
+          const xChart = await generateHighQualityChart(chartData, `Horizontal Movement - Session ${i + 1}`, isEyeOnly, i + 1, 'horizontal');
+          const yChart = await generateHighQualityChart(chartData, `Vertical Movement - Session ${i + 1}`, isEyeOnly, i + 1, 'vertical');
+          sessionCharts.push({ x: xChart.toDataURL(), y: yChart.toDataURL() });
+        } else {
+          sessionCharts.push(null);
+        }
+      }
+    }
+
+    const reportHtml = `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <title>Medical Report - ${patientId}</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
             body { 
-              font-family: Arial, sans-serif; 
-              margin: 20px; 
-              line-height: 1.6;
+              font-family: 'Inter', sans-serif; 
+              margin: 0; 
+              padding: 40px; 
+              background-color: #f1f5f9;
+              color: #1e293b;
+            }
+            .report-container {
+              max-width: 1000px;
+              margin: 0 auto;
+              background: white;
+              padding: 60px;
+              border-radius: 24px;
+              shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+              box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
             }
             .header { 
-              text-align: center; 
-              margin-bottom: 30px;
-              border-bottom: 2px solid #333;
-              padding-bottom: 10px;
+              border-bottom: 2px solid #e2e8f0;
+              padding-bottom: 30px;
+              margin-bottom: 40px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
             }
-            .section { 
-              margin-bottom: 30px; 
-            }
-            .section-header { 
+            .header h1 { margin: 0; color: #4f46e5; font-size: 28px; font-weight: 800; letter-spacing: -0.025em; }
+            .header-meta { text-align: right; color: #64748b; font-size: 14px; }
+            
+            .section { margin-bottom: 50px; }
+            .section-title { 
               font-size: 18px; 
-              font-weight: bold; 
-              color: #2c5aa0;
-              margin-bottom: 10px;
-              border-left: 4px solid #2c5aa0;
-              padding-left: 10px;
+              font-weight: 700; 
+              color: #0f172a;
+              margin-bottom: 20px;
+              padding-bottom: 8px;
+              border-bottom: 2px solid #f1f5f9;
+              display: flex;
+              align-items: center;
             }
-            .field { 
-              margin-bottom: 8px; 
-              padding: 5px;
-            }
-            .field-title { 
-              font-weight: bold; 
+            .section-title::before {
+              content: '';
               display: inline-block;
-              width: 200px;
+              width: 4px;
+              height: 18px;
+              background: #4f46e5;
+              margin-right: 12px;
+              border-radius: 2px;
             }
-            .no-data { 
-              color: #666; 
-              font-style: italic; 
+            
+            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .field { padding: 12px 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9; }
+            .field-label { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+            .field-value { font-size: 15px; font-weight: 500; color: #334155; }
+            
+            .session-card {
+              border: 1px solid #e2e8f0;
+              border-radius: 20px;
+              padding: 30px;
+              margin-bottom: 30px;
+              background: #ffffff;
             }
+            .session-header { font-weight: 700; font-size: 18px; margin-bottom: 20px; color: #4f46e5; display: flex; justify-content: space-between; }
+            
+            .chart-grid { display: grid; grid-template-columns: 1fr; gap: 30px; margin-top: 20px; }
+            .chart-container { background: #fff; padding: 20px; border-radius: 16px; border: 1px solid #f1f5f9; }
+            .chart-container h4 { margin: 0 0 15px 0; color: #64748b; font-size: 14px; text-align: center; }
+            .chart-image { width: 100%; height: auto; border-radius: 8px; }
+            
             .print-btn {
-              background: #2c5aa0;
+              position: fixed;
+              bottom: 40px;
+              right: 40px;
+              background: #4f46e5;
               color: white;
               border: none;
-              padding: 10px 20px;
-              border-radius: 5px;
+              padding: 16px 32px;
+              border-radius: 50px;
+              font-weight: 700;
               cursor: pointer;
-              margin: 20px 0;
+              box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
+              transition: all 0.2s;
+              z-index: 100;
+              display: flex;
+              align-items: center;
+              gap: 8px;
             }
-            .print-btn:hover {
-              background: #1e3d6f;
-            }
+            .print-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(79, 70, 229, 0.5); }
+            
             @media print {
               .print-btn { display: none; }
+              body { background: white; padding: 0; }
+              .report-container { box-shadow: none; padding: 0; margin: 0; max-width: none; border: none; }
             }
           </style>
         </head>
         <body>
-          <div class="header">
-            <h1>Medical Report - Patient ID: ${patientId}</h1>
-            <p><strong>Doctor:</strong> ${patientData.patientData.Doctor || 'N/A'}</p>
-            <p><strong>Report Generated:</strong> ${new Date().toLocaleString()}</p>
+          <div class="report-container">
+            <div class="header">
+              <div>
+                <h1>OCULOMOTOR REPORT</h1>
+                <div style="color: #64748b; font-weight: 600; margin-top: 4px;">ID: ${patientData.patientData.patientid}</div>
+              </div>
+              <div class="header-meta">
+                <div>Doctor: <strong>${patientData.patientData.Doctor || 'N/A'}</strong></div>
+                <div>Generated: ${new Date().toLocaleString()}</div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="section-title">Patient Demographics</div>
+              <div class="grid">
+                <div class="field"><div class="field-label">Name</div><div class="field-value">${patientData.patientData.Name || 'N/A'}</div></div>
+                <div class="field"><div class="field-label">DOB</div><div class="field-value">${patientData.patientData.patientDOB ? new Date(patientData.patientData.patientDOB).toLocaleDateString() : 'N/A'}</div></div>
+                <div class="field"><div class="field-label">Sex</div><div class="field-value">${patientData.patientData.patientSex || 'N/A'}</div></div>
+                <div class="field"><div class="field-label">Exam Date</div><div class="field-value">${patientData.patientData.examDate ? new Date(patientData.patientData.examDate).toLocaleDateString() : 'N/A'}</div></div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="section-title">Clinical Findings</div>
+              <div class="grid">
+                <div class="field"><div class="field-label">Visual Activity OD</div><div class="field-value">${patientData.patientData.visualActivityOD || 'N/A'}</div></div>
+                <div class="field"><div class="field-label">Visual Activity OS</div><div class="field-value">${patientData.patientData.visualActivityOS || 'N/A'}</div></div>
+                <div class="field" style="grid-column: span 2;"><div class="field-label">Neurological Findings</div><div class="field-value">${patientData.patientData.neuroFindings || 'N/A'}</div></div>
+                <div class="field"><div class="field-label">Aphasia</div><div class="field-value">${patientData.patientData.hasAphasia || 'No'}</div></div>
+                <div class="field"><div class="field-label">Aphasia Detail</div><div class="field-value">${patientData.patientData.aphasiaDescription || 'N/A'}</div></div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="section-title">Tracking Data & Charts</div>
+              ${patientData.trackingSessions && patientData.trackingSessions.length > 0 ?
+        patientData.trackingSessions.map((session, index) => `
+                  <div class="session-card">
+                    <div class="session-header">
+                      <span>SESSION #${index + 1}</span>
+                      <span style="font-size: 12px; color: #64748b; font-weight: 500;">
+                        ${session.stimulusType !== 'none' ? `${session.stimulusShape} Shape (${session.speed})` : 'Eye Only'}
+                      </span>
+                    </div>
+                    <div class="grid" style="margin-bottom: 25px;">
+                      <div class="field"><div class="field-label">Start</div><div class="field-value">${session.sessionStart ? new Date(session.sessionStart).toLocaleTimeString() : 'N/A'}</div></div>
+                      <div class="field"><div class="field-label">Eye</div><div class="field-value" style="text-transform: capitalize;">${session.selectedEye || 'N/A'}</div></div>
+                    </div>
+                    
+                    ${sessionCharts[index] ? `
+                      <div class="chart-grid">
+                        <div class="chart-container">
+                          <h4>HORIZONTAL TRACKING</h4>
+                          <img src="${sessionCharts[index].x}" class="chart-image" alt="Horizontal Chart">
+                        </div>
+                        <div class="chart-container">
+                          <h4>VERTICAL TRACKING</h4>
+                          <img src="${sessionCharts[index].y}" class="chart-image" alt="Vertical Chart">
+                        </div>
+                      </div>
+                    ` : '<div style="color: #94a3b8; font-style: italic; text-align: center;">No chart available for this session</div>'}
+                  </div>
+                `).join('') :
+        '<div style="text-align: center; color: #94a3b8; padding: 40px;">No tracking sessions recorded.</div>'
+      }
+            </div>
           </div>
 
-          <div class="section">
-            <div class="section-header">Patient Information</div>
-            ${patientData.patientData.Name ? `<div class="field"><span class="field-title">Name:</span> ${patientData.patientData.Name}</div>` : ''}
-            ${patientData.patientData.patientDOB ? `<div class="field"><span class="field-title">Date of Birth:</span> ${new Date(patientData.patientData.patientDOB).toLocaleDateString()}</div>` : ''}
-            ${patientData.patientData.patientSex ? `<div class="field"><span class="field-title">Sex:</span> ${patientData.patientData.patientSex}</div>` : ''}
-            ${patientData.patientData.examDate ? `<div class="field"><span class="field-title">Exam Date:</span> ${new Date(patientData.patientData.examDate).toLocaleDateString()}</div>` : ''}
-            ${patientData.patientData.visualActivityOD ? `<div class="field"><span class="field-title">Visual Activity OD:</span> ${patientData.patientData.visualActivityOD}</div>` : ''}
-            ${patientData.patientData.visualActivityOS ? `<div class="field"><span class="field-title">Visual Activity OS:</span> ${patientData.patientData.visualActivityOS}</div>` : ''}
-            ${patientData.patientData.neuroFindings ? `<div class="field"><span class="field-title">Neurological Findings:</span> ${patientData.patientData.neuroFindings}</div>` : ''}
-            ${patientData.patientData.hasAphasia ? `<div class="field"><span class="field-title">Aphasia:</span> ${patientData.patientData.hasAphasia}</div>` : ''}
-            ${patientData.patientData.aphasiaDescription ? `<div class="field"><span class="field-title">Aphasia Description:</span> ${patientData.patientData.aphasiaDescription}</div>` : ''}
-          </div>
-
-          <div class="section">
-            <div class="section-header">Bedside Examination</div>
-            ${Object.entries(patientData.bedsideExamData || {}).map(([key, value]) => 
-              value ? `<div class="field"><span class="field-title">${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</span> ${value}</div>` : ''
-            ).join('')}
-          </div>
-
-          <div class="section">
-            <div class="section-header">Telestroke Examination</div>
-            ${Object.entries(patientData.teleStrokeExamData || {}).map(([key, value]) => 
-              value ? `<div class="field"><span class="field-title">${key.replace('tele_', '').replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</span> ${value}</div>` : ''
-            ).join('')}
-          </div>
-
-          <div class="section">
-            <div class="section-header">Tracking Sessions</div>
-            ${patientData.trackingSessions && patientData.trackingSessions.length > 0 ? 
-              patientData.trackingSessions.map((session, index) => `
-                <div style="margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                  <h3>Session ${index + 1}</h3>
-                  <div class="field"><span class="field-title">Start Time:</span> ${session.sessionStart ? new Date(session.sessionStart).toLocaleString() : 'N/A'}</div>
-                  <div class="field"><span class="field-title">End Time:</span> ${session.sessionEnd ? new Date(session.sessionEnd).toLocaleString() : 'N/A'}</div>
-                  <div class="field"><span class="field-title">Selected Eye:</span> ${session.selectedEye || 'N/A'}</div>
-                  <div class="field"><span class="field-title">Stimulus Type:</span> ${session.stimulusType || 'N/A'}</div>
-                  <div class="field"><span class="field-title">Stimulus Shape:</span> ${session.stimulusShape || 'N/A'}</div>
-                  <div class="field"><span class="field-title">Exam Mode:</span> ${session.examMode || 'N/A'}</div>
-                  <div class="field"><span class="field-title">Data Points:</span> ${session.dataPoints ? session.dataPoints.length : 0}</div>
-                </div>
-              `).join('') : 
-              '<div class="no-data">No tracking sessions available</div>'
-            }
-          </div>
-
-          <button class="print-btn" onclick="window.print()">Print Report</button>
-
-          <script>
-            window.onload = function() {
-              // Focus and attempt to print
-              setTimeout(() => {
-                window.focus();
-              }, 1000);
-            };
-          </script>
+          <button class="print-btn" onclick="window.print()">
+            <svg style="width: 20px; height: 20px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            Print Full Report
+          </button>
         </body>
       </html>
-    `);
+    `;
+
+    reportWindow.document.open();
+    reportWindow.document.write(reportHtml);
     reportWindow.document.close();
   };
 
@@ -925,15 +1026,18 @@ const EMRReportpage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <NavBar />
-      <div className="flex flex-col lg:flex-row pt-24">
+      <div className="flex flex-col lg:flex-row pt-24 bg-gray-50/50 min-h-screen">
         <Sidebar page="EMR" />
         <main className="flex-1 lg:ml-[250px] p-4 sm:p-6">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-                EMR Reports
-              </h1>
-              <div className="w-full sm:w-1/2 lg:w-1/3">
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-6">
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+                  EMR Reports
+                </h1>
+                <p className="text-gray-500 mt-2 text-lg">Manage and view patient examination records</p>
+              </div>
+              <div className="w-full sm:w-1/2 lg:w-1/3 relative group">
                 <input
                   type="text"
                   value={searchQuery}
@@ -965,7 +1069,7 @@ const EMRReportpage = () => {
                       currentRows.map((exam, index) => {
                         const patientId = exam.patientData.patientid;
                         const isGenerating = isGeneratingPDF(patientId, index);
-                        
+
                         return (
                           <tr key={`${patientId}-${index}`} className="hover:bg-gray-50 transition-colors">
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">

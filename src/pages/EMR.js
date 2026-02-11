@@ -93,7 +93,6 @@ const EMRpage = () => {
 
   const chartRef = useRef(null);
   const MAX_POINTS = 1000;
-  const SESSION_SAVE_INTERVAL = 10000;
   const csvDataLoaded = useRef(false);
   const stimulusXData = useRef([]);
   const stimulusYData = useRef([]);
@@ -371,24 +370,6 @@ const EMRpage = () => {
     }));
   };
 
-  // Periodic session save
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (
-        isStimulusActive.current &&
-        currentSession &&
-        sessionDataPoints.current.length > 0 &&
-        !isPaused &&
-        !stimulusDataComplete.current &&
-        !sessionSavedDueToCSVComplete.current
-      ) {
-        console.log("Periodic save - saving intermediate session data");
-        saveCurrentSession(true); // Keep session open for continuation
-      }
-    }, SESSION_SAVE_INTERVAL);
-
-    return () => clearInterval(interval);
-  }, [currentSession, isPaused]);
 
   // Reset stimulus plotting state
   const resetPlottingState = () => {
@@ -430,6 +411,12 @@ const EMRpage = () => {
   const saveCurrentSession = async (keepOpen = false) => {
     if (!currentSession || sessionDataPoints.current.length === 0) {
       console.log("No session or data points to save.");
+      return;
+    }
+
+    // Only save stimulus sessions if they are fully completed
+    if (isStimulusActive.current && !stimulusDataComplete.current) {
+      console.log("Stimulus session not complete - as per user request, skipping save.");
       return;
     }
 
@@ -591,28 +578,37 @@ const EMRpage = () => {
         currentSession.stimulusShape !== settings.shape ||
         currentSession.speed !== settings.speed
       ) {
-        // Save existing session if it has data
+        // Save existing session if it has data AND is complete
         if (
           currentSession &&
           sessionDataPoints.current.length > 0 &&
-          !sessionSavedDueToCSVComplete.current
+          !sessionSavedDueToCSVComplete.current &&
+          (!isStimulusActive.current || stimulusDataComplete.current)
         ) {
           saveCurrentSession(false).then(() => {
             resetPlottingState();
             startNewStimulusSession();
           });
         } else {
+          // If not complete, we just reset and start new without saving old one
+          if (currentSession && !sessionSavedDueToCSVComplete.current) {
+            console.log("Discarding incomplete stimulus session");
+          }
+          resetPlottingState();
           startNewStimulusSession();
         }
       }
     } else {
-      // If stimulus settings are cleared, save any active session
+      // If stimulus settings are cleared, save any active session ONLY if complete
       if (
         currentSession &&
         sessionDataPoints.current.length > 0 &&
-        !sessionSavedDueToCSVComplete.current
+        !sessionSavedDueToCSVComplete.current &&
+        (!isStimulusActive.current || stimulusDataComplete.current)
       ) {
         saveCurrentSession(false);
+      } else if (currentSession && !sessionSavedDueToCSVComplete.current) {
+        console.log("Discarding incomplete stimulus session on settings clear");
       }
       setCurrentSession(null);
       sessionStarted.current = false;
@@ -1183,22 +1179,33 @@ const EMRpage = () => {
                                     position: "top",
                                     labels: {
                                       color: "#000",
-                                      boxWidth: 12,
-                                      padding: 15,
+                                      boxWidth: 15,
+                                      padding: 20,
+                                      font: {
+                                        weight: 'bold',
+                                        size: 14
+                                      }
                                     },
                                   },
                                 },
                                 scales: {
                                   x: {
                                     grid: {
-                                      color: "rgba(0, 0, 0, 0.15)",
+                                      color: "rgba(0, 0, 0, 0.1)",
                                       drawBorder: true,
                                     },
-                                    title: { display: true, text: "Time (s)" },
+                                    title: {
+                                      display: true,
+                                      text: "Time (s)",
+                                      font: { weight: 'bold', size: 14 }
+                                    },
+                                    ticks: {
+                                      font: { weight: 'bold' }
+                                    }
                                   },
                                   y: {
                                     grid: {
-                                      color: "rgba(0, 0, 0, 0.15)",
+                                      color: "rgba(0, 0, 0, 0.1)",
                                       drawBorder: true,
                                     },
                                     min: -70,
@@ -1206,7 +1213,11 @@ const EMRpage = () => {
                                     title: {
                                       display: true,
                                       text: "Angle/Position (X)",
+                                      font: { weight: 'bold', size: 14 }
                                     },
+                                    ticks: {
+                                      font: { weight: 'bold' }
+                                    }
                                   },
                                 },
                               }}
@@ -1252,22 +1263,33 @@ const EMRpage = () => {
                                     position: "top",
                                     labels: {
                                       color: "#000",
-                                      boxWidth: 12,
-                                      padding: 15,
+                                      boxWidth: 15,
+                                      padding: 20,
+                                      font: {
+                                        weight: 'bold',
+                                        size: 14
+                                      }
                                     },
                                   },
                                 },
                                 scales: {
                                   x: {
                                     grid: {
-                                      color: "rgba(0, 0, 0, 0.15)",
+                                      color: "rgba(0, 0, 0, 0.1)",
                                       drawBorder: true,
                                     },
-                                    title: { display: true, text: "Time (s)" },
+                                    title: {
+                                      display: true,
+                                      text: "Time (s)",
+                                      font: { weight: 'bold', size: 14 }
+                                    },
+                                    ticks: {
+                                      font: { weight: 'bold' }
+                                    }
                                   },
                                   y: {
                                     grid: {
-                                      color: "rgba(0, 0, 0, 0.15)",
+                                      color: "rgba(0, 0, 0, 0.1)",
                                       drawBorder: true,
                                     },
                                     min: -40,
@@ -1275,7 +1297,11 @@ const EMRpage = () => {
                                     title: {
                                       display: true,
                                       text: "Angle/Position (Y)",
+                                      font: { weight: 'bold', size: 14 }
                                     },
+                                    ticks: {
+                                      font: { weight: 'bold' }
+                                    }
                                   },
                                 },
                               }}
