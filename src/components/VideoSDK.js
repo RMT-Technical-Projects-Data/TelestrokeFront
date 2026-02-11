@@ -260,39 +260,9 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
     };
   }, [handlePopState]); // useCallback ensures handlePopState is stable
 
-  const handleToggleMic = async () => {
-    try {
-      // Try to get mic access to trigger permission prompt
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // If the user clicked "Allow", we got access
-      stream.getTracks().forEach(track => track.stop()); // Stop test stream
-      toggleMic(); // This will turn mic ON in VideoSDK
-      console.log(" Mic permission granted. Mic toggled ON.");
-    } catch (error) {
-      console.error("Mic access denied or error:", error);
-
-      // If permission is blocked or user clicked "Block"
-      if (
-        error.name === "NotAllowedError" ||
-        error.name === "PermissionDeniedError"
-      ) {
-        alert(
-          "Microphone permission is blocked.\n\nTo enable it:\n1. Click the 🔒 padlock icon in your browser's address bar.\n2. Go to 'Site settings'.\n3. Set Microphone permission to 'Allow'.\n\nThen reload the page and try again."
-        );
-      } else {
-        alert("An unexpected error occurred while accessing microphone.");
-      }
-    }
+  const handleToggleMic = () => {
+    toggleMic();
   };
-
-
-  // const handleToggleMic = () => {
-  //   // Toggling Mic
-  //   // console.log(toggleMic());
-
-  //   toggleMic();
-  // };
 
   return (
     <div
