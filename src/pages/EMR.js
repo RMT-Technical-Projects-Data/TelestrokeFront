@@ -169,8 +169,8 @@ const EMRpage = () => {
       return;
     }
 
-    webSocketRef.current = new WebSocket("ws://localhost:3001");
-    // webSocketRef.current = new WebSocket("ws://13.233.6.224:3001");
+    // webSocketRef.current = new WebSocket("ws://localhost:3001");
+    webSocketRef.current = new WebSocket("ws://13.233.6.224:3001");
 
     webSocketRef.current.onopen = () => {
       console.log("WebSocket connected for eye data");
