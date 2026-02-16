@@ -110,9 +110,14 @@ function onParticipantJoined(participant) {
 }
 
 function Controls({ customTrack, handleLeave, meetingId, patientId }) {
-  const { toggleMic, toggleWebcam, localMicOn } = useMeeting({
+  const meeting = useMeeting({
     onParticipantJoined,
   });
+
+  const toggleMic = meeting?.toggleMic;
+  const toggleWebcam = meeting?.toggleWebcam;
+  const localMicState =
+    meeting?.localMicOn ?? meeting?.micOn ?? meeting?.localParticipant?.micOn;
 
 
   const handleToggleWebcam = () => {
@@ -261,7 +266,11 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
   }, [handlePopState]); // useCallback ensures handlePopState is stable
 
   const handleToggleMic = () => {
-    toggleMic();
+    if (typeof toggleMic === "function") {
+      toggleMic();
+    } else {
+      console.error("toggleMic is not available on meeting object", meeting);
+    }
   };
 
   return (
@@ -284,11 +293,7 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
         End Appointment
       </Button>
       <Button onClick={handleToggleMic} className="text-xs sm:text-base">
-        {localMicOn ? (
-          <Mic size={20} />
-        ) : (
-          <MicOff size={20} />
-        )}
+        {localMicState ? <Mic size={20} /> : <MicOff size={20} />}
       </Button>
 
       {/* <Button

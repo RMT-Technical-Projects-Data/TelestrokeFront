@@ -22,7 +22,7 @@ function Dashboard() {
     const fetchAppointments = async () => {
       try {
         const Doctor = localStorage.getItem("Doctor");
-        const url = Doctor ? `${process.env.REACT_APP_BACKEND_URL}/api/appointments?Doctor=${Doctor}` : `${process.env.REACT_APP_BACKEND_URL}/api/appointments`;
+        const url = Doctor ? `${process.env.REACT_APP_BACKEND_URL}/appointments?Doctor=${Doctor}` : `${process.env.REACT_APP_BACKEND_URL}/api/appointments`;
         const response = await fetch(url);
         if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
