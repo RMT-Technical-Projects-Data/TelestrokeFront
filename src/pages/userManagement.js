@@ -35,7 +35,7 @@ const UserManagement = () => {
           return;
         }
 
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/get`, {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/users/get`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -95,12 +95,12 @@ const UserManagement = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/api/users/add`,
+        `${process.env.REACT_APP_BACKEND_URL}/users/add`,
         { username: newUser.username, password: newUser.password },
         { headers: { Authorization: `Bearer ${token}` } }
       );
   
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/get`, {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/users/get`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
@@ -160,7 +160,7 @@ const UserManagement = () => {
       setLoading(true);
 
       await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/api/users/edit`,
+        `${process.env.REACT_APP_BACKEND_URL}/users/edit`,
         { 
           currentUsername: editingUser.username, 
           newUsername: editedUsername, 
@@ -169,7 +169,7 @@ const UserManagement = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/get`, {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/users/get`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);

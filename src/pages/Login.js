@@ -19,7 +19,7 @@ const Login = () => {
   
     try {
       // Call the backend API for login
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/login`, {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/login`, {
         username,
         password,
       });

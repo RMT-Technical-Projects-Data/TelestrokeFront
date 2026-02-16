@@ -140,7 +140,7 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
 
               try {
                 const response = await axios.put(
-                  `${process.env.REACT_APP_BACKEND_URL}/api/appointments`,
+                  `${process.env.REACT_APP_BACKEND_URL}/appointments`,
                   {
                     meetingId,
                     ID: patientId,
