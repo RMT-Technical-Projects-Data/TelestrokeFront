@@ -172,7 +172,7 @@ const EMRpage = () => {
     // webSocketRef.current = new WebSocket("ws://localhost:3001");
     // webSocketRef.current = new WebSocket("ws://13.233.6.224:3001");
 
-        webSocketRef.current = new WebSocket("wss://telestrokeapp.duckdns.org/socket/");
+    webSocketRef.current = new WebSocket("wss://telestrokeapp.duckdns.org/socket/");
 
 
     webSocketRef.current.onopen = () => {
