@@ -338,11 +338,6 @@ function MeetingView(props) {
     join();
   };
 
-  useEffect(() => {
-    // Auto-join meeting on mount
-    joinMeeting();
-  }, []);
-
   const handleLeaveAndNavigate = () => {
     leave(); // Call the leave function from useMeeting
     props.onMeetingLeave(); // Call the prop function to handle leaving
@@ -376,17 +371,23 @@ function MeetingView(props) {
           />
         </div>
       ) : joined && joined === "JOINING" ? (
-        <div className="ml-[50%] mt-[25%]">
+        <div className="flex flex-col items-center justify-center mt-[20%]">
           <img
             src={loading}
             width={50}
             height={50}
-            alt="Loading..." // Added alt text for accessibility
+            alt="Joining meeting..."
           />
+          <p className="text-gray-500 mt-2 font-medium">Joining meeting...</p>
         </div>
       ) : (
-        <div className="ml-[50%] mt-[25%] text-gray-500 font-semibold italic animate-pulse">
-           Connecting to meeting...
+        <div className="flex flex-col items-center justify-center mt-[20%]">
+          <button
+            onClick={joinMeeting}
+            className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 font-semibold text-lg shadow-md transition-colors"
+          >
+            Join
+          </button>
         </div>
       )}
     </div>

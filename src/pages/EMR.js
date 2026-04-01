@@ -1141,7 +1141,7 @@ const EMRpage = () => {
           const statusResponse = await axios.put(
             `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/appointments`,
             {
-              meetingId,
+              meetingId: meetingid,
               ID: patientid,
             }
           );
