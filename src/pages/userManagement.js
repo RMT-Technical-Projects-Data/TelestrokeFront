@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import NavBar from "../components/NavBar";
-import { FaList, FaThLarge } from "react-icons/fa";
+import { FaList, FaThLarge, FaEye, FaEyeSlash } from "react-icons/fa";
 // import { FaUserMd } from "react-icons/fa";
 import doctorImage from "../assets/doctor.png";
 
@@ -14,14 +14,21 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ username: "", password: "" });
+  const [newUser, setNewUser] = useState({ username: "", password: "", confirmPassword: "" });
   const [createError, setCreateError] = useState("");
   const [editingUser, setEditingUser] = useState(null);
   const [editedUsername, setEditedUsername] = useState(""); // New state for editing username
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState(""); // New state for confirm password
+  const [editError, setEditError] = useState(""); // State for edit modal errors
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("list"); // New state for toggling view
+
+  // Password visibility states
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showNewConfirmPassword, setShowNewConfirmPassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
+  const [showEditConfirmPassword, setShowEditConfirmPassword] = useState(false);
 
 
   
@@ -35,7 +42,7 @@ const UserManagement = () => {
           return;
         }
 
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/users/get`, {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api/users/get`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -64,6 +71,18 @@ const UserManagement = () => {
   const handleCreateUser = async () => {
     setCreateError("");
   
+    // Check for empty fields
+    const missingFields = [];
+    if (!newUser.username.trim()) missingFields.push("Username");
+    if (!newUser.password) missingFields.push("Password");
+    if (!newUser.confirmPassword) missingFields.push("Confirm password");
+
+    if (missingFields.length > 0) {
+      const message = missingFields.join(", ") + (missingFields.length > 1 ? " are required." : " is required.");
+      setCreateError(message);
+      return;
+    }
+
     // Check if the password length is between 8 and 16 characters
     if (newUser.password.length < 8 || newUser.password.length > 16) {
       setCreateError("Password must be between 8 and 16 characters long.");
@@ -77,6 +96,12 @@ const UserManagement = () => {
       return;
     }
   
+    // Check if passwords match
+    if (newUser.password !== newUser.confirmPassword) {
+      setCreateError("Passwords do not match.");
+      return;
+    }
+
     // Check if the username is at least 3 characters long, less than or equal to 20 characters, 
     // and contains only alphabets and spaces
     const nameRegex = /^[A-Za-z\s]+$/;  // Allow alphabets and spaces
@@ -95,18 +120,20 @@ const UserManagement = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/users/add`,
+        `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/users/add`,
         { username: newUser.username, password: newUser.password },
         { headers: { Authorization: `Bearer ${token}` } }
       );
   
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/users/get`, {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/users/get`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
   
-      setNewUser({ username: "", password: "" });
+      setNewUser({ username: "", password: "", confirmPassword: "" });
       setIsModalOpen(false);
+      setShowNewPassword(false);
+      setShowNewConfirmPassword(false);
   
       toast.success("User successfully created!");
     } catch (error) {
@@ -126,27 +153,47 @@ const UserManagement = () => {
     setEditedUsername(user.username); // Set current username for editing
     setNewPassword(""); // Reset password field
     setConfirmPassword(""); // Reset confirm password field
+    setEditError(""); // Reset error message
+    setShowEditPassword(false);
+    setShowEditConfirmPassword(false);
   };
 
   const handleEditSubmit = async () => {
-    // Validate the new password if provided
-    if (newPassword) {
+    // Check for missing fields
+    const missingFields = [];
+    if (!editedUsername.trim()) missingFields.push("Username");
+    
+    // Validate the new password if either password field is provided
+    if (newPassword || confirmPassword) {
+      if (!newPassword) missingFields.push("New password");
+      if (!confirmPassword) missingFields.push("Confirm password");
+    }
+
+    if (missingFields.length > 0) {
+      const message = missingFields.join(", ") + (missingFields.length > 1 ? " are required." : " is required.");
+      setEditError(message);
+      return;
+    }
+
+    if (newPassword || confirmPassword) {
+      if (newPassword !== confirmPassword) {
+        setEditError("Passwords do not match.");
+        return;
+      }
+
       if (newPassword.length < 8 || newPassword.length > 16) {
-        toast.error("Password must be between 8 and 16 characters long.");
+        setEditError("Password must be between 8 and 16 characters long.");
         return;
       }
 
       const specialCharacterRegex = /[!@#$%^&*(),.?":{}|<>]/;
       if (!specialCharacterRegex.test(newPassword)) {
-        toast.error("Password must contain at least one special character.");
-        return;
-      }
-
-      if (newPassword !== confirmPassword) {
-        toast.error("Passwords do not match.");
+        setEditError("Password must contain at least one special character.");
         return;
       }
     }
+
+    setEditError(""); // Clear errors before proceeding
 
     try {
       const token = localStorage.getItem("token");
@@ -160,7 +207,7 @@ const UserManagement = () => {
       setLoading(true);
 
       await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/users/edit`,
+        `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/users/edit`,
         { 
           currentUsername: editingUser.username, 
           newUsername: editedUsername, 
@@ -169,19 +216,20 @@ const UserManagement = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/users/get`, {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/users/get`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
-
       setEditingUser(null);
+      setEditError("");
       toast.success("User updated successfully!");
     } catch (error) {
       if (error.response && error.response.status === 401) {
-        toast.error("Expired or Invalid token. Please log in again.");
+        setEditError("Expired or Invalid token. Please log in again.");
         handleLogout();
       } else {
-        toast.error("Error updating user: " + error.message);
+        const msg = error.response?.data?.message || error.message;
+        setEditError("Error updating user: " + msg);
       }
     } finally {
       // Re-enable button
@@ -312,11 +360,12 @@ const UserManagement = () => {
       )}
 
 
-{isModalOpen && (
+ {isModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-96">
               <h2 className="text-xl font-bold mb-4">Add New User</h2>
-              <div className="flex flex-col gap-2">
+              {createError && <p className="text-red-500 text-sm mt-2 text-center">{createError}</p>}
+              <div className="flex flex-col gap-3">
                 <input
                   type="text"
                   placeholder="Username"
@@ -324,31 +373,66 @@ const UserManagement = () => {
                   onChange={(e) =>
                     setNewUser({ ...newUser, username: e.target.value })
                   }
-                  className="border p-2 rounded"
+                  className="border p-2 rounded w-full"
                   minLength={3}
                   maxLength={30}
                 />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={newUser.password}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, password: e.target.value })
-                  }
-                  className="border p-2 rounded"
-                  maxLength={16}
-                />
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={newUser.password}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, password: e.target.value })
+                    }
+                    className="border p-2 rounded w-full pr-10"
+                    maxLength={16}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-gray-500 hover:text-gray-700 bg-transparent border-none outline-none shadow-none p-0 focus:outline-none"
+                  >
+                    {showNewPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showNewConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm Password"
+                    value={newUser.confirmPassword}
+                    onChange={(e) => {
+                      setNewUser({ ...newUser, confirmPassword: e.target.value });
+                      if (createError) setCreateError("");
+                    }}
+                    className="border p-2 rounded w-full pr-10 border-gray-300 focus:outline-none focus:border-blue-500"
+                    maxLength={16}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewConfirmPassword(!showNewConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-gray-500 hover:text-gray-700 bg-transparent border-none outline-none shadow-none p-0 focus:outline-none"
+                  >
+                    {showNewConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                  </button>
+                </div>
                 <button
                   onClick={handleCreateUser}
-                  className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
+                  className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-500 mt-2"
                 >
                   Create User
                 </button>
-                {createError && <p className="text-red-600">{createError}</p>}
+                
               </div>
               <button
-                onClick={() => setIsModalOpen(false)}
-                className="mt-4 py-2 px-4 bg-gray-400 text-white rounded-lg hover:bg-gray-300"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setNewUser({ username: "", password: "", confirmPassword: "" });
+                  setCreateError("");
+                  setShowNewPassword(false);
+                  setShowNewConfirmPassword(false);
+                }}
+                className="mt-4 py-2 px-4 bg-gray-400 text-white rounded-lg hover:bg-gray-300 w-full"
               >
                 Cancel
               </button>
@@ -364,38 +448,74 @@ const UserManagement = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-xl font-bold mb-4">Edit User</h2>
-            <div className="flex flex-col gap-2">
+            {editError && <p className="text-red-500 text-sm mt-2 text-center">{editError}</p>}
+            <div className="flex flex-col gap-3">
               <input
                 type="text"
                 placeholder="New Username"
                 value={editedUsername}
-                onChange={(e) => setEditedUsername(e.target.value)}
-                className="border p-2 rounded" />
-              <input
-                type="password"
-                placeholder="New Password (Optional)"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="border p-2 rounded" />
-              <input
-                type="password"
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="border p-2 rounded" />
+                onChange={(e) => {
+                  setEditedUsername(e.target.value);
+                  if (editError) setEditError("");
+                }}
+                className="border p-2 rounded w-full border-gray-300 focus:outline-none focus:border-blue-500" />
+              <div className="relative flex items-center">
+                <input
+                  type={showEditPassword ? "text" : "password"}
+                  placeholder="New Password (Optional)"
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    if (editError) setEditError("");
+                  }}
+                  className="border p-2 rounded w-full pr-10 border-gray-300 focus:outline-none focus:border-blue-500" />
+                <button
+                  type="button"
+                  onClick={() => setShowEditPassword(!showEditPassword)}
+                  className="absolute right-3 flex items-center text-gray-500 hover:text-gray-700 bg-transparent border-none outline-none shadow-none p-0 focus:outline-none"
+                >
+                  {showEditPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                </button>
+              </div>
+              <div className="relative flex items-center">
+                <input
+                  type={showEditConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (editError) setEditError("");
+                  }}
+                  className="border p-2 rounded w-full pr-10 border-gray-300 focus:outline-none focus:border-blue-500" />
+                <button
+                  type="button"
+                  onClick={() => setShowEditConfirmPassword(!showEditConfirmPassword)}
+                  className="absolute right-3 flex items-center text-gray-500 hover:text-gray-700 bg-transparent border-none outline-none shadow-none p-0 focus:outline-none"
+                >
+                  {showEditConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                </button>
+              </div>
               <div>
                 <button
                   onClick={handleEditSubmit}
                   disabled={loading}
-                  className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
+                  className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-500 w-full font-medium transition duration-200"
                 >
                   {loading ? "Updating..." : "Update User"}
                 </button>
-                {loading && <div className="loader"></div>}
+                {loading && <div className="loader mt-2"></div>}
+                
               </div>
               <button
-                onClick={() => setEditingUser(null)}
-                className="mt-2 py-2 px-4 bg-gray-400 text-white rounded-lg hover:bg-gray-300"
+                onClick={() => {
+                  setEditingUser(null);
+                  setNewPassword("");
+                  setConfirmPassword("");
+                  setEditError("");
+                  setShowEditPassword(false);
+                  setShowEditConfirmPassword(false);
+                }}
+                className="mt-2 py-2 px-4 bg-gray-400 text-white rounded-lg hover:bg-gray-300 w-full transition duration-200"
               >
                 Cancel
               </button>

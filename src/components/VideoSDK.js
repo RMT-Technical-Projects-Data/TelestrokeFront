@@ -94,7 +94,7 @@ function ParticipantView(props) {
               }}
             />
           ) : (
-            <h1>Webcam off</h1>
+            null
           )}
         </div>
       ) : (
@@ -147,39 +147,15 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
           <button
             className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
             onClick={async () => {
-              localStorage.setItem(
-                "Ended",
-                JSON.stringify({ meetingId, patientId })
-              );
-
-              try {
-                const response = await axios.put(
-                  `${process.env.REACT_APP_BACKEND_URL}/appointments`,
-                  {
-                    meetingId,
-                    ID: patientId,
-                  }
-                );
-
-                if (response.data.success) {
-                  console.log("Appointment status updated to 'Complete'.");
-                } else {
-                  console.log(
-                    "No changes made: Appointment is already 'Complete'."
-                  );
-                }
-              } catch (error) {
-                console.error(
-                  "Error updating appointment status:",
-                  error.message
-                );
-              }
-
+              // localStorage.setItem("Ended", JSON.stringify({ meetingId, patientId })); // No longer needed here
+              
+              // We removed the status update to "Complete" from here.
+              // It is now handled in EMR.js upon successful data save.
+              
               setTimeout(() => {
                 handleLeave();
               }, 500);
 
-              localStorage.removeItem("Ended");
               toast.dismiss(confirmToast);
 
               if (shouldReload) {
@@ -205,6 +181,7 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
         closeOnClick: false,
         draggable: false,
         theme: "light",
+        toastId: "confirm-end-appointment",
       }
     );
   };
@@ -253,6 +230,7 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
           closeOnClick: false,
           draggable: false,
           theme: "light",
+          toastId: "confirm-navigation",
         }
       );
     },
@@ -360,6 +338,11 @@ function MeetingView(props) {
     join();
   };
 
+  useEffect(() => {
+    // Auto-join meeting on mount
+    joinMeeting();
+  }, []);
+
   const handleLeaveAndNavigate = () => {
     leave(); // Call the leave function from useMeeting
     props.onMeetingLeave(); // Call the prop function to handle leaving
@@ -402,9 +385,9 @@ function MeetingView(props) {
           />
         </div>
       ) : (
-        <Button onClick={joinMeeting} className="ml-[47%] mt-[20%]">
-          Join
-        </Button>
+        <div className="ml-[50%] mt-[25%] text-gray-500 font-semibold italic animate-pulse">
+           Connecting to meeting...
+        </div>
       )}
     </div>
   );

@@ -3,28 +3,28 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function EMR_PatientInfo() {
-  const [patientEMR, setPatientEMR] = useState({
-    Name: "",
-    Doctor: "",
-    PatientDOB: "",
-    PatientSex: "Male",
-    ExamDate: "",
-    VisualActivityOD: "",
-    VisualActivityOS: "",
-    RelNeurologicalFinds: "",
-    HasAphasia: "",
-    AphasiaText: ""
+  const [patientEMR, setPatientEMR] = useState(() => {
+    const saved = localStorage.getItem("patientEMR");
+    if (saved) return JSON.parse(saved);
+    const doctor = localStorage.getItem("Doctor") || "";
+    return {
+      Name: "",
+      Doctor: doctor,
+      PatientDOB: "",
+      PatientSex: "Male",
+      ExamDate: "",
+      VisualActivityOD: "",
+      VisualActivityOS: "",
+      RelNeurologicalFinds: "",
+      HasAphasia: "",
+      AphasiaText: ""
+    };
   });
 
-  
+  // Auto-save to localStorage whenever patientEMR changes
   useEffect(() => {
-    const storedDoctor = localStorage.getItem("Doctor");
-    setPatientEMR((prevState) => ({
-      ...prevState,
-     
-      Doctor: storedDoctor || ""
-    }));
-  }, []);
+    localStorage.setItem("patientEMR", JSON.stringify(patientEMR));
+  }, [patientEMR]);
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -40,19 +40,25 @@ export default function EMR_PatientInfo() {
         toast.error("Date of birth must be today or earlier.");
         return;
       }
-      setPatientEMR((prevState) => ({
-        ...prevState,
-        [name]: value
-      }));
+      setPatientEMR((prevState) => {
+        const newState = { ...prevState, [name]: value };
+        if (newState.ExamDate) {
+          validateAge(value, newState.ExamDate);
+        }
+        return newState;
+      });
     } else if (name === "ExamDate") {
       if (value < today) {
         toast.error("Exam date must be today or later.");
         return;
       }
-      setPatientEMR((prevState) => ({
-        ...prevState,
-        [name]: value
-      }));
+      setPatientEMR((prevState) => {
+        const newState = { ...prevState, [name]: value };
+        if (newState.PatientDOB) {
+          validateAge(newState.PatientDOB, value);
+        }
+        return newState;
+      });
     } else {
       setPatientEMR((prevState) => ({
         ...prevState,
@@ -61,188 +67,177 @@ export default function EMR_PatientInfo() {
     }
   };
 
-  const savePatientInfo = () => {
-    for (const key in patientEMR) {
-      // Skip the 'AphasiaText' field from validation
-      if (key !== "AphasiaText" && patientEMR[key] === "") {
-        toast.error(`Please fill in all fields. Missing field: ${key}`);
-        return;
-      }
+  const validateAge = (dobString, examString) => {
+    const dob = new Date(dobString);
+    const exam = new Date(examString);
+    let ageAtExam = exam.getFullYear() - dob.getFullYear();
+    const monthDiff = exam.getMonth() - dob.getMonth();
+    const dayDiff = exam.getDate() - dob.getDate();
+
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      ageAtExam--;
     }
-    setPatientEMR(patientEMR);
-    localStorage.setItem("patientEMR", JSON.stringify(patientEMR));
-    toast.success("Patient information set.");
+
+    if (ageAtExam < 5) {
+      toast.error("Patient must be at least 5 years old on the exam date.");
+      return false;
+    }
+    return true;
   };
-  
-  
 
   return (
-    <div className="scrollable-container overflow-x-auto h-[250px]">
-    <div className="flex flex-wrap gap-4 ml-3">
-    {/* Name, Doctor, D.O.B, and Sex on a single line */}
-    <div className="flex flex-row gap-4 items-center">
-      <p className="font-bold text-lg">Patient</p> {/* Title on the left */}
-      <div>
-        <input
-          className="border-t-0 border-x-0 border-b-2"
-          type="text"
-          name="Name"
-          value={patientEMR.Name}
-          onChange={handleChange}
-          maxLength={30} // Limit to 20 characters
-          placeholder="Name"
-        />
-        </div>
+    <div className="p-2">
+      <div className="flex flex-wrap gap-4 ml-3">
+        {/* Name, Doctor, D.O.B, and Sex on a single line */}
         <div className="flex flex-row gap-4 items-center">
-           <p className="font-bold text-lg">Doctor</p> {/* Title on the left */}
-        
-        <div>
-          <input
-            className="border-t-0 border-x-0 border-b-2"
-            type="text"
-            name="Doctor"
-            value={patientEMR.Doctor}
-            onChange={handleChange}
-            readOnly
-            placeholder="Doctor"
-          />
+          <p className="font-bold text-lg">Patient</p> {/* Title on the left */}
+          <div>
+            <input
+              className="border-t-0 border-x-0 border-b-2"
+              type="text"
+              name="Name"
+              value={patientEMR.Name}
+              onChange={handleChange}
+              maxLength={30} // Limit to 20 characters
+              placeholder="Name"
+            />
+          </div>
+          <div className="flex flex-row gap-4 items-center">
+            <p className="font-bold text-lg">Doctor</p> {/* Title on the left */}
+
+            <div>
+              <input
+                className="border-t-0 border-x-0 border-b-2"
+                type="text"
+                name="Doctor"
+                value={patientEMR.Doctor}
+                onChange={handleChange}
+                readOnly
+                placeholder="Doctor"
+              />
+            </div>
+          </div>
+          <div className="flex flex-row gap-4 items-center">
+            <p className="font-bold text-lg">DOB</p> {/* Title on the left */}
+            <div>
+              <input
+                className="border-t-0 border-x-0 border-b-2"
+                type="date"
+                name="PatientDOB"
+                value={patientEMR.PatientDOB}
+                onChange={handleChange}
+                placeholder="D.O.B"
+              />
+            </div>
+          </div>
+          <div className="flex flex-row gap-4 items-center">
+            <p className="font-bold text-lg">Gender</p> {/* Title on the left */}
+            <div>
+              <select
+                className="border-t-0 border-x-0 border-b-2"
+                name="PatientSex"
+                value={patientEMR.PatientSex}
+                onChange={handleChange}
+              >
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
         </div>
-        </div>
+
+        {/* Exam Date, Visual Activity OD/OS on a single line */}
         <div className="flex flex-row gap-4 items-center">
-           <p className="font-bold text-lg">DOB</p> {/* Title on the left */}
-        <div>
+          <p className="font-bold text-lg">Exam Date</p> {/* Title on the left */}
           <input
             className="border-t-0 border-x-0 border-b-2"
             type="date"
-            name="PatientDOB"
-            value={patientEMR.PatientDOB}
+            name="ExamDate"
+            value={patientEMR.ExamDate}
             onChange={handleChange}
-            placeholder="D.O.B"
+            placeholder="Exam Date"
           />
-        </div>
-        </div>
-        <div className="flex flex-row gap-4 items-center">
-           <p className="font-bold text-lg">Gender</p> {/* Title on the left */}
-        <div>
-          <select
-            className="border-t-0 border-x-0 border-b-2"
-            name="PatientSex"
-            value={patientEMR.PatientSex}
-            onChange={handleChange}
-          >
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-          </select>
-        </div>
-      </div>
-      </div>
-
-      {/* Exam Date, Visual Activity OD/OS on a single line */}
-        <div className="flex flex-row gap-4 items-center">
-        <p className="font-bold text-lg">Exam Date</p> {/* Title on the left */}
-        <input
-          className="border-t-0 border-x-0 border-b-2"
-          type="date"
-          name="ExamDate"
-          value={patientEMR.ExamDate}
-          onChange={handleChange}
-          placeholder="Exam Date"
-        />
 
 
-<div className="flex flex-row gap-4 items-center">
-  <p className="font-bold text-lg">Visual</p> {/* Title on the left */}
-  <div className="flex flex-row gap-2">
-    <div>
-      <input
-        className="border-t-0 border-x-0 border-b-2"
-        type="text"
-        name="VisualActivityOD"
-        value={patientEMR.VisualActivityOD}
-        onChange={handleChange}
-        placeholder="OD"
-        maxLength={30} // Limit text to 40 characters
-      />
-    </div>
-    <div>
-      <input
-        className="border-t-0 border-x-0 border-b-2"
-        type="text"
-        name="VisualActivityOS"
-        value={patientEMR.VisualActivityOS}
-        onChange={handleChange}
-        placeholder="OS"
-        maxLength={30} // Limit text to 40 characters
-      />
-    </div>
-  </div>
-</div>
-</div>
-
-
-      {/* Relevant Neurological Findings and Aphasia on a single line */}
-      <div className="flex flex-row gap-4">
-        <div>
-          <textarea
-            className="h-20 w-60"
-            name="RelNeurologicalFinds"
-            value={patientEMR.RelNeurologicalFinds}
-            onChange={handleChange}
-            placeholder="Neurological Findings"
-            maxLength={50} // Limit text to 40 characters
-          />
-        </div>
-        <div className="flex flex-row gap-4">
-          <div className="flex items-center">
-           
+          <div className="flex flex-row gap-4 items-center">
+            <p className="font-bold text-lg">Visual</p> {/* Title on the left */}
+            <div className="flex flex-row gap-2">
+              <div>
+                <input
+                  className="border-t-0 border-x-0 border-b-2"
+                  type="text"
+                  name="VisualActivityOD"
+                  value={patientEMR.VisualActivityOD}
+                  onChange={handleChange}
+                  placeholder="OD"
+                  maxLength={30} // Limit text to 40 characters
+                />
+              </div>
+              <div>
+                <input
+                  className="border-t-0 border-x-0 border-b-2"
+                  type="text"
+                  name="VisualActivityOS"
+                  value={patientEMR.VisualActivityOS}
+                  onChange={handleChange}
+                  placeholder="OS"
+                  maxLength={30} // Limit text to 40 characters
+                />
+              </div>
+            </div>
           </div>
-          <textarea
-            className="h-20 w-60"
-            name="AphasiaText"
-            value={patientEMR.AphasiaText}
-            onChange={handleChange}
-            placeholder="Aphasia Text"
-            maxLength={50} // Limit text to 40 characters
-            
-          />
-          <div className="flex items-center mt-4"> {/* Added margin-top here */}
-      <input
-        className="inline m-2"
-        type="radio"
-        value="true"
-        name="HasAphasia"
-        checked={patientEMR.HasAphasia === true}
-        onChange={handleChange}
-      />
-      <label>Yes</label>
-      <input
-        className="inline m-2"
-        type="radio"
-        value="false"
-        name="HasAphasia"
-        checked={patientEMR.HasAphasia === false}
-        onChange={handleChange}
-      />
-      <label>No</label>
-    </div>
+        </div>
+
+
+        {/* Relevant Neurological Findings and Aphasia on a single line */}
+        <div className="flex flex-row gap-4">
+          <div>
+            <textarea
+              className="h-20 w-60 border border-gray-300 rounded p-2"
+              name="RelNeurologicalFinds"
+              value={patientEMR.RelNeurologicalFinds}
+              onChange={handleChange}
+              placeholder="Neurological Findings"
+              maxLength={50} // Limit text to 40 characters
+            />
+          </div>
+          <div className="flex flex-row gap-4">
+            <div className="flex items-center">
+
+            </div>
+            <textarea
+              className="h-20 w-60 border border-gray-300 rounded p-2"
+              name="AphasiaText"
+              value={patientEMR.AphasiaText}
+              onChange={handleChange}
+              placeholder="Aphasia Text"
+              maxLength={50} // Limit text to 40 characters
+
+            />
+            <div className="flex items-center mt-4"> {/* Added margin-top here */}
+              <input
+                className="inline m-2"
+                type="radio"
+                value="true"
+                name="HasAphasia"
+                checked={patientEMR.HasAphasia === true}
+                onChange={handleChange}
+              />
+              <label>Yes</label>
+              <input
+                className="inline m-2"
+                type="radio"
+                value="false"
+                name="HasAphasia"
+                checked={patientEMR.HasAphasia === false}
+                onChange={handleChange}
+              />
+              <label>No</label>
+            </div>
+          </div>
         </div>
       </div>
-     
-      <div className="flex flex-wrap w-full">
-  <button
-    className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-md w-28 text-sm transition duration-300 ease-in-out transform hover:bg-blue-600 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-    onClick={savePatientInfo}
-  >
-    Set
-  </button>
-</div>
-</div>
-
-
-
-      {/* ToastContainer to display the toast notifications */}
-      <ToastContainer />
     </div>
   );
 }

@@ -8,6 +8,8 @@ import attended from "../assets/icon_attended.png";
 import scheduled from "../assets/icon_scheduled.png";
 import total from "../assets/icon_total.png"; 
 import "../App.css";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -18,11 +20,23 @@ function Dashboard() {
   const [attendedAppointments, setAttendedAppointments] = useState(0);
   const [scheduledAppointments, setScheduledAppointments] = useState(0);
 
+  const isOverdue = (dateStr, timeStr) => {
+    if (!dateStr || !timeStr) return false;
+    try {
+      const today = new Date();
+      const cleanDate = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
+      const appointmentDateTime = new Date(`${cleanDate}T${timeStr}`);
+      return appointmentDateTime < today;
+    } catch (e) {
+      return false;
+    }
+  };
+
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
         const Doctor = localStorage.getItem("Doctor");
-        const url = Doctor ? `${process.env.REACT_APP_BACKEND_URL}/appointments?Doctor=${Doctor}` : `${process.env.REACT_APP_BACKEND_URL}/api/appointments`;
+        const url = Doctor ? `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/appointments?Doctor=${Doctor}` : `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api/appointments`;
         const response = await fetch(url);
         if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
@@ -30,7 +44,15 @@ function Dashboard() {
         setAppointments(data);
         setTotalAppointments(data.length);
         setAttendedAppointments(data.filter(a => a.Checkup_Status === "Complete").length);
-        setScheduledAppointments(data.filter(a => a.Checkup_Status !== "Complete").length);
+        
+        const pendingAppointments = data.filter(a => a.Checkup_Status !== "Complete");
+        setScheduledAppointments(pendingAppointments.length);
+
+        // Check and notify for overdue appointments
+        const overdue = pendingAppointments.filter(a => isOverdue(a.AppointmentDate, a.AppointmentTime));
+        if (overdue.length > 0) {
+          toast.warn(`Reminder: You have ${overdue.length} overdue appointment(s) pending!`);
+        }
       } catch (error) {
         console.error("Error fetching appointments:", error);
       } finally {
@@ -89,7 +111,14 @@ function Dashboard() {
             <div className="text-black w-full sm:w-auto">
               <p className="text-xl sm:text-2xl font-bold">{a.AppointmentTime ? formatTime(a.AppointmentTime) : "N/A"}</p>
               <p className="text-lg sm:text-xl font-bold">{a.AppointmentDate ? new Date(a.AppointmentDate).toISOString().split("T")[0] : "N/A"}</p>
-              <p className="text-base sm:text-lg text-gray-500 mt-2">Device ID: {a.DeviceID}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <p className="text-base sm:text-lg text-gray-500">Device ID: {a.DeviceID}</p>
+                {isOverdue(a.AppointmentDate, a.AppointmentTime) && (
+                  <span className="bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold animate-pulse">
+                    Overdue
+                  </span>
+                )}
+              </div>
             </div>
             {a.meetingId ? (
               <Link to={`/emr/${a.ID}/${a.meetingId}`} className="w-full sm:w-auto">
@@ -140,6 +169,7 @@ function Dashboard() {
 
   return (
     <>
+      <ToastContainer position="top-right" autoClose={5000} />
       <NavBar />
       <div className="flex flex-col sm:flex-row mb-28 pt-[60px] sm:pt-[80px]">
 

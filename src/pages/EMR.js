@@ -12,7 +12,7 @@ import EMRBedSide from "../components/EMR_BedSide";
 import EMRTelestrokeExam from "../components/EMR_TelestrokeExam";
 import QuadrantTracking from "../components/QuadrantTracking";
 import StimulusVideoController from "../components/StimulusVideoController";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Line } from "react-chartjs-2";
 import { submitExamData, submitTrackingSession } from "../utils/auth";
@@ -250,7 +250,7 @@ const EMRpage = () => {
     webSocketRef.current.onerror = (error) => {
       console.error("WebSocket error:", error);
       if (!webSocketConnected.current) {
-        toast.error("WebSocket connection error occurred.");
+        console.error("WebSocket connection error occurred.");
       }
     };
 
@@ -952,6 +952,29 @@ const EMRpage = () => {
       }
 
       const patientEMR = JSON.parse(localStorage.getItem("patientEMR")) || {};
+      
+      // Age validation: at least 5 years between DOB and Exam Date
+      if (patientEMR.PatientDOB && patientEMR.ExamDate) {
+        const dob = new Date(patientEMR.PatientDOB);
+        const exam = new Date(patientEMR.ExamDate);
+        let ageAtExam = exam.getFullYear() - dob.getFullYear();
+        const monthDiff = exam.getMonth() - dob.getMonth();
+        const dayDiff = exam.getDate() - dob.getDate();
+        if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+          ageAtExam--;
+        }
+        if (ageAtExam < 5) {
+          toast.error("Patient must be at least 5 years old on the exam date (Patient Info tab).");
+          return;
+        }
+      }
+
+      // Presence validation for mandatory fields
+      if (!patientEMR.Name || !patientEMR.Doctor || !patientEMR.ExamDate) {
+        toast.error("Mandatory fields missing: Name, Doctor, and Exam Date are required (Patient Info tab).");
+        return;
+      }
+
       const emrBedSideData =
         JSON.parse(localStorage.getItem("emrBedSideData")) || {};
       const emrTelestrokeExam =
@@ -1112,7 +1135,25 @@ const EMRpage = () => {
         toast.error(response.error);
       } else {
         setExamId(response.data._id);
-        toast.success("Exam data saved successfully!");
+        
+        // After successful EMR save, mark the appointment as "Complete"
+        try {
+          const statusResponse = await axios.put(
+            `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/appointments`,
+            {
+              meetingId,
+              ID: patientid,
+            }
+          );
+          if (statusResponse.data.success) {
+            console.log("Appointment status updated to 'Complete' in EMR save.");
+          }
+        } catch (statusError) {
+          console.error("Error updating appointment status to Complete:", statusError);
+          // We don't block the user if status update fails, as the EMR data is already saved
+        }
+
+        toast.success("Exam data saved successfully and appointment completed!");
         localStorage.removeItem("patientEMR");
         localStorage.removeItem("emrBedSideData");
         localStorage.removeItem("emrTelestrokeExam");
@@ -1128,7 +1169,7 @@ const EMRpage = () => {
     console.log("Sending settings to server:", settings);
     axios
       .post(
-        `${process.env.REACT_APP_BACKEND_URL}/videoController-webhook`,
+        `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/videoController-webhook`,
         settings
       )
       .then((response) => {
@@ -1536,9 +1577,15 @@ const EMRpage = () => {
                       </button>
                     </div>
                     <div className="mt-2">
-                      {tab === 0 && <EMRPatientInfo />}
-                      {tab === 1 && <EMRBedSide />}
-                      {tab === 2 && <EMRTelestrokeExam />}
+                      <div className={tab === 0 ? "block" : "hidden"}>
+                        <EMRPatientInfo />
+                      </div>
+                      <div className={tab === 1 ? "block" : "hidden"}>
+                        <EMRBedSide />
+                      </div>
+                      <div className={tab === 2 ? "block" : "hidden"}>
+                        <EMRTelestrokeExam />
+                      </div>
                     </div>
                   </>
                 )}
@@ -1558,6 +1605,7 @@ const EMRpage = () => {
             )}
           </div>
         </div>
+        <ToastContainer />
       </div>
     </>
   );

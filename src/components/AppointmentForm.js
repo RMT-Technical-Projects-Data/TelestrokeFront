@@ -18,6 +18,7 @@ const AppointmentForm = ({ close }) => {
     meetingId: "",
     Doctor: "",
   });
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     const doctorName = localStorage.getItem("Doctor") || "Unknown Doctor";
@@ -28,17 +29,17 @@ const AppointmentForm = ({ close }) => {
   }, []);
 
   const handleChange = (e) => {
-    const today = new Date().toISOString().split("T")[0];
     const { name, value } = e.target;
-
-    if (name === "AppointmentDate" && value < today) {
-      toast.error("Please select today or a future date!");
-    } else {
-      setNewAppointment((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+    
+    // Clear error for this field when changed
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
     }
+
+    setNewAppointment((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const formatDate = (dateString) => {
@@ -62,18 +63,30 @@ const AppointmentForm = ({ close }) => {
 
   const generateAppointmentID = async () => {
     try {
-      const doctor = localStorage.getItem("Doctor");
-      const appointments = await getAllAppointments(doctor);
+      // Fetch ALL appointments (without doctor filter) to ensure global uniqueness 
+      // as confirmed by the database unique index on ID field
+      const result = await getAllAppointments();
       let maxID = 0;
+      let appointments = [];
+
+      // Robustly handle various response formats
+      if (Array.isArray(result)) {
+        appointments = result;
+      } else if (result && Array.isArray(result.data)) {
+        appointments = result.data;
+      } else if (result && Array.isArray(result.appointments)) {
+        appointments = result.appointments;
+      }
 
       if (appointments && appointments.length > 0) {
-        maxID = Math.max(...appointments.map((appt) => parseInt(appt.ID, 10)));
+        maxID = Math.max(...appointments.map((appt) => parseInt(appt.ID, 10) || 0));
       }
 
       const newID = String(maxID + 1).padStart(5, "0");
+      console.log(`Generated new Appointment ID: ${newID} (Max existing ID: ${maxID})`);
       return newID;
     } catch (error) {
-      console.error("Error fetching appointments:", error);
+      console.error("Error generating appointment ID:", error);
       toast.error("Error generating appointment ID. Please try again.");
     }
   };
@@ -85,18 +98,27 @@ const AppointmentForm = ({ close }) => {
       const appointmentDate = newAppointment.AppointmentDate;
       const appointmentTime = newAppointment.AppointmentTime;
 
+      // Convert new appointment time to minutes from start of day
+      const [newH, newM] = appointmentTime.split(':').map(Number);
+      const newTotalMinutes = newH * 60 + newM;
+
       for (const appt of appointments) {
+        // Skip if it's the same appointment (shouldn't happen in form but good for consistency)
+        if (appt.ID === newAppointment.ID) continue;
+
         const existingDate = appt.AppointmentDate;
         const existingTime = appt.AppointmentTime;
 
-        const formattedExistingDate = formatDate(existingDate); 
-        const formattedExistingTime = formatTime(existingTime);
-        const formattedNewDate = formatDate(appointmentDate);
-        const formattedNewTime = formatTime(appointmentTime);
+        // Check if on the same date
+        if (formatDate(existingDate) === formatDate(appointmentDate)) {
+          const [extH, extM] = existingTime.split(':').map(Number);
+          const extTotalMinutes = extH * 60 + extM;
 
-        if (formattedExistingDate === formattedNewDate && formattedExistingTime === formattedNewTime) {
-          toast.error("Appointment time clashes with an existing appointment.");
-          return false;
+          const diff = Math.abs(newTotalMinutes - extTotalMinutes);
+          if (diff < 30) {
+            toast.error("Appointment must have at least a 30-minute buffer from existing appointments.");
+            return false;
+          }
         }
       }
 
@@ -114,6 +136,36 @@ const AppointmentForm = ({ close }) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     setIsCancelEnabled(false);
+
+    const newErrors = {};
+    if (!newAppointment.DeviceID) newErrors.DeviceID = "Device ID is required";
+    if (!newAppointment.AppointmentDate) newErrors.AppointmentDate = "Date is required";
+    if (!newAppointment.AppointmentTime) newErrors.AppointmentTime = "Time is required";
+
+    // Past date check (though input min should prevent this, extra safety)
+    const todayStr = new Date().toISOString().split("T")[0];
+    if (newAppointment.AppointmentDate && newAppointment.AppointmentDate < todayStr) {
+      newErrors.AppointmentDate = "Please select today or a future date";
+    }
+
+    // Past time check for today
+    if (newAppointment.AppointmentDate === todayStr && newAppointment.AppointmentTime) {
+      const now = new Date();
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+      const [selectedHours, selectedMinutes] = newAppointment.AppointmentTime.split(':').map(Number);
+      
+      if (selectedHours < currentHours || (selectedHours === currentHours && selectedMinutes < currentMinutes)) {
+        newErrors.AppointmentTime = "Please select a future time for today";
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setIsSubmitting(false);
+      setIsCancelEnabled(true);
+      return;
+    }
 
     const isClashFree = await checkForClashes();
     if (!isClashFree) {
@@ -148,6 +200,7 @@ const AppointmentForm = ({ close }) => {
         Doctor: localStorage.getItem("Doctor") || "",
       };
 
+      console.log("Submitting Appointment Data:", newAppointmentData);
       const response = await AppointmentFormSubmit(newAppointmentData);
 
       if (response) {
@@ -164,7 +217,11 @@ const AppointmentForm = ({ close }) => {
       }
     } catch (error) {
       console.error("Error saving appointment:", error);
-      toast.error("An unexpected error occurred. Please try again.");
+      if (error.response && error.response.data && error.response.data.error) {
+        toast.error(`Error: ${error.response.data.error}`);
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
+      }
       setIsSubmitting(false);
       setIsCancelEnabled(true);
     }
@@ -201,25 +258,22 @@ const AppointmentForm = ({ close }) => {
                 <label className="block text-gray-700 font-medium mb-2">
                   Device ID <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   name="DeviceID"
                   value={newAppointment.DeviceID}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  required
-                  pattern="\d{4}"
-                  title="Device ID must be exactly 4 digits"
-                  maxLength={4}
-                  onInput={(e) => {
-                    e.target.value = e.target.value.replace(/\D/g, '');
-                  }}
-                />
+                  className={`w-full p-3 border ${errors.DeviceID ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
+                >
+                  <option value="">Select Device ID</option>
+                  <option value="1000">1000</option>
+                  <option value="1001">1001</option>
+                </select>
+                {errors.DeviceID && <p className="text-red-500 text-sm mt-1">{errors.DeviceID}</p>}
               </div>
 
               <div>
                 <label className="block text-gray-700 font-medium mb-2">
-                  Patient ID <span className="text-red-500">*</span>
+                  Meeting ID <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -252,15 +306,9 @@ const AppointmentForm = ({ close }) => {
                 <label className="block text-gray-700 font-medium mb-2">
                   Checkup Status
                 </label>
-                <select
-                  name="Checkup_Status"
-                  value={newAppointment.Checkup_Status}
-                  onChange={(e) => setNewAppointment({ ...newAppointment, Checkup_Status: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  required
-                >
-                  <option value="Pending">Pending</option>
-                </select>
+                <div className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 flex items-center h-[50px]">
+                  <span className="text-gray-700">Pending</span>
+                </div>
               </div>
             </div>
           </div>
@@ -275,9 +323,10 @@ const AppointmentForm = ({ close }) => {
                 name="AppointmentDate"
                 value={newAppointment.AppointmentDate}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                required
+                min={new Date().toISOString().split("T")[0]}
+                className={`w-full p-3 border ${errors.AppointmentDate ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
               />
+              {errors.AppointmentDate && <p className="text-red-500 text-sm mt-1">{errors.AppointmentDate}</p>}
             </div>
 
             <div>
@@ -289,15 +338,15 @@ const AppointmentForm = ({ close }) => {
                 name="AppointmentTime"
                 value={newAppointment.AppointmentTime}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                required
+                className={`w-full p-3 border ${errors.AppointmentTime ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
               />
+              {errors.AppointmentTime && <p className="text-red-500 text-sm mt-1">{errors.AppointmentTime}</p>}
             </div>
           </div>
         </div>
 
         {/* Footer Buttons */}
-        <div className="bg-gray-50 px-6 py-4 rounded-b-xl flex flex-col sm:flex-row justify-end gap-3">
+        <div className="bg-white px-6 py-4 rounded-b-xl flex flex-col sm:flex-row justify-end gap-3">
           <button
             type="button"
             onClick={isCancelEnabled ? close : null}

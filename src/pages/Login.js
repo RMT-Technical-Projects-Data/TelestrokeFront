@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; // For API requests
 import telestroke from "../assets/eyeimage.png";
-import { toast, ToastContainer } from "react-toastify"; // Import toast and ToastContainer
+import { toast } from "react-toastify"; // Import toast
 import "react-toastify/dist/ReactToastify.css"; // Import the CSS for react-toastify
 import logo from "../assets/Telestroke-logo.png";
 // import background from "../assets/bg-blur.jpg"
@@ -10,19 +10,41 @@ import logo from "../assets/Telestroke-logo.png";
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [usernameError, setUsernameError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault(); // Prevent default form submission behavior
-  
+
+    // Clear previous validation errors
+    setUsernameError("");
+    setPasswordError("");
+
+    let isValid = true;
+    if (!username.trim()) {
+      setUsernameError("Username is required");
+      isValid = false;
+    }
+    if (!password) {
+      setPasswordError("Password is required");
+      isValid = false;
+    }
+    
+    if (!isValid) return;
+
+    if (isLoading) return; // Prevent duplicate submissions
+    setIsLoading(true);
+
     console.log(process.env.REACT_APP_BACKEND_URL);
-  
+
     try {
       // Call the backend API for login
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/login`, {
-        username,
-        password,
-      });
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api/auth/login`, {
+      username,
+      password,
+    });
   
       // Extract token and role from the response
       const { token, role } = response.data;
@@ -50,12 +72,10 @@ const Login = () => {
   
       // Check if the error is due to invalid credentials or network issue
       if (error.response) {
-        if (error.response.status === 400) {
-          // Handle invalid credentials (bad request)
-          toast.error(error.response.data.message || "Invalid username or password. Please try again.");
-        } else if (error.response.status === 401) {
-          // Unauthorized (invalid credentials)
-          toast.error("Invalid username or password. Please try again.");
+        if (error.response.status >= 400 && error.response.status < 500) {
+          // Handle client errors (bad request, unauthorized, not found)
+          const errorMessage = error.response.data?.message || error.response.data?.error || "Invalid username or password. Please try again.";
+          toast.error(errorMessage);
         } else {
           // Other server-side errors
           toast.error("An error occurred while logging in. Please try again later.");
@@ -64,6 +84,8 @@ const Login = () => {
         // Network error or no response from the server
         toast.error("Unable to connect to the server. Please check your network connection.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -111,9 +133,13 @@ const Login = () => {
                 type="text"
                 id="username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  if (usernameError) setUsernameError("");
+                }}
+                className={`w-full p-4 border ${usernameError ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none`}
               />
+              {usernameError && <p className="text-red-500 text-sm mt-1">{usernameError}</p>}
             </div>
             <div>
               <label htmlFor="password" className="block text-gray-600 mb-2 font-medium">
@@ -123,15 +149,20 @@ const Login = () => {
                 type="password"
                 id="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordError) setPasswordError("");
+                }}
+                className={`w-full p-4 border ${passwordError ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none`}
               />
+              {passwordError && <p className="text-red-500 text-sm mt-1">{passwordError}</p>}
             </div>
             <button
               type="submit"
-              className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-md"
+              disabled={isLoading}
+              className={`w-full py-3 ${isLoading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold rounded-lg transition-all shadow-md`}
             >
-              Login
+              {isLoading ? 'Logging in...' : 'Login'}
             </button>
           </form>
   
@@ -139,12 +170,7 @@ const Login = () => {
         </div>
       </div>
     </div>
-  
-    {/* Toast container */}
-    <ToastContainer />
   </div>
-  
-  
   );
 };
 

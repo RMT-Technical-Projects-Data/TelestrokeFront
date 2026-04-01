@@ -4,7 +4,7 @@ let authToken = null;
 // Function to fetch the auth token from the backend
 export const getToken = async () => {
   try {
-    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/get-token`, {
+    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/get-token`, {
       method: "GET",
     });
     const { token } = await res.json();
@@ -29,7 +29,7 @@ export const getAuthToken = async () => {
 export const createMeeting = async (region = "us") => {
   try {
     const token = await getAuthToken(); // Ensure token is loaded before the call
-    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/create-meeting/`, {
+    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/create-meeting/`, {
       method: "POST",
       headers: {
         Authorization: token, // Use the fetched token
@@ -52,7 +52,7 @@ export const createMeeting = async (region = "us") => {
 export const validateMeeting = async (meetingId) => {
   try {
     const token = await getAuthToken(); // Ensure token is loaded before the call
-    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/validate-meeting/${meetingId}`, {
+    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/validate-meeting/${meetingId}`, {
       method: "POST",
       headers: {
         Authorization: token, // Use the fetched token
