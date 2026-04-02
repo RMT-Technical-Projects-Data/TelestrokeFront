@@ -493,10 +493,11 @@ const EMRReportpage = () => {
 
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
-      doc.text(`Patient ID: ${patientId}`, pageWidth / 2, 35, { align: "center" });
-      doc.text(`Report Date: ${new Date().toLocaleDateString()}`, pageWidth / 2, 42, { align: "center" });
+      doc.text(`Report ID: ${patientData.reportId || 'N/A'}`, pageWidth / 2, 35, { align: "center" });
+      // doc.text(`Patient ID: ${patientId}`, pageWidth / 2, 42, { align: "center" });
+      doc.text(`Exam Date: ${new Date().toLocaleDateString()}`, pageWidth / 2, 49, { align: "center" });
 
-      yPosition = 60;
+      yPosition = 65;
 
       // Patient Information Section
       doc.setFontSize(16);
@@ -506,6 +507,7 @@ const EMRReportpage = () => {
       yPosition += 10;
 
       const patientInfoData = [
+        ['Report ID', patientData.reportId || 'N/A'],
         ['Patient ID', patientData.patientData.patientid || 'N/A'],
         ['Name', patientData.patientData.Name || 'N/A'],
         ['Date of Birth', patientData.patientData.patientDOB ? new Date(patientData.patientData.patientDOB).toLocaleDateString() : 'N/A'],
@@ -742,10 +744,9 @@ const EMRReportpage = () => {
     }
   };
 
-  const handleShowReport = async (patientId) => {
-    const patientData = examData.find((exam) => exam.patientData.patientid === patientId);
+  const handleShowReport = async (patientData) => {
     if (!patientData) {
-      console.error(`No patient data found for ID: ${patientId}`);
+      console.error(`No patient data provided`);
       toast.error("Patient data not found");
       return;
     }
@@ -798,7 +799,7 @@ const EMRReportpage = () => {
       <html lang="en">
         <head>
           <meta charset="UTF-8">
-          <title>Medical Report - ${patientId}</title>
+          <title>Medical Report - ${patientData.patientData.patientid}</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
             body { 
@@ -899,8 +900,8 @@ const EMRReportpage = () => {
           <div class="report-container">
             <div class="header">
               <div>
-                <h1>OCULOMOTOR REPORT</h1>
-                <div style="color: #64748b; font-weight: 600; margin-top: 4px;">ID: ${patientData.patientData.patientid}</div>
+                <h1 style="color: #4f46e5; font-size: 24px;">REPORT ID: ${patientData.reportId || 'N/A'}</h1>
+                <!-- <div style="color: #64748b; font-weight: 600; margin-top: 4px;">Patient ID: ${patientData.patientData.patientid}</div> -->
               </div>
               <div class="header-meta">
                 <div>Doctor: <strong>${patientData.patientData.Doctor || 'N/A'}</strong></div>
@@ -1054,7 +1055,10 @@ const EMRReportpage = () => {
                   <thead className="bg-indigo-50">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
-                        Meeting ID
+                        Report ID
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
+                        Patient ID
                       </th>
                       <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
                         Patient Name
@@ -1072,6 +1076,9 @@ const EMRReportpage = () => {
 
                         return (
                           <tr key={`${patientId}-${index}`} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
+                              {exam.reportId || 'N/A'}
+                            </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                               {patientId}
                             </td>
@@ -1081,7 +1088,7 @@ const EMRReportpage = () => {
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                               <div className="flex space-x-2">
                                 <Button
-                                  onClick={() => handleShowReport(patientId)}
+                                  onClick={() => handleShowReport(exam)}
                                   className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                                 >
                                   <FontAwesomeIcon icon={faEye} className="mr-1" />

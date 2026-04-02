@@ -1318,7 +1318,7 @@ const EMRpage = () => {
                                 },
                                 scales: {
                                   x: {
-                                    grid: {
+                                    grid: {            
                                       color: "rgba(0, 0, 0, 0.1)",
                                       drawBorder: true,
                                     },

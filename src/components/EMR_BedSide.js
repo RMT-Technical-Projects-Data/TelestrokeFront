@@ -67,25 +67,31 @@ function EMR_BedSide() {
       <div className="flex flex-col gap-4 ml-3">
         <div className="flex flex-row gap-8 justify-between">
           <div className="basis-2/4">
-            <p className="font-bold text-lg inline mr-4">Smooth Pursuit and Saccades</p>
-            <input
-              className="inline m-2"
-              name="bedside-smoothPursuitAndSaccadesResult"
-              type="radio"
-              value="Normal"
-              checked={formData.smoothPursuitAndSaccadesResult === "Normal"}
-              onChange={handleChange}
-            />
-            <label>Normal</label>
-            <input
-              className="inline m-2"
-              name="bedside-smoothPursuitAndSaccadesResult"
-              type="radio"
-              value="Abnormal"
-              checked={formData.smoothPursuitAndSaccadesResult === "Abnormal"}
-              onChange={handleChange}
-            />
-            <label>Abnormal</label>
+            <div className="flex items-center gap-4 mb-2">
+              <p className="font-bold text-lg">Smooth Pursuit and Saccades</p>
+              <div className="flex items-center gap-1">
+                <input
+                  className="w-4 h-4 cursor-pointer"
+                  name="bedside-smoothPursuitAndSaccadesResult"
+                  type="radio"
+                  value="Normal"
+                  checked={formData.smoothPursuitAndSaccadesResult === "Normal"}
+                  onChange={handleChange}
+                />
+                <label className="cursor-pointer">Normal</label>
+              </div>
+              <div className="flex items-center gap-1">
+                <input
+                  className="w-4 h-4 cursor-pointer"
+                  name="bedside-smoothPursuitAndSaccadesResult"
+                  type="radio"
+                  value="Abnormal"
+                  checked={formData.smoothPursuitAndSaccadesResult === "Abnormal"}
+                  onChange={handleChange}
+                />
+                <label className="cursor-pointer">Abnormal</label>
+              </div>
+            </div>
             <textarea
               className="h-20 block w-[100%] border border-gray-300 rounded p-2"
               name="smoothPursuitAndSaccadesDescription"
@@ -234,25 +240,31 @@ function EMR_BedSide() {
         </div>
         <div className="flex flex-row gap-8 justify-between">
           <div className="basis-2/4">
-            <p className="font-bold text-lg inline mr-4">Extraocular Movement</p>
-            <input
-              className="inline m-2"
-              name="bedside-extraocularMovementResult"
-              type="radio"
-              value="Normal"
-              checked={formData.extraocularMovementResult === "Normal"}
-              onChange={handleChange}
-            />
-            <label>Normal</label>
-            <input
-              className="inline m-2"
-              name="bedside-extraocularMovementResult"
-              type="radio"
-              value="Abnormal"
-              checked={formData.extraocularMovementResult === "Abnormal"}
-              onChange={handleChange}
-            />
-            <label>Abnormal</label>
+            <div className="flex items-center gap-4 mb-2">
+              <p className="font-bold text-lg">Extraocular Movement</p>
+              <div className="flex items-center gap-1">
+                <input
+                  className="w-4 h-4 cursor-pointer"
+                  name="bedside-extraocularMovementResult"
+                  type="radio"
+                  value="Normal"
+                  checked={formData.extraocularMovementResult === "Normal"}
+                  onChange={handleChange}
+                />
+                <label className="cursor-pointer">Normal</label>
+              </div>
+              <div className="flex items-center gap-1">
+                <input
+                  className="w-4 h-4 cursor-pointer"
+                  name="bedside-extraocularMovementResult"
+                  type="radio"
+                  value="Abnormal"
+                  checked={formData.extraocularMovementResult === "Abnormal"}
+                  onChange={handleChange}
+                />
+                <label className="cursor-pointer">Abnormal</label>
+              </div>
+            </div>
             <textarea
               className="h-20 block w-[100%] border border-gray-300 rounded p-2"
               name="extraocularMovementDescription"
