@@ -268,7 +268,7 @@ const AppointmentTable = ({ addAppointment }) => {
           type="text"
           value={searchQuery}
           onChange={handleSearchChange}
-          placeholder="Search by Patient ID"
+          placeholder="Search by Meeting ID"
           className="p-2 sm:p-3 w-full sm:w-1/2 md:w-1/3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
         />
       </div>

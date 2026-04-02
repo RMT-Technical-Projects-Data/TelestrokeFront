@@ -1,38 +1,42 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Use useNavigate instead of useHistory
+import { useNavigate, useLocation } from 'react-router-dom'; // Use useLocation to check current path
 import jwt_decode from 'jwt-decode';
 
 const useAuth = () => {
-  const navigate = useNavigate(); // Initialize the navigate function
+  const navigate = useNavigate();
+  const location = useLocation(); // Get current location
 
-  // Function to check if the token is expired
   const checkTokenExpiration = () => {
-    const token = localStorage.getItem('token'); // Or sessionStorage if you're using that
+    const token = localStorage.getItem('token');
     
     if (!token) {
-      return true; // No token found, consider expired or missing
+      return true;
     }
 
     try {
       const decodedToken = jwt_decode(token);
-      const currentTime = Date.now() / 1000; // Current time in seconds
+      const currentTime = Date.now() / 1000;
 
       if (decodedToken.exp < currentTime) {
-        return true; // Token is expired
+        return true;
       }
-      return false; // Token is still valid
+      return false;
     } catch (error) {
-      return true; // If there's an error decoding, consider the token expired
+      return true;
     }
   };
 
-  // Effect to check token expiration when the component mounts or when history changes
   useEffect(() => {
-    if (checkTokenExpiration()) {
-    localStorage.clear();
-      navigate('/login'); // Redirect to the login page using useNavigate
+    // If we're already on the login page, don't try to redirect there again
+    if (location.pathname === '/login') {
+      return;
     }
-  }, [navigate]); // Re-run when the component mounts or on navigate change
+
+    if (checkTokenExpiration()) {
+      localStorage.clear();
+      navigate('/login');
+    }
+  }, [navigate, location.pathname]); // Add location.pathname to dependencies
 };
 
 export default useAuth;

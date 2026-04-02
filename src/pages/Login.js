@@ -12,6 +12,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [loginError, setLoginError] = useState(""); // General login error (e.g. invalid credentials)
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -21,6 +22,7 @@ const Login = () => {
     // Clear previous validation errors
     setUsernameError("");
     setPasswordError("");
+    setLoginError(""); // Clear general error
 
     let isValid = true;
     if (!username.trim()) {
@@ -62,9 +64,11 @@ const Login = () => {
           navigate("/dashboard");
           toast.success("Login successful! Redirecting to Dashboard."); // Success toast
         } else {
+          setLoginError("Invalid user role. Please contact support.");
           toast.error("Invalid user role. Please contact support."); // Error toast for invalid role
         }
       } else {
+        setLoginError("Invalid username or password. Please try again.");
         toast.error("Invalid username or password. Please try again."); // Error toast for invalid login
       }
     } catch (error) {
@@ -75,13 +79,16 @@ const Login = () => {
         if (error.response.status >= 400 && error.response.status < 500) {
           // Handle client errors (bad request, unauthorized, not found)
           const errorMessage = error.response.data?.message || error.response.data?.error || "Invalid username or password. Please try again.";
+          setLoginError(errorMessage);
           toast.error(errorMessage);
         } else {
           // Other server-side errors
+          setLoginError("An error occurred while logging in. Please try again later.");
           toast.error("An error occurred while logging in. Please try again later.");
         }
       } else {
         // Network error or no response from the server
+        setLoginError("Unable to connect to the server. Please check your network connection.");
         toast.error("Unable to connect to the server. Please check your network connection.");
       }
     } finally {
@@ -124,6 +131,14 @@ const Login = () => {
           <h1 className="text-4xl font-bold text-gray-800 mb-6 text-center">
             Welcome
           </h1>
+          
+          {/* General Login Error Message */}
+          {loginError && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-center font-medium animate-pulse">
+              {loginError}
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label htmlFor="username" className="block text-gray-600 mb-2 font-medium">
@@ -136,8 +151,9 @@ const Login = () => {
                 onChange={(e) => {
                   setUsername(e.target.value);
                   if (usernameError) setUsernameError("");
+                  if (loginError) setLoginError("");
                 }}
-                className={`w-full p-4 border ${usernameError ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none`}
+                className={`w-full p-4 border ${usernameError || loginError ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none`}
               />
               {usernameError && <p className="text-red-500 text-sm mt-1">{usernameError}</p>}
             </div>
@@ -152,8 +168,9 @@ const Login = () => {
                 onChange={(e) => {
                   setPassword(e.target.value);
                   if (passwordError) setPasswordError("");
+                  if (loginError) setLoginError("");
                 }}
-                className={`w-full p-4 border ${passwordError ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none`}
+                className={`w-full p-4 border ${passwordError || loginError ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none`}
               />
               {passwordError && <p className="text-red-500 text-sm mt-1">{passwordError}</p>}
             </div>

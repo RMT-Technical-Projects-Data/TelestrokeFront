@@ -1043,7 +1043,7 @@ const EMRReportpage = () => {
                   type="text"
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  placeholder="Search by Patient ID"
+                  placeholder="Search by Meeting ID"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                 />
               </div>
@@ -1058,7 +1058,7 @@ const EMRReportpage = () => {
                         Report ID
                       </th>
                       <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
-                        Patient ID
+                        Meeting ID
                       </th>
                       <th className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
                         Patient Name
