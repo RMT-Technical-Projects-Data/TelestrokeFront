@@ -147,7 +147,6 @@ const handleSubmit = async (e) => {
 
   return (
     <>
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
       <NavBar />
       <div className="flex flex-col sm:flex-row h-screen">
         <Sidebar page="PATIENTS" />

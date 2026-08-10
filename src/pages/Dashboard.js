@@ -8,7 +8,7 @@ import attended from "../assets/icon_attended.png";
 import scheduled from "../assets/icon_scheduled.png";
 import total from "../assets/icon_total.png"; 
 import "../App.css";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -170,7 +170,6 @@ function Dashboard() {
 
   return (
     <>
-      <ToastContainer position="top-right" autoClose={5000} />
       <NavBar />
       <div className="flex flex-col sm:flex-row mb-28 pt-[60px] sm:pt-[80px]">
 

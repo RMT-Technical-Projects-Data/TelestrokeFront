@@ -1176,7 +1176,6 @@ const EMRReportpage = () => {
           </div>
         </main>
       </div>
-      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };

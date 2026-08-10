@@ -1605,7 +1605,6 @@ const EMRpage = () => {
             )}
           </div>
         </div>
-        <ToastContainer />
       </div>
     </>
   );

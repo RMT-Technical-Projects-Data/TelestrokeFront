@@ -372,7 +372,6 @@ const AppointmentForm = ({ close }) => {
           </button>
         </div>
       </form>
-      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };

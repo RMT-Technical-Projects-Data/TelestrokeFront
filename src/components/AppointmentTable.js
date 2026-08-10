@@ -251,7 +251,6 @@ const AppointmentTable = ({ addAppointment }) => {
   return (
     <div className="w-full px-4 py-6 pt-28">
       {errorMessage && <div className="text-red-500 font-semibold mb-4">{errorMessage}</div>}
-      <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Appointments</h1>
