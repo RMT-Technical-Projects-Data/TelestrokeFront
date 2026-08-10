@@ -13,6 +13,38 @@ import "react-toastify/dist/ReactToastify.css";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
+const ChartThree = ({ attendedAppointments, scheduledAppointments }) => {
+  const series = [attendedAppointments, scheduledAppointments];
+  const options = {
+    chart: { fontFamily: 'Satoshi, sans-serif', type: 'donut' },
+    colors: ['#3b4fdf', '#1c2434'],
+    labels: ['Appointments Attended', 'Appointments Scheduled'],
+    legend: { show: false },
+    plotOptions: { pie: { donut: { size: '65%' } } },
+    dataLabels: { enabled: false },
+    responsive: [{ breakpoint: 640, options: { chart: { width: '100%' } } }],
+  };
+
+  return (
+    <div className="w-full border border-gray-300 rounded-md bg-white shadow-md p-5">
+      <h5 className="text-xl font-semibold text-black mb-4">Appointments Analytics</h5>
+      <div className="flex justify-center">
+        <ReactApexChart options={options} series={series} type="donut" width="100%" />
+      </div>
+      <div className="flex flex-col sm:flex-row justify-center items-center mt-4 gap-4">
+        {[{ label: 'Appointments Scheduled', value: scheduledAppointments, color: 'bg-[#1c2434]' },
+          { label: 'Appointments Attended', value: attendedAppointments, color: 'bg-[#3b4fdf]' }].map((item, i) => (
+          <div key={i} className="flex items-center w-full max-w-xs justify-between text-sm">
+            <span className={`inline-block w-4 h-4 mr-2 rounded-full ${item.color}`}></span>
+            <span className="text-gray-700">{item.label}</span>
+            <span className="font-bold">{item.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 function Dashboard() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +68,8 @@ function Dashboard() {
     const fetchAppointments = async () => {
       try {
         const Doctor = localStorage.getItem("Doctor");
-        const url = Doctor ? `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/appointments?Doctor=${Doctor}` : `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api/appointments`;
+        const baseUrl = (process.env.REACT_APP_BACKEND_URL || "http://localhost:5000").replace(/\/api\/?$/, "");
+        const url = Doctor ? `${baseUrl}/api/appointments?Doctor=${Doctor}` : `${baseUrl}/api/appointments`;
         const response = await fetch(url);
         if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
@@ -135,38 +168,6 @@ function Dashboard() {
     });
   };
 
-  const ChartThree = () => {
-    const series = [attendedAppointments, scheduledAppointments];
-    const options = {
-      chart: { fontFamily: 'Satoshi, sans-serif', type: 'donut' },
-      colors: ['#3b4fdf', '#1c2434'],
-      labels: ['Appointments Attended', 'Appointments Scheduled'],
-      legend: { show: false },
-      plotOptions: { pie: { donut: { size: '65%' } } },
-      dataLabels: { enabled: false },
-      responsive: [{ breakpoint: 640, options: { chart: { width: '100%' } } }],
-    };
-
-    return (
-      <div className="w-full border border-gray-300 rounded-md bg-white shadow-md p-5">
-        <h5 className="text-xl font-semibold text-black mb-4">Appointments Analytics</h5>
-        <div className="flex justify-center">
-          <ReactApexChart options={options} series={series} type="donut" width="100%" />
-        </div>
-        <div className="flex flex-col sm:flex-row justify-center items-center mt-4 gap-4">
-          {[{ label: 'Appointments Scheduled', value: scheduledAppointments, color: 'bg-[#1c2434]' },
-            { label: 'Appointments Attended', value: attendedAppointments, color: 'bg-[#3b4fdf]' }].map((item, i) => (
-            <div key={i} className="flex items-center w-full max-w-xs justify-between text-sm">
-              <span className={`inline-block w-4 h-4 mr-2 rounded-full ${item.color}`}></span>
-              <span className="text-gray-700">{item.label}</span>
-              <span className="font-bold">{item.value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <>
       <ToastContainer position="top-right" autoClose={5000} />
@@ -214,7 +215,10 @@ function Dashboard() {
                   {renderAppointments()}
                 </div>
                 <div className="w-full lg:w-auto flex justify-center">
-                  <ChartThree />
+                  <ChartThree 
+                    attendedAppointments={attendedAppointments}
+                    scheduledAppointments={scheduledAppointments}
+                  />
                 </div>
               </div>
             </div>

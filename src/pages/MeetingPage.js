@@ -240,7 +240,7 @@ const handleSubmit = async (e) => {
                 )}
                 <button
                   type="button"
-                  onClick={() => navigate("/Dashboard")}
+                  onClick={() => navigate("/dashboard")}
                   className="px-6 py-2 bg-gray-300 text-gray-800 rounded-lg font-medium hover:bg-gray-400 transition-colors"
                 >
                   Cancel
