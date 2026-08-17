@@ -63,20 +63,27 @@ const AppointmentTable = ({ addAppointment }) => {
     return date.toLocaleDateString(undefined, options);
   };
 
-  const handleDelete = (patientId) => {
-    setPatientToDelete(patientId);
+  const handleDelete = (appointment) => {
+    setPatientToDelete(appointment);
     setIsDeleteModalOpen(true);
   };
 
   const confirmDelete = async () => {
     if (!patientToDelete) return;
+    const targetID = typeof patientToDelete === 'object' ? patientToDelete.ID : patientToDelete;
+    const targetMongoId = typeof patientToDelete === 'object' ? patientToDelete._id : null;
+
     try {
-      const result = await deleteAppointment({ patientId: patientToDelete });
+      const result = await deleteAppointment({ patientId: targetID, _id: targetMongoId });
       if (result?.success) {
+        console.log("Meeting deleted successfully and removed from backend:", { patientId: targetID, _id: targetMongoId });
         setAppointmentsData(
-          appointments_data.filter(
-            (appointment) => appointment.ID !== patientToDelete
-          )
+          appointments_data.filter((appointment) => {
+            if (targetMongoId && appointment._id) {
+              return appointment._id !== targetMongoId;
+            }
+            return appointment.ID !== targetID;
+          })
         );
         toast.success("Appointment successfully deleted!");
       } else {
@@ -385,7 +392,7 @@ const AppointmentTable = ({ addAppointment }) => {
                         <FaEdit size={16} />
                       </button>
                       <button
-                        onClick={() => handleDelete(appointment?.ID)}
+                        onClick={() => handleDelete(appointment)}
                         className="text-red-600 hover:text-red-800 transition-colors"
                         aria-label="Delete"
                       >

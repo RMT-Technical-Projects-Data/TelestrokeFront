@@ -33,12 +33,16 @@ export const getAllAppointments = async (Doctor = '') => {
 
 
 
-export const deleteAppointment = async ({ patientId }) => {
+export const deleteAppointment = async ({ patientId, _id }) => {
   try {
-    // Sending the patientId in the body of the DELETE request
+    // Sending patientId and _id in the body of the DELETE request
     const response = await client.delete("/api/appointments", { 
-      data: { patientId } 
+      data: { patientId, _id } 
     });
+
+    if (response.data?.success) {
+      console.log("Meeting deleted from backend successfully:", response.data);
+    }
 
     return response.data; // Return the relevant response data
   } catch (error) {
