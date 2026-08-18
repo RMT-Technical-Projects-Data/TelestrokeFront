@@ -12,7 +12,7 @@ import Sidebar from "../components/Sidebar";
 
 const MeetingPage = () => {
   const navigate = useNavigate();
-  const [DeviceID, setDeviceID] = useState("");
+  const [DeviceID, setDeviceID] = useState("1000");
   const [patientID, setPatientID] = useState("");
   const [meetingId, setMeetingId] = useState("");
   const [, setToken] = useState("");
@@ -167,17 +167,12 @@ const handleSubmit = async (e) => {
                     <label className="block text-gray-700 font-medium mb-2">
                       Device ID <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <input
+                      type="text"
                       value={DeviceID}
-                      onChange={(e) => setDeviceID(e.target.value)}
-                      className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${isMeetingCreated ? "bg-gray-100 cursor-not-allowed text-gray-500" : ""}`}
-                      required
-                      disabled={isMeetingCreated}
-                    >
-                      <option value="">Select Device ID</option>
-                      <option value="1000">1000</option>
-                      <option value="1001">1001</option>
-                    </select>
+                      readOnly
+                      className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
                   </div>
 
                   <div>

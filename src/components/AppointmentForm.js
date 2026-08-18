@@ -9,7 +9,7 @@ const AppointmentForm = ({ close }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCancelEnabled, setIsCancelEnabled] = useState(true);
   const [newAppointment, setNewAppointment] = useState({
-    DeviceID: "",
+    DeviceID: "1000",
     ID: "",
     AppointmentTime: "",
     AppointmentDate: "",
@@ -258,17 +258,13 @@ const AppointmentForm = ({ close }) => {
                 <label className="block text-gray-700 font-medium mb-2">
                   Device ID <span className="text-red-500">*</span>
                 </label>
-                <select
+                <input
+                  type="text"
                   name="DeviceID"
                   value={newAppointment.DeviceID}
-                  onChange={handleChange}
-                  className={`w-full p-3 border ${errors.DeviceID ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
-                >
-                  <option value="">Select Device ID</option>
-                  <option value="1000">1000</option>
-                  <option value="1001">1001</option>
-                </select>
-                {errors.DeviceID && <p className="text-red-500 text-sm mt-1">{errors.DeviceID}</p>}
+                  readOnly
+                  className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                />
               </div>
 
               <div>
