@@ -10,6 +10,7 @@ import total from "../assets/icon_total.png";
 import "../App.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { getAllAppointments } from "../utils/auth";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -68,11 +69,16 @@ function Dashboard() {
     const fetchAppointments = async () => {
       try {
         const Doctor = localStorage.getItem("Doctor");
-        const baseUrl = (process.env.REACT_APP_BACKEND_URL || "http://localhost:5000").replace(/\/api\/?$/, "");
-        const url = Doctor ? `${baseUrl}/api/appointments?Doctor=${Doctor}` : `${baseUrl}/api/appointments`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Network response was not ok");
-        const data = await response.json();
+        const result = await getAllAppointments(Doctor);
+        
+        let data = [];
+        if (Array.isArray(result)) {
+          data = result;
+        } else if (result && Array.isArray(result.data)) {
+          data = result.data;
+        } else if (result && Array.isArray(result.appointments)) {
+          data = result.appointments;
+        }
 
         setAppointments(data);
         setTotalAppointments(data.length);

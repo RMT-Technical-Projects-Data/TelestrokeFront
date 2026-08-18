@@ -1,4 +1,4 @@
-import client from "../api/client";
+import client, { getApiBaseUrl } from "../api/client";
 
 const catchError = (error) => {
   return error?.response?.data || { success: false, error: error.message };
@@ -83,7 +83,7 @@ export const submitExamData = async (examData) => {
     };
 
     // Send the data to the backend using fetch
-    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/examdatas`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/examdatas`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ export const submitTrackingSession = async (examId, session) => {
     //   },
     //   body: JSON.stringify(payload),
     // });
- const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/examdatas/${examId}/add-session`, {
+ const response = await fetch(`${getApiBaseUrl()}/api/examdatas/${examId}/add-session`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

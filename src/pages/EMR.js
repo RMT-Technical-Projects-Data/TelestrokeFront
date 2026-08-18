@@ -5,6 +5,7 @@ import React, { useEffect, useState, useRef } from "react";
 import NavBar from "../components/NavBar";
 import Button from "../components/Button";
 import axios from "axios";
+import { getApiBaseUrl } from "../api/client";
 import VIDEOSDK from "../components/VideoSDK";
 import { useParams } from "react-router-dom";
 import EMRPatientInfo from "../components/EMR_PatientInfo";
@@ -1139,7 +1140,7 @@ const EMRpage = () => {
         // After successful EMR save, mark the appointment as "Complete"
         try {
           const statusResponse = await axios.put(
-            `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/appointments`,
+            `${getApiBaseUrl()}/api/appointments`,
             {
               meetingId: meetingid,
               ID: patientid,
@@ -1169,7 +1170,7 @@ const EMRpage = () => {
     console.log("Sending settings to server:", settings);
     axios
       .post(
-        `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/videoController-webhook`,
+        `${getApiBaseUrl()}/videoController-webhook`,
         settings
       )
       .then((response) => {

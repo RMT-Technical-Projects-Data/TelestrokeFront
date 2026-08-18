@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { getApiBaseUrl } from "../api/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -42,7 +43,7 @@ const UserManagement = () => {
           return;
         }
 
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api/users/get`, {
+        const response = await axios.get(`${getApiBaseUrl()}/api/users/get`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -120,12 +121,12 @@ const UserManagement = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/users/add`,
+        `${getApiBaseUrl()}/api/users/add`,
         { username: newUser.username, password: newUser.password },
         { headers: { Authorization: `Bearer ${token}` } }
       );
   
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/users/get`, {
+      const response = await axios.get(`${getApiBaseUrl()}/api/users/get`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
@@ -207,7 +208,7 @@ const UserManagement = () => {
       setLoading(true);
 
       await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/users/edit`,
+        `${getApiBaseUrl()}/api/users/edit`,
         { 
           currentUsername: editingUser.username, 
           newUsername: editedUsername, 
@@ -216,7 +217,7 @@ const UserManagement = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/users/get`, {
+      const response = await axios.get(`${getApiBaseUrl()}/api/users/get`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);

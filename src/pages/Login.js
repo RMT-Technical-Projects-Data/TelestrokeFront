@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; // For API requests
+import { getApiBaseUrl } from "../api/client";
 import telestroke from "../assets/eyeimage.png";
 import { toast } from "react-toastify"; // Import toast
 import "react-toastify/dist/ReactToastify.css"; // Import the CSS for react-toastify
@@ -43,7 +44,7 @@ const Login = () => {
 
     try {
       // Call the backend API for login
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api/auth/login`, {
+      const response = await axios.post(`${getApiBaseUrl()}/api/auth/login`, {
       username,
       password,
     });
