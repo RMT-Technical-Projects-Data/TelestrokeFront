@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import jwt_decode from 'jwt-decode';
+import { toast } from 'react-toastify';
 
 const useAuth = () => {
   const navigate = useNavigate();
@@ -36,7 +37,9 @@ const useAuth = () => {
 
     if (checkTokenExpiration()) {
       localStorage.clear();
-      navigate('/login');
+      sessionStorage.removeItem("tsOverdueToastShown");
+      toast.dismiss();
+      navigate("/login");
     }
   }, [navigate, location.pathname]);
 };

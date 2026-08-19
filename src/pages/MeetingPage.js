@@ -2,9 +2,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getAllAppointments } from "../utils/auth";
+import { getAllAppointments, parseAppointmentList, AppointmentFormSubmit } from "../utils/auth";
 import { getToken, createMeeting } from "../API";
-import { AppointmentFormSubmit } from "../utils/auth";
 import { Copy, Phone, Video, Calendar, FileText } from "lucide-react";
 import AppShell from "../components/AppShell";
 import { buildAppointmentInsights } from "../utils/overviewInsights";
@@ -32,28 +31,24 @@ const MeetingPage = () => {
     );
   }, []);
 
-  useEffect(() => {
-    const generatePatientID = async () => {
-      try {
-        const result = await getAllAppointments(doctor);
-        let list = [];
-        if (Array.isArray(result)) list = result;
-        else if (result && Array.isArray(result.data)) list = result.data;
-        else if (result && Array.isArray(result.appointments)) list = result.appointments;
-        setAppointments(list);
-
-        let maxID = 0;
-        if (list.length > 0) {
-          maxID = Math.max(...list.map((appt) => parseInt(appt.ID, 10) || 0));
-        }
-        setPatientID(String(maxID + 1).padStart(5, "0"));
-      } catch (error) {
-        console.error("Error fetching appointments:", error);
-        toast.error("Error generating Patient ID. Please try again.");
+  const refreshAppointments = async ({ updateId = true } = {}) => {
+    try {
+      const result = await getAllAppointments(doctor);
+      const list = parseAppointmentList(result);
+      setAppointments(list);
+      if (!updateId) return;
+      let maxID = 0;
+      if (list.length > 0) {
+        maxID = Math.max(...list.map((appt) => parseInt(appt.ID, 10) || 0));
       }
-    };
+      setPatientID(String(maxID + 1).padStart(5, "0"));
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+    }
+  };
 
-    if (doctor) generatePatientID();
+  useEffect(() => {
+    if (doctor) refreshAppointments();
   }, [doctor]);
 
   const insights = useMemo(() => buildAppointmentInsights(appointments), [appointments]);
@@ -102,8 +97,10 @@ const MeetingPage = () => {
       };
 
       const saveResponse = await AppointmentFormSubmit(meetingDetails);
-      if (saveResponse) toast.success("Meeting created successfully!");
-      else toast.error("Failed to save meeting details.");
+      if (saveResponse) {
+        toast.success("Meeting created successfully!");
+        await refreshAppointments({ updateId: false });
+      } else toast.error("Failed to save meeting details.");
     } catch (error) {
       console.error("Error creating meeting:", error);
       toast.error("Error creating meeting. Please try again.");

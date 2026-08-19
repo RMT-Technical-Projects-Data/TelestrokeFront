@@ -5,7 +5,7 @@ import { getToken, createMeeting } from "../API";
 import { toast, ToastContainer } from "react-toastify";
 import "react-datepicker/dist/react-datepicker.css";
 
-const AppointmentForm = ({ close }) => {
+const AppointmentForm = ({ close, saveAppointment }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCancelEnabled, setIsCancelEnabled] = useState(true);
   const [newAppointment, setNewAppointment] = useState({
@@ -205,11 +205,10 @@ const AppointmentForm = ({ close }) => {
 
       if (response) {
         toast.success("Appointment saved successfully!");
-        setTimeout(() => {
-          setIsSubmitting(false);
-          setIsCancelEnabled(true);
-          close();
-        }, 1000);
+        setIsSubmitting(false);
+        setIsCancelEnabled(true);
+        if (typeof saveAppointment === "function") saveAppointment(newAppointmentData);
+        else close();
       } else {
         toast.error("Failed to save the appointment. Please try again.");
         setIsSubmitting(false);

@@ -23,6 +23,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
+    toast.dismiss();
     const remembered = localStorage.getItem("rememberedUsername");
     if (remembered) setUsername(remembered);
   }, []);

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CircleUserRound, LogOut } from "lucide-react";
 import ConfirmModal from "./ConfirmModal";
+import { toast } from "react-toastify";
 
 const UserProfileBadge = ({ compact = false }) => {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ const UserProfileBadge = ({ compact = false }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("Doctor");
     localStorage.removeItem("role");
+    sessionStorage.removeItem("tsOverdueToastShown");
+    toast.dismiss();
     setShowSignOut(false);
     navigate("/login");
   };

@@ -4,7 +4,7 @@ import { Calendar, CalendarCheck, Clock, AlertTriangle, Plus, Video, Percent, Ca
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AppShell from "../components/AppShell";
-import { getAllAppointments } from "../utils/auth";
+import { getAllAppointments, parseAppointmentList } from "../utils/auth";
 import { buildAppointmentInsights } from "../utils/overviewInsights";
 
 const EmptyState = ({ icon: Icon, title, text, to, action }) => (
@@ -70,22 +70,29 @@ function Dashboard() {
   const insights = useMemo(() => buildAppointmentInsights(appointments), [appointments]);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     const fetchAppointments = async () => {
       try {
         const Doctor = localStorage.getItem("Doctor");
         const result = await getAllAppointments(Doctor);
-
-        let data = [];
-        if (Array.isArray(result)) data = result;
-        else if (result && Array.isArray(result.data)) data = result.data;
-        else if (result && Array.isArray(result.appointments)) data = result.appointments;
-
+        const data = parseAppointmentList(result);
         setAppointments(data);
 
         const overdue = data.filter(
           (a) => a.Checkup_Status !== "Complete" && isOverdue(a.AppointmentDate, a.AppointmentTime)
         );
-        if (overdue.length > 0 && localStorage.getItem("tsOverdueAlerts") !== "off") {
+        const alreadyShown = sessionStorage.getItem("tsOverdueToastShown") === "1";
+        if (
+          overdue.length > 0 &&
+          !alreadyShown &&
+          localStorage.getItem("tsOverdueAlerts") !== "off"
+        ) {
+          sessionStorage.setItem("tsOverdueToastShown", "1");
           toast.warn(`Reminder: You have ${overdue.length} overdue appointment(s) pending.`);
         }
       } catch (error) {

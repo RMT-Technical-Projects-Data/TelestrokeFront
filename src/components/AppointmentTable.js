@@ -4,9 +4,9 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaTrash, FaEdit, FaChevronLeft, FaChevronRight, FaSort, FaSortUp, FaSortDown, FaPhoneAlt } from "react-icons/fa"; 
 import { Search } from "lucide-react"; 
-import { deleteAppointment, UpdateAppointment, getAllAppointments } from "../utils/auth"; 
+import { deleteAppointment, UpdateAppointment, getAllAppointments, parseAppointmentList } from "../utils/auth"; 
 
-const AppointmentTable = ({ addAppointment, hideHeader = false }) => {
+const AppointmentTable = ({ addAppointment, hideHeader = false, reloadKey = 0 }) => {
   const [appointments_data, setAppointmentsData] = useState([]);
   const [errorMessage, setErrorMessage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -32,29 +32,21 @@ const AppointmentTable = ({ addAppointment, hideHeader = false }) => {
     setSortConfig({ key, direction });
   };
 
+  const loadAppointments = async () => {
+    try {
+      const Doctor = localStorage.getItem("Doctor");
+      const result = await getAllAppointments(Doctor);
+      setAppointmentsData(parseAppointmentList(result));
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      toast.error("Failed to load appointments!");
+      setAppointmentsData([]);
+    }
+  };
+
   useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const Doctor = localStorage.getItem('Doctor');
-        const result = await getAllAppointments(Doctor);
-        if (Array.isArray(result)) {
-          setAppointmentsData(result);
-        } else if (result && Array.isArray(result.data)) {
-          setAppointmentsData(result.data);
-        } else if (result && Array.isArray(result.appointments)) {
-          setAppointmentsData(result.appointments);
-        } else {
-          setAppointmentsData([]);
-          console.log("No valid appointment array returned:", result);
-        }
-      } catch (error) {
-        console.error("Error fetching appointments:", error);
-        toast.error("Failed to load appointments!");
-        setAppointmentsData([]);
-      }
-    };
-    fetchAppointments();
-  }, []);
+    loadAppointments();
+  }, [reloadKey]);
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -87,6 +79,7 @@ const AppointmentTable = ({ addAppointment, hideHeader = false }) => {
           })
         );
         toast.success("Appointment successfully deleted!");
+        loadAppointments();
       } else {
         toast.error("Failed to delete appointment. Please try again.");
       }
@@ -148,6 +141,7 @@ const AppointmentTable = ({ addAppointment, hideHeader = false }) => {
         setIsEditing(false);
         setErrorMessage(null);
         toast.success("Appointment successfully updated!");
+        loadAppointments();
       } else {
         setErrorMessage("Failed to update appointment. Please try again.");
         toast.error("Failed to update appointment.");

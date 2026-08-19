@@ -5,14 +5,14 @@ import AppointmentTable from "../components/AppointmentTable";
 import AppointmentForm from "../components/AppointmentForm";
 
 const AppointmentsPage = () => {
-  const [appointments_data, setAppointmentsData] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const addAppointment = () => setShowForm(true);
 
-  const saveAppointment = (appointment) => {
-    setAppointmentsData([...appointments_data, appointment]);
+  const saveAppointment = () => {
     setShowForm(false);
+    setReloadKey((key) => key + 1);
   };
 
   const closeForm = () => setShowForm(false);
@@ -31,15 +31,14 @@ const AppointmentsPage = () => {
       }
     >
       <AppointmentTable
-        appointments_data={appointments_data}
         addAppointment={addAppointment}
         hideHeader
+        reloadKey={reloadKey}
       />
       {showForm && (
         <AppointmentForm
           saveAppointment={saveAppointment}
           close={closeForm}
-          appointments_data={appointments_data}
         />
       )}
     </AppShell>

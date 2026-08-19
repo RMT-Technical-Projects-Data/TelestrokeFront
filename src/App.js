@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import useAuth from './components/useAuth'; // Import useAuth
 import EMRpage from "./pages/EMR";
 import EMRReportpage from "./pages/EMR_Report";
@@ -51,6 +51,15 @@ class ErrorBoundary extends Component {
   }
 }
 
+function RequireAuth({ children }) {
+  const token = localStorage.getItem("token");
+  const location = useLocation();
+  if (!token) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+  return children;
+}
+
 function App() {
   // Apply the useAuth function here to ensure authentication check happens globally
   useAuth();
@@ -58,17 +67,16 @@ function App() {
   return (
     <ErrorBoundary>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/emr/:patientid/:meetingid" element={<EMRpage />} />
-        <Route path="/emr/:patientid/" element={<EMRpage />} />
-        <Route path="/emr" element={<EMRReportpage />} />
-        <Route path="/meeting" element={<MeetingPage />} />
-        <Route path="/appointment" element={<Appointments />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/userManagement" element={<UserManagement />} />
-        <Route path="/settings" element={<Settings />} />
-        {/* Fallback route */}
+        <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
+        <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+        <Route path="/emr/:patientid/:meetingid" element={<RequireAuth><EMRpage /></RequireAuth>} />
+        <Route path="/emr/:patientid/" element={<RequireAuth><EMRpage /></RequireAuth>} />
+        <Route path="/emr" element={<RequireAuth><EMRReportpage /></RequireAuth>} />
+        <Route path="/meeting" element={<RequireAuth><MeetingPage /></RequireAuth>} />
+        <Route path="/appointment" element={<RequireAuth><Appointments /></RequireAuth>} />
+        <Route path="/userManagement" element={<RequireAuth><UserManagement /></RequireAuth>} />
+        <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />

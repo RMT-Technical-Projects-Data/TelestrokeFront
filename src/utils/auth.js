@@ -31,6 +31,13 @@ export const getAllAppointments = async (Doctor = '') => {
   }
 };
 
+export const parseAppointmentList = (result) => {
+  if (Array.isArray(result)) return result;
+  if (result && Array.isArray(result.data)) return result.data;
+  if (result && Array.isArray(result.appointments)) return result.appointments;
+  return [];
+};
+
 
 
 export const deleteAppointment = async ({ patientId, _id }) => {
