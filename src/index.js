@@ -5,6 +5,13 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from "react-router-dom"; // Import BrowserRouter
 
+try {
+  const theme = localStorage.getItem("tsTheme") === "dark" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", theme);
+} catch (e) {
+  document.documentElement.setAttribute("data-theme", "light");
+}
+
 // Create the root element for rendering
 const root = ReactDOM.createRoot(document.getElementById('root'));
 

@@ -1,132 +1,131 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css"; // Import CSS for Toastify
+import React, { useState, useEffect, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { getAllAppointments } from "../utils/auth";
 import { getToken, createMeeting } from "../API";
 import { AppointmentFormSubmit } from "../utils/auth";
-import { FaPhoneAlt } from "react-icons/fa";
-
-import NavBar from "../components/NavBar";
-import Sidebar from "../components/Sidebar";
+import { Copy, Phone, Video, Calendar, FileText } from "lucide-react";
+import AppShell from "../components/AppShell";
+import { buildAppointmentInsights } from "../utils/overviewInsights";
 
 const MeetingPage = () => {
   const navigate = useNavigate();
-  const [DeviceID, setDeviceID] = useState("1000");
+  const [DeviceID] = useState("1000");
   const [patientID, setPatientID] = useState("");
   const [meetingId, setMeetingId] = useState("");
   const [, setToken] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isMeetingCreated, setIsMeetingCreated] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [doctor, setDoctor] = useState(""); // State to hold Doctor value
+  const [doctor, setDoctor] = useState("");
+  const [appointments, setAppointments] = useState([]);
 
-  // Fetch Doctor from localStorage on component mount
   useEffect(() => {
     const storedDoctor = localStorage.getItem("Doctor") || "Unknown Doctor";
     setDoctor(storedDoctor);
   }, []);
 
-  // Clear specific localStorage keys on component mount
   useEffect(() => {
     ["patientEMR", "emrBedSideData", "emrTelestrokeExam", "patientName"].forEach((key) =>
       localStorage.removeItem(key)
     );
   }, []);
 
-// In MeetingPage component
-useEffect(() => {
-  const generatePatientID = async () => {
-    try {
-      const appointments = await getAllAppointments(doctor); // Pass the doctor reference
-      let maxID = 0;
-      if (appointments && appointments.length > 0) {
-        maxID = Math.max(...appointments.map((appt) => parseInt(appt.ID, 10)));
+  useEffect(() => {
+    const generatePatientID = async () => {
+      try {
+        const result = await getAllAppointments(doctor);
+        let list = [];
+        if (Array.isArray(result)) list = result;
+        else if (result && Array.isArray(result.data)) list = result.data;
+        else if (result && Array.isArray(result.appointments)) list = result.appointments;
+        setAppointments(list);
+
+        let maxID = 0;
+        if (list.length > 0) {
+          maxID = Math.max(...list.map((appt) => parseInt(appt.ID, 10) || 0));
+        }
+        setPatientID(String(maxID + 1).padStart(5, "0"));
+      } catch (error) {
+        console.error("Error fetching appointments:", error);
+        toast.error("Error generating Patient ID. Please try again.");
       }
-      const newID = String(maxID + 1).padStart(5, "0");
-      setPatientID(newID);
-    } catch (error) {
-      console.error("Error fetching appointments:", error);
-      toast.error("Error generating Patient ID. Please try again.");
-    }
-  };
-
-  if (doctor) {
-    generatePatientID();
-  }
-}, [doctor]); // Add doctor as a dependency
-
-// Handle form submission
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  if (!DeviceID) {
-    toast.warn("Please select a Device ID.");
-    return;
-  }
-
-  setIsLoading(true);
-
-  try {
-    const generatedToken = await getToken();
-    if (!generatedToken) {
-      toast.error("Failed to generate token. Please try again.");
-      setIsLoading(false);
-      return;
-    }
-    setToken(generatedToken);
-
-    const generatedMeetingId = await createMeeting();
-    if (!generatedMeetingId) {
-      toast.error("Failed to create meeting. Please try again.");
-      setIsLoading(false);
-      return;
-    }
-    setMeetingId(generatedMeetingId);
-    setIsMeetingCreated(true);
-
-    // Get current date and time
-    const currentDateTime = new Date();
-    const appointmentDate = currentDateTime.toISOString().split("T")[0]; // Format: YYYY-MM-DD
-    const appointmentTime = currentDateTime.toTimeString().split(" ")[0].slice(0, 5); // Format: HH:MM (removes seconds)
-
-    // Include Doctor and date/time in the meeting details
-    const meetingDetails = {
-      DeviceID: DeviceID,
-      ID: patientID,
-      token: generatedToken,
-      meetingId: generatedMeetingId,
-      Doctor: doctor,
-      AppointmentDate: appointmentDate, // Add current date
-      AppointmentTime: appointmentTime, // Add current time in HH:MM format
-      Checkup_Status: "Pending"
     };
 
-    const saveResponse = await AppointmentFormSubmit(meetingDetails);
-    if (saveResponse) {
-      toast.success("Meeting created successfully!");
-    } else {
-      toast.error("Failed to save meeting details.");
+    if (doctor) generatePatientID();
+  }, [doctor]);
+
+  const insights = useMemo(() => buildAppointmentInsights(appointments), [appointments]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!DeviceID) {
+      toast.warn("Please select a Device ID.");
+      return;
     }
-  } catch (error) {
-    console.error("Error creating meeting:", error);
-    toast.error("Error creating meeting. Please try again.");
-  } finally {
-    setIsLoading(false);
-  }
-};
 
+    setIsLoading(true);
 
-  const handleStartMeeting = () => {
-    if (meetingId) {
-      navigate(`/emr/${patientID}/${meetingId}`);
+    try {
+      const generatedToken = await getToken();
+      if (!generatedToken) {
+        toast.error("Failed to generate token. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+      setToken(generatedToken);
+
+      const generatedMeetingId = await createMeeting();
+      if (!generatedMeetingId) {
+        toast.error("Failed to create meeting. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+      setMeetingId(generatedMeetingId);
+      setIsMeetingCreated(true);
+
+      const currentDateTime = new Date();
+      const appointmentDate = currentDateTime.toISOString().split("T")[0];
+      const appointmentTime = currentDateTime.toTimeString().split(" ")[0].slice(0, 5);
+
+      const meetingDetails = {
+        DeviceID,
+        ID: patientID,
+        token: generatedToken,
+        meetingId: generatedMeetingId,
+        Doctor: doctor,
+        AppointmentDate: appointmentDate,
+        AppointmentTime: appointmentTime,
+        Checkup_Status: "Pending",
+      };
+
+      const saveResponse = await AppointmentFormSubmit(meetingDetails);
+      if (saveResponse) toast.success("Meeting created successfully!");
+      else toast.error("Failed to save meeting details.");
+    } catch (error) {
+      console.error("Error creating meeting:", error);
+      toast.error("Error creating meeting. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleCopyClick = () => {
-    setCopied(true);
-    toast.info("Meeting ID copied to clipboard!");
-    setTimeout(() => setCopied(false), 1500);
+  const handleStartMeeting = () => {
+    if (meetingId) navigate(`/emr/${patientID}/${meetingId}`);
+  };
+
+  const handleCopyClick = async () => {
+    const value = meetingId || patientID;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      toast.info("Copied to clipboard.");
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error("Could not copy.");
+    }
   };
 
   useEffect(() => {
@@ -139,112 +138,169 @@ const handleSubmit = async (e) => {
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isMeetingCreated]);
 
   return (
-    <>
-      <NavBar />
-      <div className="flex flex-col sm:flex-row h-screen">
-        <Sidebar page="PATIENTS" />
-        <main className="flex-1 sm:ml-[250px] bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-6 lg:p-10 pt-20">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden">
-            {/* Header Section */}
-            <div className="bg-blue-600 text-white p-6">
-              <h1 className="text-2xl font-bold font-sans">Create an Instant Meeting</h1>
-              <p className="text-blue-100 mt-1">Please fill out the details below to start a meeting immediately.</p>
+    <AppShell
+      page="PATIENTS"
+      title="Instant meeting"
+      subtitle="Create a live session and join the exam immediately."
+    >
+      <div className="ts-meeting-layout">
+        <form onSubmit={handleSubmit} className="ts-modal ts-modal-wide ts-meeting-card">
+          <div className="ts-modal-head">
+            <div>
+              <h2>Create meeting</h2>
+              <p className="ts-muted" style={{ margin: "0.25rem 0 0" }}>
+                Session details are filled in automatically.
+              </p>
+            </div>
+            <span className={`ts-badge ${isMeetingCreated ? "ts-badge-ok" : "ts-badge-accent"}`}>
+              {isMeetingCreated ? "Ready" : "Pending"}
+            </span>
+          </div>
+
+          <div className="ts-modal-body">
+            <div className="ts-form-grid">
+              <div className="ts-field">
+                <label htmlFor="meeting-device">Device ID</label>
+                <input id="meeting-device" type="text" value={DeviceID} readOnly className="ts-input" />
+              </div>
+              <div className="ts-field">
+                <label htmlFor="meeting-id">Meeting ID</label>
+                <input id="meeting-id" type="text" value={patientID} readOnly className="ts-input" />
+              </div>
+              <div className="ts-field">
+                <label htmlFor="meeting-doctor">Doctor</label>
+                <input id="meeting-doctor" type="text" value={doctor} readOnly className="ts-input" />
+              </div>
+              <div className="ts-field">
+                <label htmlFor="meeting-status">Checkup status</label>
+                <input
+                  id="meeting-status"
+                  type="text"
+                  value={isMeetingCreated ? "Ready to join" : "Pending"}
+                  readOnly
+                  className="ts-input"
+                />
+              </div>
             </div>
 
-            {/* Form Section */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Left Column */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-2">
-                      Device ID <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={DeviceID}
-                      readOnly
-                      className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-2">
-                      Meeting ID
-                    </label>
-                    <input
-                      type="text"
-                      value={patientID}
-                      readOnly
-                      className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                    />
-                  </div>
+            {isMeetingCreated && meetingId ? (
+              <div className="ts-meeting-result">
+                <div>
+                  <span className="ts-meeting-result-label">Live meeting ID</span>
+                  <strong>{meetingId}</strong>
                 </div>
-
-                {/* Right Column */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-2">
-                      Doctor
-                    </label>
-                    <input
-                      type="text"
-                      value={doctor}
-                      readOnly
-                      className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-2">
-                      Checkup Status
-                    </label>
-                    <div className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 flex items-center h-[50px]">
-                      <span className="text-gray-700">Pending</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer Buttons Section */}
-              <div className="bg-white -mx-6 -mb-6 px-6 py-4 flex flex-col sm:flex-row justify-end gap-3 mt-6">
-                {!isMeetingCreated ? (
-                  <button
-                    type="submit"
-                    className={`px-6 py-2 rounded-lg font-medium transition-colors ${isLoading ? 'bg-blue-400 text-white cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Creating..." : "Create Meeting"}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleStartMeeting}
-                    className="flex items-center bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-200"
-                  >
-                    <FaPhoneAlt className="mr-2" /> Start Meeting
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => navigate("/dashboard")}
-                  className="px-6 py-2 bg-gray-300 text-gray-800 rounded-lg font-medium hover:bg-gray-400 transition-colors"
-                >
-                  Cancel
+                <button type="button" className="ts-btn ts-btn-ghost" onClick={handleCopyClick}>
+                  <Copy size={14} /> {copied ? "Copied" : "Copy"}
                 </button>
               </div>
-            </form>
+            ) : null}
           </div>
-        </main>
+
+          <div className="ts-modal-footer">
+            <button type="button" className="ts-btn ts-btn-ghost" onClick={() => navigate("/dashboard")}>
+              Cancel
+            </button>
+            {!isMeetingCreated ? (
+              <button type="submit" className="ts-btn ts-btn-primary" disabled={isLoading}>
+                {isLoading ? "Creating..." : "Create Meeting"}
+              </button>
+            ) : (
+              <button type="button" className="ts-btn ts-btn-primary" onClick={handleStartMeeting}>
+                <Phone size={15} /> Start Meeting
+              </button>
+            )}
+          </div>
+        </form>
+
+        <div className="ts-stack">
+          <div className="ts-panel">
+            <div className="ts-panel-head">
+              <h3 className="ts-panel-title">How it works</h3>
+              <span className="ts-panel-meta">3 steps</span>
+            </div>
+            <div className="ts-meeting-steps">
+              <div className="ts-meeting-step">
+                <span className="ts-meeting-step-num">1</span>
+                <div>
+                  <strong>Create the session</strong>
+                  <p>Device, meeting ID, and doctor are assigned automatically.</p>
+                </div>
+              </div>
+              <div className="ts-meeting-step">
+                <span className="ts-meeting-step-num">2</span>
+                <div>
+                  <strong>Start the exam</strong>
+                  <p>Join the live meeting and complete the bedside / telestroke exam.</p>
+                </div>
+              </div>
+              <div className="ts-meeting-step">
+                <span className="ts-meeting-step-num">3</span>
+                <div>
+                  <strong>Save to EMR</strong>
+                  <p>Findings are stored so the report is available after the call.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="ts-panel">
+            <div className="ts-panel-head">
+              <h3 className="ts-panel-title">Today’s sessions</h3>
+              <span className="ts-panel-meta">{insights.todayCount}</span>
+            </div>
+            {insights.today.length > 0 ? (
+              <div className="ts-table-wrap">
+                <table className="ts-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Time</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {insights.today.slice(0, 6).map((a) => (
+                      <tr key={`meet-today-${a.ID || a._id}`}>
+                        <td><strong>{String(a.ID ?? "—").padStart(5, "0")}</strong></td>
+                        <td>{a.AppointmentTime || "—"}</td>
+                        <td className="ts-muted">{a.Checkup_Status || "Pending"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="ts-empty-state" style={{ minHeight: 120 }}>
+                <div className="ts-empty-icon"><Video size={18} /></div>
+                <strong>No live sessions today</strong>
+                <p>Create a meeting on the left to start an exam immediately.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="ts-panel">
+            <div className="ts-panel-head">
+              <h3 className="ts-panel-title">Quick links</h3>
+            </div>
+            <div className="ts-meeting-steps">
+              <Link to="/appointment" className="ts-btn ts-btn-ghost" style={{ justifyContent: "flex-start" }}>
+                <Calendar size={15} /> Schedule appointment
+              </Link>
+              <Link to="/emr" className="ts-btn ts-btn-ghost" style={{ justifyContent: "flex-start" }}>
+                <FileText size={15} /> EMR reports
+              </Link>
+              <Link to="/dashboard" className="ts-btn ts-btn-ghost" style={{ justifyContent: "flex-start" }}>
+                <Video size={15} /> Back to overview
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
-    </>
+    </AppShell>
   );
 };
 

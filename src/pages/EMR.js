@@ -2,8 +2,6 @@
 
 
 import React, { useEffect, useState, useRef } from "react";
-import NavBar from "../components/NavBar";
-import Button from "../components/Button";
 import axios from "axios";
 import { getApiBaseUrl } from "../api/client";
 import VIDEOSDK from "../components/VideoSDK";
@@ -13,11 +11,12 @@ import EMRBedSide from "../components/EMR_BedSide";
 import EMRTelestrokeExam from "../components/EMR_TelestrokeExam";
 import QuadrantTracking from "../components/QuadrantTracking";
 import StimulusVideoController from "../components/StimulusVideoController";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Line } from "react-chartjs-2";
 import { submitExamData, submitTrackingSession } from "../utils/auth";
 import Papa from "papaparse";
+import AppShell from "../components/AppShell";
 
 const EMRpage = () => {
   const { patientid, meetingid } = useParams();
@@ -1183,24 +1182,39 @@ const EMRpage = () => {
   }, [settings]);
 
   return (
-    <>
-      <div className="overflow-x-hidden overflow-y-auto">
-        <NavBar disableDashboardLink={true} />
-        <div className="flex flex-col min-h-screen pt-6 mx-10 mt-10">
-          <div className="flex flex-col gap-4 ml-3 w-full">
-            {meetingid ? (
-              <>
-                <div className="flex flex-row justify-between gap-8 pt-5 px-3">
-                  <div className="basis-[50%] bg-[#F0F0F0]">
-                    <VIDEOSDK setMeetingJoined={setMeetingJoined} />
-                  </div>
-                  {meetingJoined && (
-                    <div className="basis-[40%] p-4 rounded-md bg-white shadow-lg">
-                      <div className="w-full flex flex-col gap-6">
-                        {/* Horizontal Chart */}
+    <AppShell
+      page="PATIENTS"
+      dense
+      title="Live exam"
+      subtitle={meetingid ? `Meeting ${patientid || "—"} · ${meetingid}` : "Join a scheduled or instant session."}
+      actions={
+        meetingJoined ? (
+          <button type="button" className="ts-btn ts-btn-primary" onClick={handleSave}>
+            Save exam
+          </button>
+        ) : null
+      }
+    >
+      {meetingid ? (
+        <>
+          <div className={`ts-exam-grid ${meetingJoined ? "" : "is-prejoin"}`}>
+            <div className="ts-panel ts-exam-video">
+              <div className="ts-panel-head">
+                <h3 className="ts-panel-title">Video</h3>
+                <span className="ts-panel-meta">{meetingJoined ? "Live" : "Ready"}</span>
+              </div>
+              <VIDEOSDK setMeetingJoined={setMeetingJoined} />
+            </div>
+            {meetingJoined && (
+              <div className="ts-panel ts-exam-charts">
+                <div className="ts-panel-head">
+                  <h3 className="ts-panel-title">Eye tracking</h3>
+                  <span className="ts-panel-meta">{isPaused ? "Paused" : "Real-time"}</span>
+                </div>
+                <div className="ts-exam-charts-body">
                         {!isPaused ? (
-                          <div className="h-[400px] bg-white p-4 rounded-md shadow-sm">
-                            <h4 className="text-center font-semibold text-black mb-2">
+                          <div className="ts-exam-chart">
+                            <h4 className="ts-exam-chart-title">
                               Horizontal Eye Angle and Stimulus (X)
                             </h4>
                             <Line
@@ -1269,22 +1283,15 @@ const EMRpage = () => {
                             />
                           </div>
                         ) : (
-                          <div className="h-[400px] bg-gray-100 p-4 rounded-md shadow-sm flex items-center justify-center">
-                            <div className="text-center">
-                              <h4 className="text-center font-semibold text-gray-600 mb-2">
-                                Chart Paused
-                              </h4>
-                              <p className="text-gray-500">
-                                Resume to view real-time data
-                              </p>
-                            </div>
+                          <div className="ts-exam-chart ts-exam-chart-paused">
+                            <h4 className="ts-exam-chart-title">Chart paused</h4>
+                            <p className="ts-muted">Resume to view real-time data</p>
                           </div>
                         )}
 
-                        {/* Vertical Chart */}
                         {!isPaused ? (
-                          <div className="h-[400px] bg-white p-4 rounded-md shadow-sm">
-                            <h4 className="text-center font-semibold text-black mb-2">
+                          <div className="ts-exam-chart">
+                            <h4 className="ts-exam-chart-title">
                               Vertical Eye Angle and Stimulus (Y)
                             </h4>
                             <Line
@@ -1353,28 +1360,23 @@ const EMRpage = () => {
                             />
                           </div>
                         ) : (
-                          <div className="h-[400px] bg-gray-100 p-4 rounded-md shadow-sm flex items-center justify-center">
-                            <div className="text-center">
-                              <h4 className="text-center font-semibold text-gray-600 mb-2">
-                                Chart Paused
-                              </h4>
-                              <p className="text-gray-500">
-                                Resume to view real-time data
-                              </p>
-                            </div>
+                          <div className="ts-exam-chart ts-exam-chart-paused">
+                            <h4 className="ts-exam-chart-title">Chart paused</h4>
+                            <p className="ts-muted">Resume to view real-time data</p>
                           </div>
                         )}
-                      </div>
-                    </div>
-                  )}
-                  {meetingJoined && (
-                    <div className="w-full max-w-[280px] bg-slate-200 p-5 rounded-md">
-                      <div className="flex flex-col gap-3 justify-evenly items-left">
-                        <h3 className="font-bold text-2xl text-center">
-                          Video Control Panel
-                        </h3>
-                        <h3 className="font-bold text-lg">
-                          Eye Camera Controls
+                </div>
+              </div>
+            )}
+            {meetingJoined && (
+              <div className="ts-panel ts-exam-side">
+                <div className="ts-panel-head">
+                  <h3 className="ts-panel-title">Controls</h3>
+                  <span className="ts-panel-meta">Camera</span>
+                </div>
+                <div className="ts-exam-side-body">
+                        <h3 className="ts-exam-side-label">
+                          Eye camera
                         </h3>
                         <div className="flex items-center space-x-6">
                           <div className="flex items-center">
@@ -1414,7 +1416,8 @@ const EMRpage = () => {
                         </div>
                         <div className="flex flex-col gap-2">
                           <button
-                            className="bg-blue-500 text-white px-4 py-2 rounded-md mt-4"
+                            type="button"
+                            className="ts-btn ts-btn-primary"
                             disabled={
                               !selectedEye || calibrateCounts[selectedEye] >= 2
                             }
@@ -1428,7 +1431,8 @@ const EMRpage = () => {
                           </button>
                           {selectedEye && calibrateCounts[selectedEye] >= 2 && (
                             <button
-                              className="bg-red-500 text-white px-4 py-2 rounded-md"
+                              type="button"
+                              className="ts-btn ts-btn-danger"
                               onClick={handleResetCalibration}
                             >
                               Reset Calibration
@@ -1496,10 +1500,8 @@ const EMRpage = () => {
                           </>
                         )}
                         {/* Session status display */}
-                        <div className="mt-4 p-3 bg-white rounded-md">
-                          <h4 className="font-semibold text-lg mb-2">
-                            Session Status
-                          </h4>
+                        <div className="ts-exam-status">
+                          <h4>Session status</h4>
                           <div className="text-sm">
                             <p>
                               <strong>Active:</strong>{" "}
@@ -1542,72 +1544,59 @@ const EMRpage = () => {
                             )}
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
-                {meetingJoined && (
-                  <>
-                    <div className="flex flex-row gap-1 ml-2 mt-4">
-                      <button
-                        className={`rounded-b-none rounded-t-md border-b-0 text-sm ${tab === 0
-                          ? "bg-[rgb(5,60,212)] text-white"
-                          : "bg-gray-200"
-                          }`}
-                        onClick={() => setTab(0)}
-                      >
-                        Patient Info
-                      </button>
-                      <button
-                        className={`rounded-b-none rounded-t-md border-b-0 text-sm ${tab === 1
-                          ? "bg-[rgb(5,60,212)] text-white"
-                          : "bg-gray-200"
-                          }`}
-                        onClick={() => setTab(1)}
-                      >
-                        Bedside Exam
-                      </button>
-                      <button
-                        className={`rounded-b-none rounded-t-md border-b-0 text-sm ${tab === 2
-                          ? "bg-[rgb(5,60,212)] text-white"
-                          : "bg-gray-200"
-                          }`}
-                        onClick={() => setTab(2)}
-                      >
-                        Telestroke Exam
-                      </button>
-                    </div>
-                    <div className="mt-2">
-                      <div className={tab === 0 ? "block" : "hidden"}>
-                        <EMRPatientInfo />
-                      </div>
-                      <div className={tab === 1 ? "block" : "hidden"}>
-                        <EMRBedSide />
-                      </div>
-                      <div className={tab === 2 ? "block" : "hidden"}>
-                        <EMRTelestrokeExam />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </>
-            ) : (
-              <Button>Join Meeting</Button>
-            )}
-            {meetingJoined && (
-              <div className="flex flex-row-reverse gap-8 mx-8 mt-4 mb-6">
-                <Button
-                  onClick={handleSave}
-                  className="scale-110 rounded-lg px-6 py-3"
-                >
-                  Save
-                </Button>
               </div>
             )}
           </div>
+
+          {meetingJoined && (
+            <div className="ts-panel ts-exam-forms">
+              <div className="ts-exam-tabs">
+                <button
+                  type="button"
+                  className={tab === 0 ? "is-active" : ""}
+                  onClick={() => setTab(0)}
+                >
+                  Patient Info
+                </button>
+                <button
+                  type="button"
+                  className={tab === 1 ? "is-active" : ""}
+                  onClick={() => setTab(1)}
+                >
+                  Bedside Exam
+                </button>
+                <button
+                  type="button"
+                  className={tab === 2 ? "is-active" : ""}
+                  onClick={() => setTab(2)}
+                >
+                  Telestroke Exam
+                </button>
+              </div>
+              <div className="ts-exam-form-body">
+                <div className={tab === 0 ? "block" : "hidden"}>
+                  <EMRPatientInfo />
+                </div>
+                <div className={tab === 1 ? "block" : "hidden"}>
+                  <EMRBedSide />
+                </div>
+                <div className={tab === 2 ? "block" : "hidden"}>
+                  <EMRTelestrokeExam />
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="ts-panel">
+          <div className="ts-exam-join">
+            <h3>No meeting selected</h3>
+            <p>Open Join from appointments or create an instant meeting first.</p>
+          </div>
         </div>
-      </div>
-    </>
+      )}
+    </AppShell>
   );
 };
 

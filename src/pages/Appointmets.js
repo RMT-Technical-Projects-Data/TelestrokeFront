@@ -1,53 +1,49 @@
 import React, { useState } from "react";
-import Sidebar from "../components/Sidebar";
-import NavBar from "../components/NavBar";
+import { Plus } from "lucide-react";
+import AppShell from "../components/AppShell";
 import AppointmentTable from "../components/AppointmentTable";
 import AppointmentForm from "../components/AppointmentForm";
 
 const AppointmentsPage = () => {
   const [appointments_data, setAppointmentsData] = useState([]);
-
   const [showForm, setShowForm] = useState(false);
 
-  const addAppointment = () => {
-    setShowForm(!showForm);
-  };
+  const addAppointment = () => setShowForm(true);
 
   const saveAppointment = (appointment) => {
     setAppointmentsData([...appointments_data, appointment]);
     setShowForm(false);
   };
 
-  const closeForm = () => {
-    setShowForm(false);
-  };
+  const closeForm = () => setShowForm(false);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <NavBar />
-      <div className="flex flex-col md:flex-row justify-between gap-2 mb-28 p-4">
-        <div className="w-full md:w-1/6 mb-4 md:mb-0">
-          <Sidebar page="APPOINTMENTS" />
-        </div>
-        <div className="w-full md:w-5/6 flex flex-col h-fit gap-3">
-          {!showForm && (
-            <AppointmentTable
-              appointments_data={appointments_data}
-              addAppointment={addAppointment}
-            />
-          )}
-          {showForm && (
-            <AppointmentForm
-              saveAppointment={saveAppointment}
-              close={closeForm}
-              appointments_data={appointments_data}
-            />
-          )}
-        </div>
-      </div>
-    </div>
+    <AppShell
+      page="APPOINTMENTS"
+      title="Appointments"
+      subtitle="Schedule, join, and manage remote exam sessions."
+      actions={
+        !showForm ? (
+          <button type="button" className="ts-btn ts-btn-primary" onClick={addAppointment}>
+            <Plus size={16} /> Add Appointment
+          </button>
+        ) : null
+      }
+    >
+      <AppointmentTable
+        appointments_data={appointments_data}
+        addAppointment={addAppointment}
+        hideHeader
+      />
+      {showForm && (
+        <AppointmentForm
+          saveAppointment={saveAppointment}
+          close={closeForm}
+          appointments_data={appointments_data}
+        />
+      )}
+    </AppShell>
   );
 };
 
 export default AppointmentsPage;
-

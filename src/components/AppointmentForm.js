@@ -228,142 +228,65 @@ const AppointmentForm = ({ close }) => {
   };
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <form 
-        onSubmit={handleSubmit} 
-        className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-      >
-        {/* Header Section */}
-        <div className="bg-blue-600 text-white p-6 rounded-t-xl">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Create Appointment</h1>
-            {/* <button
-              type="button"
-              onClick={isCancelEnabled ? close : null}
-              className="text-white hover:text-gray-200 text-2xl"
-              disabled={!isCancelEnabled}
-            >
-              &times;
-            </button> */}
-          </div>
-          <p className="text-blue-100 mt-1">Please fill out the details below to schedule an appointment.</p>
+    <div className="ts-modal-backdrop">
+      <form onSubmit={handleSubmit} className="ts-modal ts-modal-wide">
+        <div className="ts-modal-head">
+          <h2>Create appointment</h2>
+          <button type="button" className="ts-btn-icon" onClick={isCancelEnabled ? close : null} disabled={!isCancelEnabled}>
+            ×
+          </button>
         </div>
-
-        {/* Form Section */}
-        <div className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Device ID <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="DeviceID"
-                  value={newAppointment.DeviceID}
-                  readOnly
-                  className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Meeting ID <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="ID"
-                  value={newAppointment.ID}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                  required
-                  readOnly
-                />
-              </div>
+        <div className="ts-modal-body">
+          <p className="ts-muted" style={{ marginTop: 0, marginBottom: "1rem" }}>
+            Fill in the details below to schedule a remote exam.
+          </p>
+          <div className="ts-form-grid">
+            <div className="ts-field">
+              <label>Device ID</label>
+              <input type="text" name="DeviceID" value={newAppointment.DeviceID} readOnly className="ts-input" />
             </div>
-
-            {/* Right Column */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Doctor <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="Doctor"
-                  value={newAppointment.Doctor}
-                  className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                  readOnly
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Checkup Status
-                </label>
-                <div className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 flex items-center h-[50px]">
-                  <span className="text-gray-700">Pending</span>
-                </div>
-              </div>
+            <div className="ts-field">
+              <label>Meeting ID</label>
+              <input type="text" name="ID" value={newAppointment.ID} readOnly className="ts-input" required />
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Appointment Date <span className="text-red-500">*</span>
-              </label>
+            <div className="ts-field">
+              <label>Doctor</label>
+              <input type="text" name="Doctor" value={newAppointment.Doctor} readOnly className="ts-input" />
+            </div>
+            <div className="ts-field">
+              <label>Checkup status</label>
+              <input type="text" value="Pending" readOnly className="ts-input" />
+            </div>
+            <div className="ts-field">
+              <label>Appointment date</label>
               <input
                 type="date"
                 name="AppointmentDate"
                 value={newAppointment.AppointmentDate}
                 onChange={handleChange}
                 min={new Date().toISOString().split("T")[0]}
-                className={`w-full p-3 border ${errors.AppointmentDate ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
+                className="ts-input"
               />
-              {errors.AppointmentDate && <p className="text-red-500 text-sm mt-1">{errors.AppointmentDate}</p>}
+              {errors.AppointmentDate && <p style={{ margin: "0.35rem 0 0", fontSize: "0.75rem", color: "#dc2626", fontWeight: 600 }}>{errors.AppointmentDate}</p>}
             </div>
-
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Appointment Time <span className="text-red-500">*</span>
-              </label>
+            <div className="ts-field">
+              <label>Appointment time</label>
               <input
                 type="time"
                 name="AppointmentTime"
                 value={newAppointment.AppointmentTime}
                 onChange={handleChange}
-                className={`w-full p-3 border ${errors.AppointmentTime ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
+                className="ts-input"
               />
-              {errors.AppointmentTime && <p className="text-red-500 text-sm mt-1">{errors.AppointmentTime}</p>}
+              {errors.AppointmentTime && <p style={{ margin: "0.35rem 0 0", fontSize: "0.75rem", color: "#dc2626", fontWeight: 600 }}>{errors.AppointmentTime}</p>}
             </div>
           </div>
         </div>
-
-        {/* Footer Buttons */}
-        <div className="bg-white px-6 py-4 rounded-b-xl flex flex-col sm:flex-row justify-end gap-3">
-          <button
-            type="button"
-            onClick={isCancelEnabled ? close : null}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              isCancelEnabled 
-                ? "bg-gray-300 hover:bg-gray-400 text-gray-800"
-                : "bg-gray-200 text-gray-500 cursor-not-allowed"
-            }`}
-            disabled={!isCancelEnabled}
-          >
+        <div className="ts-modal-footer">
+          <button type="button" onClick={isCancelEnabled ? close : null} className="ts-btn ts-btn-ghost" disabled={!isCancelEnabled}>
             Cancel
           </button>
-          <button
-            type="submit"
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              isCancelEnabled 
-                ? "bg-blue-600 hover:bg-blue-700 text-white"
-                : "bg-blue-400 text-white cursor-not-allowed"
-            }`}
-            disabled={!isCancelEnabled}
-          >
+          <button type="submit" className="ts-btn ts-btn-primary" disabled={!isCancelEnabled}>
             {isSubmitting ? "Saving..." : "Save Appointment"}
           </button>
         </div>

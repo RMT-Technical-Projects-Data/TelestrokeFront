@@ -8,7 +8,7 @@
 }
 
 body, html { 
-  font-family: Helvetica, sans-serif !important;
+  font-family: Inter, Helvetica, sans-serif;
 }
 
 @media (prefers-reduced-motion: no-preference) {

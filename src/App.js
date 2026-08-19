@@ -8,6 +8,7 @@ import Appointments from "./pages/Appointmets";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import UserManagement from "./pages/userManagement";
+import Settings from "./pages/Settings";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
@@ -66,6 +67,7 @@ function App() {
         <Route path="/appointment" element={<Appointments />} />
         <Route path="/login" element={<Login />} />
         <Route path="/userManagement" element={<UserManagement />} />
+        <Route path="/settings" element={<Settings />} />
         {/* Fallback route */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

@@ -4,10 +4,8 @@ import { getApiBaseUrl } from "../api/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import NavBar from "../components/NavBar";
-import { FaList, FaThLarge, FaEye, FaEyeSlash } from "react-icons/fa";
-// import { FaUserMd } from "react-icons/fa";
-import doctorImage from "../assets/doctor.png";
+import AppShell from "../components/AppShell";
+import { LayoutList, LayoutGrid, Eye, EyeOff, Pencil, Plus, X, User, Lock } from "lucide-react";
 
 
 const UserManagement = () => {
@@ -59,9 +57,6 @@ const UserManagement = () => {
     fetchUsers();
   }, [navigate]);
    
-  const handleToggleView = (mode) => {
-    setViewMode(mode);
-  };
  
 
   const handleLogout = () => {
@@ -239,193 +234,111 @@ const UserManagement = () => {
   };
   
 
-  if (loading) {
+  if (loading && users.length === 0) {
     return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">User Management</h1>
-        <p>Loading users...</p>
-      </div>
+      <AppShell variant="admin" page="USERS" title="User Management" subtitle="Clinician accounts with workspace access.">
+        <div className="ts-loading"><span className="ts-spinner" /> Loading users...</div>
+      </AppShell>
     );
   }
 
   if (error) {
     return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">User Management</h1>
-        <p className="text-red-600">{error}</p>
-      </div>
+      <AppShell variant="admin" page="USERS" title="User Management" subtitle="Clinician accounts with workspace access.">
+        <div className="ts-alert ts-alert-err">{error}</div>
+      </AppShell>
     );
   }
 
   return (
-    <>
-    <NavBar disableDashboardLink={true} />
-    <div className="p-8">
-    <div className="flex items-center justify-between mb-6 mt-20">
-      <h1 className="text-2xl font-bold">User Management</h1>
-      <div className="flex gap-4">
-        <button
-          onClick={handleLogout}
-          className="py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-500"
-        >
-          Logout
-        </button>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-500"
-        >
-          Create New User
-        </button>
-      </div>
-    </div>
-
-
-     {/* View Mode Toggle Icon */}
-     <div className="flex justify-end mb-4">
-        <button
-          onClick={() => setViewMode(viewMode === "list" ? "cards" : "list")}
-          className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
-          aria-label="Toggle View"
-        >
-          {viewMode === "list" ? (
-            <FaThLarge className="text-xl text-gray-700" />
-          ) : (
-            <FaList className="text-xl text-gray-700" />
-          )}
-        </button>
-      </div>
-
-      {/* Conditional Rendering for List or Card View */}
-      {viewMode === "list" ? (
-       <table className="w-full border-collapse bg-white shadow-lg rounded-lg overflow-hidden">
-       <thead>
-         <tr className="bg-gray-200 text-gray-700">
-           <th className="py-3 px-6 border-b border-gray-300 text-left font-semibold">Username</th>
-           <th className="py-3 px-6 border-b border-gray-300 text-left font-semibold">Role</th>
-           <th className="py-3 px-6 border-b border-gray-300 text-center font-semibold">Actions</th>
-         </tr>
-       </thead>
-       <tbody>
-         {users.map((user, index) => (
-           <tr
-             key={user._id}
-             className={`${
-               index % 2 === 0 ? "bg-gray-50" : "bg-white"
-             } hover:bg-blue-50 transition duration-200`}
-           >
-             <td className="py-3 px-6 border-b border-gray-300">{user.username}</td>
-             <td className="py-3 px-6 border-b border-gray-300">{user.role}</td>
-             <td className="py-3 px-6 border-b border-gray-300 text-center">
-               <button
-                 onClick={() => handleEditUser(user)}
-                 className="py-2 px-4 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-500 transition"
-               >
-                 Edit User
-               </button>
-             </td>
-           </tr>
-         ))}
-       </tbody>
-     </table>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {users.map((user) => (
-          <div
-            key={user._id}
-            className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300"
+    <AppShell
+      variant="admin"
+      page="USERS"
+      title="User Management"
+      subtitle="Clinician accounts with workspace access."
+      actions={
+        <>
+          <button
+            type="button"
+            className="ts-btn-icon"
+            onClick={() => setViewMode(viewMode === "list" ? "cards" : "list")}
+            aria-label="Toggle view"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">{user.username}</h3>
-                <p className="text-gray-600 mt-2">
-                  Role: <span className="font-medium text-gray-700">{user.role}</span>
-                </p>
-                <button
-                  onClick={() => handleEditUser(user)}
-                  className="mt-4 py-2 px-5 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-500 hover:shadow-md transition-all duration-300"
-                >
-                  Edit User
-                </button>
-              </div>
-              <div className="flex items-center justify-center">
-                <img
-                  src={doctorImage}
-                  alt="Doctor"
-                  className="w-40 h-25 object-cover rounded-full" // Styling for the image
-                />
-              </div>
-            </div>
+            {viewMode === "list" ? <LayoutGrid size={16} /> : <LayoutList size={16} />}
+          </button>
+          <button type="button" className="ts-btn ts-btn-primary" onClick={() => setIsModalOpen(true)}>
+            <Plus size={16} /> Create user
+          </button>
+        </>
+      }
+    >
+      {viewMode === "list" ? (
+        <div className="ts-panel">
+          <div className="ts-panel-head">
+            <h3 className="ts-panel-title">Clinician accounts</h3>
+            <span className="ts-panel-meta">{users.length} shown</span>
           </div>
-        ))}
-      </div>
+          <div className="ts-table-wrap">
+            <table className="ts-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th className="ts-col-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user._id}>
+                    <td>
+                      <div className="ts-user-cell">
+                        <div className="ts-avatar">{(user.username || "?").charAt(0).toUpperCase()}</div>
+                        <div><strong>{user.username}</strong></div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className="ts-badge ts-badge-accent">{user.role}</span>
+                    </td>
+                    <td className="ts-col-center">
+                      <button type="button" className="ts-btn-icon" title="Edit user" onClick={() => handleEditUser(user)}>
+                        <Pencil size={15} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <div className="ts-metrics" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}>
+          {users.map((user) => (
+            <div key={user._id} className="ts-panel" style={{ padding: "1.1rem" }}>
+              <div className="ts-user-cell" style={{ marginBottom: "0.85rem" }}>
+                <div className="ts-avatar" style={{ width: 44, height: 44 }}>
+                  {(user.username || "?").charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <strong>{user.username}</strong>
+                  <span className="ts-badge ts-badge-accent">{user.role}</span>
+                </div>
+              </div>
+              <button type="button" className="ts-btn ts-btn-ghost w-full" onClick={() => handleEditUser(user)}>
+                <Pencil size={14} /> Edit user
+              </button>
+            </div>
+          ))}
+        </div>
       )}
 
-
- {isModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-              <h2 className="text-xl font-bold mb-4">Add New User</h2>
-              {createError && <p className="text-red-500 text-sm mt-2 text-center">{createError}</p>}
-              <div className="flex flex-col gap-3">
-                <input
-                  type="text"
-                  placeholder="Username"
-                  value={newUser.username}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, username: e.target.value })
-                  }
-                  className="border p-2 rounded w-full"
-                  minLength={3}
-                  maxLength={30}
-                />
-                <div className="relative">
-                  <input
-                    type={showNewPassword ? "text" : "password"}
-                    placeholder="Password"
-                    value={newUser.password}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, password: e.target.value })
-                    }
-                    className="border p-2 rounded w-full pr-10"
-                    maxLength={16}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-gray-500 hover:text-gray-700 bg-transparent border-none outline-none shadow-none p-0 focus:outline-none"
-                  >
-                    {showNewPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
-                  </button>
-                </div>
-                <div className="relative">
-                  <input
-                    type={showNewConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm Password"
-                    value={newUser.confirmPassword}
-                    onChange={(e) => {
-                      setNewUser({ ...newUser, confirmPassword: e.target.value });
-                      if (createError) setCreateError("");
-                    }}
-                    className="border p-2 rounded w-full pr-10 border-gray-300 focus:outline-none focus:border-blue-500"
-                    maxLength={16}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewConfirmPassword(!showNewConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-gray-500 hover:text-gray-700 bg-transparent border-none outline-none shadow-none p-0 focus:outline-none"
-                  >
-                    {showNewConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
-                  </button>
-                </div>
-                <button
-                  onClick={handleCreateUser}
-                  className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-500 mt-2"
-                >
-                  Create User
-                </button>
-                
-              </div>
+      {isModalOpen && (
+        <div className="ts-modal-backdrop">
+          <div className="ts-modal">
+            <div className="ts-modal-head">
+              <h2>Add new user</h2>
               <button
+                type="button"
+                className="ts-btn-icon"
                 onClick={() => {
                   setIsModalOpen(false);
                   setNewUser({ username: "", password: "", confirmPassword: "" });
@@ -433,81 +346,82 @@ const UserManagement = () => {
                   setShowNewPassword(false);
                   setShowNewConfirmPassword(false);
                 }}
-                className="mt-4 py-2 px-4 bg-gray-400 text-white rounded-lg hover:bg-gray-300 w-full"
               >
-                Cancel
+                <X size={16} />
+              </button>
+            </div>
+            <div className="ts-modal-body">
+              {createError && <div className="ts-alert ts-alert-err">{createError}</div>}
+              <div className="ts-field">
+                <label>Username</label>
+                <div className="ts-field-input-wrap">
+                  <User size={16} className="ts-field-icon" />
+                  <input
+                    type="text"
+                    value={newUser.username}
+                    onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                    className="ts-input"
+                    placeholder="johndoe"
+                    minLength={3}
+                    maxLength={30}
+                  />
+                </div>
+              </div>
+              <div className="ts-field">
+                <label>Password</label>
+                <div className="ts-field-input-wrap">
+                  <Lock size={16} className="ts-field-icon" />
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    className="ts-input"
+                    placeholder="••••••••"
+                    maxLength={16}
+                    style={{ paddingRight: "2.5rem" }}
+                  />
+                  <button type="button" className="ts-field-toggle" onClick={() => setShowNewPassword(!showNewPassword)}>
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <div className="ts-field">
+                <label>Confirm password</label>
+                <div className="ts-field-input-wrap">
+                  <Lock size={16} className="ts-field-icon" />
+                  <input
+                    type={showNewConfirmPassword ? "text" : "password"}
+                    value={newUser.confirmPassword}
+                    onChange={(e) => {
+                      setNewUser({ ...newUser, confirmPassword: e.target.value });
+                      if (createError) setCreateError("");
+                    }}
+                    className="ts-input"
+                    placeholder="••••••••"
+                    maxLength={16}
+                    style={{ paddingRight: "2.5rem" }}
+                  />
+                  <button type="button" className="ts-field-toggle" onClick={() => setShowNewConfirmPassword(!showNewConfirmPassword)}>
+                    {showNewConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <button type="button" onClick={handleCreateUser} className="ts-btn ts-btn-primary w-full" style={{ padding: "0.7rem" }}>
+                Create user
               </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-
-      
-
-      {/* User editing modal */}
       {editingUser && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-bold mb-4">Edit User</h2>
-            {editError && <p className="text-red-500 text-sm mt-2 text-center">{editError}</p>}
-            <div className="flex flex-col gap-3">
-              <input
-                type="text"
-                placeholder="New Username"
-                value={editedUsername}
-                onChange={(e) => {
-                  setEditedUsername(e.target.value);
-                  if (editError) setEditError("");
-                }}
-                className="border p-2 rounded w-full border-gray-300 focus:outline-none focus:border-blue-500" />
-              <div className="relative flex items-center">
-                <input
-                  type={showEditPassword ? "text" : "password"}
-                  placeholder="New Password (Optional)"
-                  value={newPassword}
-                  onChange={(e) => {
-                    setNewPassword(e.target.value);
-                    if (editError) setEditError("");
-                  }}
-                  className="border p-2 rounded w-full pr-10 border-gray-300 focus:outline-none focus:border-blue-500" />
-                <button
-                  type="button"
-                  onClick={() => setShowEditPassword(!showEditPassword)}
-                  className="absolute right-3 flex items-center text-gray-500 hover:text-gray-700 bg-transparent border-none outline-none shadow-none p-0 focus:outline-none"
-                >
-                  {showEditPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
-                </button>
-              </div>
-              <div className="relative flex items-center">
-                <input
-                  type={showEditConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    if (editError) setEditError("");
-                  }}
-                  className="border p-2 rounded w-full pr-10 border-gray-300 focus:outline-none focus:border-blue-500" />
-                <button
-                  type="button"
-                  onClick={() => setShowEditConfirmPassword(!showEditConfirmPassword)}
-                  className="absolute right-3 flex items-center text-gray-500 hover:text-gray-700 bg-transparent border-none outline-none shadow-none p-0 focus:outline-none"
-                >
-                  {showEditConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
-                </button>
-              </div>
-              <div>
-                <button
-                  onClick={handleEditSubmit}
-                  disabled={loading}
-                  className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-500 w-full font-medium transition duration-200"
-                >
-                  {loading ? "Updating..." : "Update User"}
-                </button>
-                {loading && <div className="loader mt-2"></div>}
-                
-              </div>
+        <div className="ts-modal-backdrop">
+          <div className="ts-modal">
+            <div className="ts-modal-head">
+              <h2>Edit user</h2>
               <button
+                type="button"
+                className="ts-btn-icon"
                 onClick={() => {
                   setEditingUser(null);
                   setNewPassword("");
@@ -516,15 +430,75 @@ const UserManagement = () => {
                   setShowEditPassword(false);
                   setShowEditConfirmPassword(false);
                 }}
-                className="mt-2 py-2 px-4 bg-gray-400 text-white rounded-lg hover:bg-gray-300 w-full transition duration-200"
               >
-                Cancel
+                <X size={16} />
+              </button>
+            </div>
+            <div className="ts-modal-body">
+              {editError && <div className="ts-alert ts-alert-err">{editError}</div>}
+              <div className="ts-field">
+                <label>Username</label>
+                <div className="ts-field-input-wrap">
+                  <User size={16} className="ts-field-icon" />
+                  <input
+                    type="text"
+                    value={editedUsername}
+                    onChange={(e) => {
+                      setEditedUsername(e.target.value);
+                      if (editError) setEditError("");
+                    }}
+                    className="ts-input"
+                  />
+                </div>
+              </div>
+              <div className="ts-field">
+                <label>New password <span style={{ fontWeight: 500, opacity: 0.7 }}>(optional)</span></label>
+                <div className="ts-field-input-wrap">
+                  <Lock size={16} className="ts-field-icon" />
+                  <input
+                    type={showEditPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      if (editError) setEditError("");
+                    }}
+                    className="ts-input"
+                    placeholder="••••••••"
+                    style={{ paddingRight: "2.5rem" }}
+                  />
+                  <button type="button" className="ts-field-toggle" onClick={() => setShowEditPassword(!showEditPassword)}>
+                    {showEditPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <div className="ts-field">
+                <label>Confirm password</label>
+                <div className="ts-field-input-wrap">
+                  <Lock size={16} className="ts-field-icon" />
+                  <input
+                    type={showEditConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (editError) setEditError("");
+                    }}
+                    className="ts-input"
+                    placeholder="••••••••"
+                    style={{ paddingRight: "2.5rem" }}
+                  />
+                  <button type="button" className="ts-field-toggle" onClick={() => setShowEditConfirmPassword(!showEditConfirmPassword)}>
+                    {showEditConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <button type="button" onClick={handleEditSubmit} disabled={loading} className="ts-btn ts-btn-primary w-full" style={{ padding: "0.7rem" }}>
+                {loading ? "Updating..." : "Update user"}
               </button>
             </div>
           </div>
         </div>
       )}
-    </div></>
+    </AppShell>
   );
 };
 export default UserManagement;

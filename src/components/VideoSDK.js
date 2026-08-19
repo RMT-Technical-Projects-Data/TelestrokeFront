@@ -16,12 +16,12 @@ import {
 import { getAuthToken } from "../API"; // Import getAuthToken instead of authToken
 import { useNavigate, useParams } from "react-router-dom";
 import ReactPlayer from "react-player";
-import Button from "./Button";
 import loading from "../assets/btn_loading.gif";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, Video } from "lucide-react";
+import ConfirmModal from "./ConfirmModal";
 
 // function JoinScreen({ getMeetingAndToken }) {
 //   const { meetingid } = useParams();
@@ -87,8 +87,8 @@ function ParticipantView(props) {
               muted={false}
               playing={true}
               url={videoStream}
-              height="580px"
-              width="800px"
+              height="360px"
+              width="100%"
               onError={(err) => {
                 console.log(err, "participant video error");
               }}
@@ -118,6 +118,8 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
   const toggleWebcam = meeting?.toggleWebcam;
   const localMicState =
     meeting?.localMicOn ?? meeting?.micOn ?? meeting?.localParticipant?.micOn;
+  const [endOpen, setEndOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   // Log meeting state on mount and changes
   useEffect(() => {
@@ -137,53 +139,16 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
     }
   };
 
-  const handleEndAppointment = async (shouldReload = false) => {
-    const confirmToast = toast(
-      <div>
-        <p className="mb-4 text-lg font-semibold">
-          Are you sure you want to end the appointment?
-        </p>
-        <div className="flex space-x-4">
-          <button
-            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-            onClick={async () => {
-              // localStorage.setItem("Ended", JSON.stringify({ meetingId, patientId })); // No longer needed here
-              
-              // We removed the status update to "Complete" from here.
-              // It is now handled in EMR.js upon successful data save.
-              
-              setTimeout(() => {
-                handleLeave();
-              }, 500);
+  const confirmLeaveMeeting = () => {
+    setEndOpen(false);
+    setLeaveOpen(false);
+    setTimeout(() => {
+      handleLeave();
+    }, 200);
+  };
 
-              toast.dismiss(confirmToast);
-
-              if (shouldReload) {
-                window.location.reload();
-              }
-            }}
-          >
-            Yes
-          </button>
-          <button
-            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-            onClick={() => {
-              toast.dismiss(confirmToast);
-            }}
-          >
-            No
-          </button>
-        </div>
-      </div>,
-      {
-        position: "top-center",
-        autoClose: false,
-        closeOnClick: false,
-        draggable: false,
-        theme: "light",
-        toastId: "confirm-end-appointment",
-      }
-    );
+  const handleEndAppointment = () => {
+    setEndOpen(true);
   };
 
   const handleBeforeUnload = (event) => {
@@ -194,47 +159,10 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
   const handlePopState = useCallback(
     (event) => {
       event.preventDefault();
-
-      const confirmToast = toast(
-        <div>
-          <p className="text-sm text-gray-600">
-            Any unsaved changes will be lost.
-          </p>
-          <div className="flex space-x-4 mt-4">
-            <button
-              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-              onClick={() => {
-                toast.dismiss(confirmToast);
-                setTimeout(() => {
-                  handleLeave();
-                }, 500); // Trigger end appointment logic if user confirms
-              }}
-            >
-              Yes
-            </button>
-            <button
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-              onClick={() => {
-                toast.dismiss(confirmToast);
-                // Push the current state back to history to prevent navigation
-                window.history.pushState(null, "", window.location.href);
-              }}
-            >
-              No
-            </button>
-          </div>
-        </div>,
-        {
-          position: "top-center",
-          autoClose: false,
-          closeOnClick: false,
-          draggable: false,
-          theme: "light",
-          toastId: "confirm-navigation",
-        }
-      );
+      setLeaveOpen(true);
+      window.history.pushState(null, "", window.location.href);
     },
-    [handleLeave]
+    []
   );
 
   useEffect(() => {
@@ -277,27 +205,36 @@ function Controls({ customTrack, handleLeave, meetingId, patientId }) {
   };
 
   return (
-    <div
-      className="controls-bar -mt-1 flex flex-row gap-4 sm:gap-5 sm:top-[110px] sm:transform-none sm:z-0 sm:mt-0 sm:w-auto"
-      style={{
-        flexDirection: "row",
-        left: "32%",
-        zIndex: 0,
-        transform: "translateX(-100%)",
-        borderRadius: "20px",
-        gap: "20px",
-        top: "85px",
-      }}
-    >
-      <Button
-        onClick={() => handleEndAppointment(false)}
-        className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 text-xs sm:text-base"
+    <div className="ts-exam-controls-bar">
+      <button
+        type="button"
+        onClick={handleEndAppointment}
+        className="ts-btn ts-btn-danger"
       >
         End Appointment
-      </Button>
-      <Button onClick={handleToggleMic} className="text-xs sm:text-base">
-        {localMicState ? <Mic size={20} /> : <MicOff size={20} />}
-      </Button>
+      </button>
+      <button type="button" onClick={handleToggleMic} className="ts-btn ts-btn-ghost">
+        {localMicState ? <Mic size={16} /> : <MicOff size={16} />}
+        {localMicState ? "Mute" : "Unmute"}
+      </button>
+      <ConfirmModal
+        isOpen={endOpen}
+        onClose={() => setEndOpen(false)}
+        onConfirm={confirmLeaveMeeting}
+        title="End appointment?"
+        message="This will leave the live exam. Unsaved exam data may be lost."
+        confirmLabel="End Appointment"
+        danger
+      />
+      <ConfirmModal
+        isOpen={leaveOpen}
+        onClose={() => setLeaveOpen(false)}
+        onConfirm={confirmLeaveMeeting}
+        title="Leave this exam?"
+        message="Any unsaved changes will be lost if you leave now."
+        confirmLabel="Leave"
+        danger
+      />
 
       {/* <Button
         onClick={() => handleToggleWebcam()}
@@ -351,10 +288,10 @@ function MeetingView(props) {
   }, []);
 
   return (
-    <div className="container">
+    <div className="ts-exam-video-inner">
       {joined && joined === "JOINED" ? (
         <div>
-          <div className="flex flex-row gap-4 justify-center">
+          <div className="ts-exam-player">
             {[...participants.keys()].map((participantId, index) => (
               <ParticipantView
                 index={index}
@@ -371,22 +308,20 @@ function MeetingView(props) {
           />
         </div>
       ) : joined && joined === "JOINING" ? (
-        <div className="flex flex-col items-center justify-center mt-[20%]">
-          <img
-            src={loading}
-            width={50}
-            height={50}
-            alt="Joining meeting..."
-          />
-          <p className="text-gray-500 mt-2 font-medium">Joining meeting...</p>
+        <div className="ts-exam-join">
+          <img src={loading} width={48} height={48} alt="" />
+          <h3>Connecting</h3>
+          <p>Joining meeting {props.meetingId || ""}…</p>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center mt-[20%]">
-          <button
-            onClick={joinMeeting}
-            className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 font-semibold text-lg shadow-md transition-colors"
-          >
-            Join
+        <div className="ts-exam-join">
+          <div className="ts-exam-join-icon">
+            <Video size={28} />
+          </div>
+          <h3>Join live exam</h3>
+          <p>Meeting ID {props.meetingId || "—"}{props.patientId ? ` · Patient ${props.patientId}` : ""}</p>
+          <button type="button" onClick={joinMeeting} className="ts-btn ts-btn-primary">
+            Join exam
           </button>
         </div>
       )}

@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css";
 import { FaTrash, FaEdit, FaChevronLeft, FaChevronRight, FaSort, FaSortUp, FaSortDown, FaPhoneAlt } from "react-icons/fa"; 
+import { Search } from "lucide-react"; 
 import { deleteAppointment, UpdateAppointment, getAllAppointments } from "../utils/auth"; 
 
-const AppointmentTable = ({ addAppointment }) => {
+const AppointmentTable = ({ addAppointment, hideHeader = false }) => {
   const [appointments_data, setAppointmentsData] = useState([]);
   const [errorMessage, setErrorMessage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -256,35 +257,38 @@ const AppointmentTable = ({ addAppointment }) => {
   };
 
   return (
-    <div className="w-full px-4 py-6 pt-28">
-      {errorMessage && <div className="text-red-500 font-semibold mb-4">{errorMessage}</div>}
+    <div className="ts-panel">
+      {errorMessage && <div className="ts-alert ts-alert-err" style={{ margin: "0.85rem 1.1rem 0" }}>{errorMessage}</div>}
 
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Appointments</h1>
-        <button
-          onClick={addAppointment}
-          className="bg-[#3b4fdf] hover:bg-[#2f44c4] text-white px-4 sm:px-5 py-2 rounded-lg shadow-md transition-colors w-full sm:w-auto"
-        >
-          Add Appointment
-        </button>
+      {!hideHeader && (
+        <div className="ts-panel-head">
+          <h3 className="ts-panel-title">Appointments</h3>
+          <button type="button" onClick={addAppointment} className="ts-btn ts-btn-primary">
+            Add Appointment
+          </button>
+        </div>
+      )}
+
+      <div className="ts-toolbar">
+        <div className="ts-search-wrap">
+          <Search size={16} />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            placeholder="Search by Meeting ID"
+            className="ts-search"
+          />
+        </div>
+        <span className="ts-panel-meta">{filteredAppointmentsData.length} shown</span>
       </div>
-      
-      <div className="mb-6">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={handleSearchChange}
-          placeholder="Search by Meeting ID"
-          className="p-2 sm:p-3 w-full sm:w-1/2 md:w-1/3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-        />
-      </div>
-      
-      <div className="overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-200">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-indigo-50">
+
+      <div className="ts-table-wrap">
+        <table className="ts-table">
+          <thead>
             <tr>
-              <th 
-                className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-indigo-100 transition-colors"
+              <th
+                className="cursor-pointer"
                 onClick={() => handleSort('ID')}
               >
                 <div className="flex items-center space-x-1">
@@ -294,10 +298,7 @@ const AppointmentTable = ({ addAppointment }) => {
                   ) : <FaSort className="text-gray-400" />}
                 </div>
               </th>
-              <th 
-                className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-indigo-100 transition-colors"
-                onClick={() => handleSort('DeviceID')}
-              >
+              <th className="cursor-pointer" onClick={() => handleSort('DeviceID')}>
                 <div className="flex items-center space-x-1">
                   <span>Device ID</span>
                   {sortConfig.key === 'DeviceID' ? (
@@ -305,10 +306,7 @@ const AppointmentTable = ({ addAppointment }) => {
                   ) : <FaSort className="text-gray-400" />}
                 </div>
               </th>
-              <th 
-                className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-indigo-100 transition-colors"
-                onClick={() => handleSort('AppointmentDate')}
-              >
+              <th className="cursor-pointer" onClick={() => handleSort('AppointmentDate')}>
                 <div className="flex items-center space-x-1">
                   <span>Date</span>
                   {sortConfig.key === 'AppointmentDate' ? (
@@ -316,10 +314,7 @@ const AppointmentTable = ({ addAppointment }) => {
                   ) : <FaSort className="text-gray-400" />}
                 </div>
               </th>
-              <th 
-                className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-indigo-100 transition-colors"
-                onClick={() => handleSort('AppointmentTime')}
-              >
+              <th className="cursor-pointer" onClick={() => handleSort('AppointmentTime')}>
                 <div className="flex items-center space-x-1">
                   <span>Time</span>
                   {sortConfig.key === 'AppointmentTime' ? (
@@ -327,10 +322,7 @@ const AppointmentTable = ({ addAppointment }) => {
                   ) : <FaSort className="text-gray-400" />}
                 </div>
               </th>
-              <th 
-                className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-indigo-100 transition-colors"
-                onClick={() => handleSort('Checkup_Status')}
-              >
+              <th className="cursor-pointer" onClick={() => handleSort('Checkup_Status')}>
                 <div className="flex items-center space-x-1">
                   <span>Status</span>
                   {sortConfig.key === 'Checkup_Status' ? (
@@ -338,65 +330,53 @@ const AppointmentTable = ({ addAppointment }) => {
                   ) : <FaSort className="text-gray-400" />}
                 </div>
               </th>
-              <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Join</th>
-              <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+              <th className="ts-col-center">Join</th>
+              <th className="ts-col-center">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody>
             {paginatedData.length > 0 ? (
               paginatedData.map((appointment) => (
-                <tr key={appointment?.ID ?? Math.random()} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-900">
-                    {String(appointment?.ID ?? '00000').padStart(5, '0')}
-                  </td>
-                  <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-900 font-mono">
-                    {appointment?.DeviceID ?? "----"}
-                  </td>
-                  <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(appointment?.AppointmentDate)}
-                  </td>
-                  <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatTime(appointment?.AppointmentTime)}
-                  </td>
-                  <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex items-center">
-                      <span className={`inline-block w-3 h-3 rounded-full mr-2 ${
-                        appointment?.Checkup_Status === "Complete" ? "bg-green-500" : "bg-red-500"
-                      }`} />
-                      {appointment?.Checkup_Status}
+                <tr key={appointment?.ID ?? Math.random()}>
+                  <td>
+                    <div className="ts-user-cell">
+                      <div className="ts-avatar">{String(appointment?.ID ?? "?").slice(-2)}</div>
+                      <div><strong>{String(appointment?.ID ?? '00000').padStart(5, '0')}</strong></div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="ts-muted">{appointment?.DeviceID ?? "----"}</td>
+                  <td>{formatDate(appointment?.AppointmentDate)}</td>
+                  <td>{formatTime(appointment?.AppointmentTime)}</td>
+                  <td>
+                    <span className={`ts-badge ${appointment?.Checkup_Status === "Complete" ? "ts-badge-ok" : "ts-badge-warn"}`}>
+                      {appointment?.Checkup_Status}
+                    </span>
+                  </td>
+                  <td className="ts-col-center">
                     {appointment?.meetingId && appointment?.Checkup_Status !== "Complete" ? (
-                      <Link to={`/emr/${appointment?.ID}/${appointment?.meetingId}`}>
-                        <button className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs sm:text-sm transition-colors">
-                          <FaPhoneAlt className="mr-2" /> Join
-                        </button>
+                      <Link to={`/emr/${appointment?.ID}/${appointment?.meetingId}`} className="ts-btn ts-btn-primary">
+                        <FaPhoneAlt /> Join
                       </Link>
                     ) : (
-                      <span className="text-gray-400">N/A</span>
+                      <span className="ts-muted">N/A</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex space-x-3">
+                  <td className="ts-col-center">
+                    <div className="ts-actions">
                       <button
                         onClick={() => openEditModal(appointment)}
-                        className={`transition-colors ${
-                          appointment?.Checkup_Status === "Complete" 
-                            ? "text-gray-300 cursor-not-allowed" 
-                            : "text-indigo-600 hover:text-indigo-800"
-                        }`}
+                        className="ts-btn-icon"
                         disabled={appointment?.Checkup_Status === "Complete"}
                         aria-label="Edit"
                       >
-                        <FaEdit size={16} />
+                        <FaEdit size={14} />
                       </button>
                       <button
                         onClick={() => handleDelete(appointment)}
-                        className="text-red-600 hover:text-red-800 transition-colors"
+                        className="ts-btn-icon"
                         aria-label="Delete"
                       >
-                        <FaTrash size={16} />
+                        <FaTrash size={14} />
                       </button>
                     </div>
                   </td>
@@ -404,7 +384,7 @@ const AppointmentTable = ({ addAppointment }) => {
               ))
             ) : (
               <tr>
-                <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                <td colSpan="7" className="ts-empty">
                   No appointments found
                 </td>
               </tr>
@@ -414,59 +394,56 @@ const AppointmentTable = ({ addAppointment }) => {
       </div>
 
       {isEditing && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold mb-4">Update Appointment</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+        <div className="ts-modal-backdrop">
+          <div className="ts-modal">
+            <div className="ts-modal-head">
+              <h2>Update appointment</h2>
+              <button type="button" className="ts-btn-icon" onClick={() => setIsEditing(false)}>×</button>
+            </div>
+            <div className="ts-modal-body">
+              <div className="ts-field">
+                <label>Date</label>
                 <input
                   type="date"
                   value={updatedDate.split('T')[0]}
                   min={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setUpdatedDate(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  className="ts-input"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+              <div className="ts-field">
+                <label>Time</label>
                 <input
                   type="time"
                   value={updatedTime}
                   onChange={(e) => setUpdatedTime(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  className="ts-input"
                 />
               </div>
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setIsEditing(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpdate}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-              >
-                Save Changes
-              </button>
+              <div className="ts-modal-actions">
+                <button type="button" onClick={() => setIsEditing(false)} className="ts-btn ts-btn-ghost">
+                  Cancel
+                </button>
+                <button type="button" onClick={handleUpdate} className="ts-btn ts-btn-primary">
+                  Save Changes
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {filteredAppointmentsData.length > itemsPerPage && (
-        <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+        <div className="ts-toolbar" style={{ borderTop: "1px solid var(--ts-border)", borderBottom: "none" }}>
           <button
+            type="button"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`flex items-center px-4 py-2 rounded-md ${currentPage === 1 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-[#3b4fdf] text-white hover:bg-[#2f44c4]'} transition-colors w-full sm:w-auto justify-center`}
+            className="ts-btn ts-btn-ghost"
           >
-            <FaChevronLeft className="mr-1" /> Previous
+            <FaChevronLeft /> Previous
           </button>
-          
-          <div className="flex items-center gap-2 text-sm text-gray-700 order-3 sm:order-none">
+          <div className="flex items-center gap-2 text-sm ts-muted">
             <span>Page</span>
             <input
               type="text"
@@ -474,41 +451,41 @@ const AppointmentTable = ({ addAppointment }) => {
               onChange={(e) => setPageInputValue(e.target.value)}
               onBlur={handlePageInputBlur}
               onKeyDown={handlePageInputKeyDown}
-              className="w-12 p-1 border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="ts-input"
+              style={{ width: "3.5rem", textAlign: "center" }}
               aria-label="Page number"
             />
             <span>of {totalPages}</span>
           </div>
-
           <button
+            type="button"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`flex items-center px-4 py-2 rounded-md ${currentPage === totalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-[#3b4fdf] text-white hover:bg-[#2f44c4]'} transition-colors w-full sm:w-auto justify-center`}
+            className="ts-btn ts-btn-ghost"
           >
-            Next <FaChevronRight className="ml-1" />
+            Next <FaChevronRight />
           </button>
         </div>
       )}
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">Confirm Deletion</h2>
-            <p className="text-gray-600 mb-6 font-medium">
-              Are you sure you want to delete this appointment? This action cannot be undone.
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-              >
-                Delete
-              </button>
+        <div className="ts-modal-backdrop">
+          <div className="ts-modal">
+            <div className="ts-modal-head">
+              <h2>Confirm deletion</h2>
+              <button type="button" className="ts-btn-icon" onClick={() => setIsDeleteModalOpen(false)}>×</button>
+            </div>
+            <div className="ts-modal-body">
+              <p className="ts-muted" style={{ margin: 0 }}>
+                Are you sure you want to delete this appointment? This action cannot be undone.
+              </p>
+              <div className="ts-modal-actions">
+                <button type="button" onClick={() => setIsDeleteModalOpen(false)} className="ts-btn ts-btn-ghost">
+                  Cancel
+                </button>
+                <button type="button" onClick={confirmDelete} className="ts-btn ts-btn-danger">
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

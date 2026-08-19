@@ -1,96 +1,92 @@
-import React, { useEffect, useState } from "react";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import NavBar from "../components/NavBar";
-import Sidebar from "../components/Sidebar";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import ReactApexChart from 'react-apexcharts';
-import attended from "../assets/icon_attended.png";
-import scheduled from "../assets/icon_scheduled.png";
-import total from "../assets/icon_total.png"; 
-import "../App.css";
+import { Calendar, CalendarCheck, Clock, AlertTriangle, Plus, Video, Percent, CalendarDays, Monitor } from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import AppShell from "../components/AppShell";
 import { getAllAppointments } from "../utils/auth";
+import { buildAppointmentInsights } from "../utils/overviewInsights";
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+const EmptyState = ({ icon: Icon, title, text, to, action }) => (
+  <div className="ts-empty-state">
+    <div className="ts-empty-icon"><Icon size={20} /></div>
+    <strong>{title}</strong>
+    <p>{text}</p>
+    {to ? (
+      <Link to={to} className="ts-btn ts-btn-primary">
+        {action}
+      </Link>
+    ) : null}
+  </div>
+);
 
-const ChartThree = ({ attendedAppointments, scheduledAppointments }) => {
-  const series = [attendedAppointments, scheduledAppointments];
-  const options = {
-    chart: { fontFamily: 'Satoshi, sans-serif', type: 'donut' },
-    colors: ['#3b4fdf', '#1c2434'],
-    labels: ['Appointments Attended', 'Appointments Scheduled'],
-    legend: { show: false },
-    plotOptions: { pie: { donut: { size: '65%' } } },
-    dataLabels: { enabled: false },
-    responsive: [{ breakpoint: 640, options: { chart: { width: '100%' } } }],
-  };
-
-  return (
-    <div className="w-full border border-gray-300 rounded-md bg-white shadow-md p-5">
-      <h5 className="text-xl font-semibold text-black mb-4">Appointments Analytics</h5>
-      <div className="flex justify-center">
-        <ReactApexChart options={options} series={series} type="donut" width="100%" />
+const MetricSkeleton = ({ count = 6 }) => (
+  <div className="ts-metrics">
+    {Array.from({ length: count }, (_, i) => (
+      <div key={i} className="ts-metric">
+        <span className="ts-skel-circle" style={{ width: 36, height: 36 }} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span className="ts-skel-bar" style={{ width: "42%", height: "0.55rem" }} />
+          <span className="ts-skel-bar" style={{ width: "58%", height: "1.25rem", marginTop: "0.45rem" }} />
+        </div>
       </div>
-      <div className="flex flex-col sm:flex-row justify-center items-center mt-4 gap-4">
-        {[{ label: 'Appointments Scheduled', value: scheduledAppointments, color: 'bg-[#1c2434]' },
-          { label: 'Appointments Attended', value: attendedAppointments, color: 'bg-[#3b4fdf]' }].map((item, i) => (
-          <div key={i} className="flex items-center w-full max-w-xs justify-between text-sm">
-            <span className={`inline-block w-4 h-4 mr-2 rounded-full ${item.color}`}></span>
-            <span className="text-gray-700">{item.label}</span>
-            <span className="font-bold">{item.value}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+    ))}
+  </div>
+);
+
+const isOverdue = (dateStr, timeStr) => {
+  if (!dateStr || !timeStr) return false;
+  try {
+    const today = new Date();
+    const cleanDate = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
+    return new Date(`${cleanDate}T${timeStr}`) < today;
+  } catch {
+    return false;
+  }
+};
+
+const formatTime = (time) => {
+  if (!time) return "N/A";
+  const [hour, minute] = time.split(":") || [];
+  const hourNum = parseInt(hour, 10);
+  if (Number.isNaN(hourNum)) return time;
+  const isPM = hourNum >= 12;
+  const formattedHour = hourNum % 12 || 12;
+  return `${formattedHour}:${minute} ${isPM ? "PM" : "AM"}`;
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return "N/A";
+  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 };
 
 function Dashboard() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [totalAppointments, setTotalAppointments] = useState(0);
-  const [attendedAppointments, setAttendedAppointments] = useState(0);
-  const [scheduledAppointments, setScheduledAppointments] = useState(0);
+  const variant = localStorage.getItem("role") === "admin" ? "admin" : "user";
 
-  const isOverdue = (dateStr, timeStr) => {
-    if (!dateStr || !timeStr) return false;
-    try {
-      const today = new Date();
-      const cleanDate = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
-      const appointmentDateTime = new Date(`${cleanDate}T${timeStr}`);
-      return appointmentDateTime < today;
-    } catch (e) {
-      return false;
-    }
-  };
+  const insights = useMemo(() => buildAppointmentInsights(appointments), [appointments]);
 
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
         const Doctor = localStorage.getItem("Doctor");
         const result = await getAllAppointments(Doctor);
-        
+
         let data = [];
-        if (Array.isArray(result)) {
-          data = result;
-        } else if (result && Array.isArray(result.data)) {
-          data = result.data;
-        } else if (result && Array.isArray(result.appointments)) {
-          data = result.appointments;
-        }
+        if (Array.isArray(result)) data = result;
+        else if (result && Array.isArray(result.data)) data = result.data;
+        else if (result && Array.isArray(result.appointments)) data = result.appointments;
 
         setAppointments(data);
-        setTotalAppointments(data.length);
-        setAttendedAppointments(data.filter(a => a.Checkup_Status === "Complete").length);
-        
-        const pendingAppointments = data.filter(a => a.Checkup_Status !== "Complete");
-        setScheduledAppointments(pendingAppointments.length);
 
-        // Check and notify for overdue appointments
-        const overdue = pendingAppointments.filter(a => isOverdue(a.AppointmentDate, a.AppointmentTime));
-        if (overdue.length > 0) {
-          toast.warn(`Reminder: You have ${overdue.length} overdue appointment(s) pending!`);
+        const overdue = data.filter(
+          (a) => a.Checkup_Status !== "Complete" && isOverdue(a.AppointmentDate, a.AppointmentTime)
+        );
+        if (overdue.length > 0 && localStorage.getItem("tsOverdueAlerts") !== "off") {
+          toast.warn(`Reminder: You have ${overdue.length} overdue appointment(s) pending.`);
         }
       } catch (error) {
         console.error("Error fetching appointments:", error);
@@ -102,135 +98,371 @@ function Dashboard() {
     fetchAppointments();
   }, []);
 
-  const formatTime = (time) => {
-    if (!time) return '';
-    const [hour, minute] = time.split(':') || [];
-    const hourNum = parseInt(hour, 10);
-    const isPM = hourNum >= 12;
-    const formattedHour = hourNum % 12 || 12;
-    const amPm = isPM ? 'PM' : 'AM';
-    return `${formattedHour}:${minute} ${amPm}`;
-  };
-
-  const groupAndSortAppointments = () => {
-    const grouped = { dateTime: [], dateOnly: [], timeOnly: [], noDateTime: [] };
-    appointments.forEach(a => {
-      const { AppointmentDate, AppointmentTime } = a;
-      if (AppointmentDate && AppointmentTime) grouped.dateTime.push(a);
-      else if (AppointmentDate) grouped.dateOnly.push(a);
-      else if (AppointmentTime) grouped.timeOnly.push(a);
-      else grouped.noDateTime.push(a);
-    });
-
-    grouped.dateTime.sort((a, b) => {
-      const dateA = new Date(a.AppointmentDate), dateB = new Date(b.AppointmentDate);
-      const timeA = new Date(`1970-01-01T${a.AppointmentTime}`), timeB = new Date(`1970-01-01T${b.AppointmentTime}`);
-      return dateA - dateB || timeA - timeB;
-    });
-
-    grouped.dateOnly.sort((a, b) => new Date(a.AppointmentDate) - new Date(b.AppointmentDate));
-    grouped.timeOnly.sort((a, b) => {
-      const today = new Date().toISOString().split("T")[0];
-      return new Date(`${today}T${a.AppointmentTime}`) - new Date(`${today}T${b.AppointmentTime}`);
-    });
-
-    return grouped;
-  };
-
-  const renderAppointments = () => {
-    const grouped = groupAndSortAppointments();
-    const displayed = [...grouped.dateTime, ...grouped.dateOnly, ...grouped.timeOnly, ...grouped.noDateTime]
-      .filter(a => a.Checkup_Status !== "Complete")
-      .slice(0, 4);
-
-    return displayed.map((a) => {
-      return (
-        <div key={a.ID} className="w-full border border-gray-300 rounded-md mb-4 transition animate-fadeIn">
-          <div className="bg-white p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 rounded-md shadow-lg">
-            <div className="text-black w-full sm:w-auto">
-              <p className="text-xl sm:text-2xl font-bold">{a.AppointmentTime ? formatTime(a.AppointmentTime) : "N/A"}</p>
-              <p className="text-lg sm:text-xl font-bold">{a.AppointmentDate ? new Date(a.AppointmentDate).toISOString().split("T")[0] : "N/A"}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <p className="text-base sm:text-lg text-gray-500">Device ID: {a.DeviceID}</p>
-                {isOverdue(a.AppointmentDate, a.AppointmentTime) && (
-                  <span className="bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold animate-pulse">
-                    Overdue
-                  </span>
-                )}
+  return (
+    <AppShell
+      variant={variant}
+      page="DASHBOARD"
+      title="Overview"
+      subtitle="Caseload, appointment volume, and upcoming sessions."
+      actions={
+        <>
+          <Link to="/meeting" className="ts-btn ts-btn-ghost">
+            <Video size={16} /> Instant meeting
+          </Link>
+          <Link to="/appointment" className="ts-btn ts-btn-primary">
+            <Plus size={16} /> Schedule appointment
+          </Link>
+        </>
+      }
+    >
+      <div className="ts-stack">
+        {loading ? (
+          <MetricSkeleton />
+        ) : (
+          <div className="ts-metrics">
+            <div className="ts-metric">
+              <div className="ts-metric-icon"><Calendar size={18} /></div>
+              <div>
+                <p className="ts-metric-label">Total</p>
+                <p className="ts-metric-value">{insights.total}</p>
               </div>
             </div>
-            {a.meetingId ? (
-              <Link to={`/emr/${a.ID}/${a.meetingId}`} className="w-full sm:w-auto">
-                <div className="bg-[#3b4fdf] text-white hover:bg-[#2f44c4] px-4 py-2 w-full sm:w-32 text-center rounded-md shadow-md">
-                  Join
-                </div>
-              </Link>
-            ) : (
-              <div className="text-gray-500 w-full sm:w-auto text-center">No Meeting Available</div>
-            )}
+            <div className="ts-metric">
+              <div className="ts-metric-icon"><CalendarCheck size={18} /></div>
+              <div>
+                <p className="ts-metric-label">Attended</p>
+                <p className="ts-metric-value">{insights.complete}</p>
+              </div>
+            </div>
+            <div className="ts-metric">
+              <div className="ts-metric-icon"><Clock size={18} /></div>
+              <div>
+                <p className="ts-metric-label">Scheduled</p>
+                <p className="ts-metric-value">{insights.pending}</p>
+              </div>
+            </div>
+            <div className="ts-metric">
+              <div className="ts-metric-icon"><AlertTriangle size={18} /></div>
+              <div>
+                <p className="ts-metric-label">Overdue</p>
+                <p className="ts-metric-value">{insights.overdue}</p>
+              </div>
+            </div>
+            <div className="ts-metric">
+              <div className="ts-metric-icon"><CalendarDays size={18} /></div>
+              <div>
+                <p className="ts-metric-label">Today</p>
+                <p className="ts-metric-value">{insights.todayCount}</p>
+              </div>
+            </div>
+            <div className="ts-metric">
+              <div className="ts-metric-icon"><Percent size={18} /></div>
+              <div>
+                <p className="ts-metric-label">Completed</p>
+                <p className="ts-metric-value">{insights.completionRate}%</p>
+              </div>
+            </div>
           </div>
+        )}
+
+        <div className="ts-quick-links">
+          <Link to="/appointment" className="ts-btn ts-btn-ghost">All appointments</Link>
+          <Link to="/meeting" className="ts-btn ts-btn-ghost">Create meeting</Link>
+          <Link to="/emr" className="ts-btn ts-btn-ghost">EMR reports</Link>
+          <Link to="/settings" className="ts-btn ts-btn-ghost">Settings</Link>
         </div>
-      );
-    });
-  };
 
-  return (
-    <>
-      <NavBar />
-      <div className="flex flex-col sm:flex-row mb-28 pt-[60px] sm:pt-[80px]">
-
-        <Sidebar page="DASHBOARD" />
-        <main className="flex-1 sm:ml-[250px] p-4 sm:p-6 lg:p-10 space-y-6">
-          {loading ? (
-            <div className="text-center text-lg">Loading...</div>
-          ) : (
-            <div className="space-y-8">
-              <div className="flex flex-col lg:flex-row gap-6">
-                <div className="flex flex-col w-full lg:w-1/4 gap-4">
-                  <Link to="/meeting">
-                    <button className="bg-[#3b4fdf] text-white px-5 py-3 rounded-md w-full hover:bg-[#2f44c4]">
-                      Create a Meeting
-                    </button>
-                  </Link>
-                  <Link to="/appointment">
-                    <button className="bg-[#3b4fdf] text-white px-5 py-3 rounded-md w-full hover:bg-[#2f44c4]">
-                      Schedule an Appointment
-                    </button>
-                  </Link>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-                  {[
-                    { count: totalAppointments, label: "Total Appointments", img: total },
-                    { count: attendedAppointments, label: "Appointments Attended", img: attended },
-                    { count: scheduledAppointments, label: "Appointments Scheduled", img: scheduled },
-                  ].map((tile, i) => (
-                    <div key={i} className="relative flex flex-col justify-end items-end bg-white p-6 sm:p-8 h-[180px] sm:h-[200px] rounded-md shadow-md">
-                      <img src={tile.img} alt={tile.label} className="absolute top-4 left-4 w-12 sm:w-16" />
-                      <p className="text-4xl sm:text-5xl font-bold">{tile.count}</p>
-                      <h2 className="text-sm sm:text-lg text-gray-500 mt-2 text-center w-full">{tile.label}</h2>
+        <div className="ts-chart-grid">
+          <div className="ts-panel">
+            <div className="ts-panel-head">
+              <h3 className="ts-panel-title">Appointments · 14 days</h3>
+              <span className="ts-panel-meta">{insights.thisWeek} this week</span>
+            </div>
+            <div className="ts-chart-body">
+              {loading ? (
+                <div className="ts-chart-empty">Loading chart…</div>
+              ) : insights.total === 0 ? (
+                <EmptyState
+                  icon={Calendar}
+                  title="No appointments yet"
+                  text="Schedule a session or start an instant meeting to see 14-day volume here."
+                  to="/appointment"
+                  action="Schedule appointment"
+                />
+              ) : (
+                <div className="ts-bar-chart" role="img" aria-label="Appointments over the last 14 days">
+                  {insights.volume.map((day) => (
+                    <div key={day.key} className="ts-bar-col" title={`${day.label}: ${day.value}`}>
+                      <div className="ts-bar-track">
+                        <div
+                          className="ts-bar-fill"
+                          style={{ height: `${Math.max(day.value ? 8 : 0, (day.value / insights.volMax) * 100)}%` }}
+                        />
+                      </div>
+                      <span className="ts-bar-label">{day.key.slice(8)}</span>
                     </div>
                   ))}
                 </div>
-              </div>
-
-              <div className="flex flex-col lg:flex-row gap-6">
-                <div className="w-full bg-white p-4 sm:p-6 rounded-md shadow-md">
-                  <h2 className="text-xl sm:text-2xl font-bold mb-4">Upcoming Appointments:</h2>
-                  {renderAppointments()}
-                </div>
-                <div className="w-full lg:w-auto flex justify-center">
-                  <ChartThree 
-                    attendedAppointments={attendedAppointments}
-                    scheduledAppointments={scheduledAppointments}
-                  />
-                </div>
-              </div>
+              )}
             </div>
+          </div>
+
+          <div className="ts-panel">
+            <div className="ts-panel-head">
+              <h3 className="ts-panel-title">Status mix</h3>
+              <span className="ts-panel-meta">{insights.total} appointments</span>
+            </div>
+            <div className="ts-chart-body">
+              {loading ? (
+                <div className="ts-chart-empty">Loading chart…</div>
+              ) : insights.total === 0 ? (
+                <EmptyState
+                  icon={CalendarCheck}
+                  title="No status mix yet"
+                  text="Attended, scheduled, and overdue shares appear after the first appointment is saved."
+                  to="/meeting"
+                  action="Create meeting"
+                />
+              ) : (
+                <div className="ts-hbars">
+                  {insights.statusBars.map((row) => (
+                    <div key={row.label} className="ts-hbar-row">
+                      <div className="ts-hbar-meta">
+                        <span>{row.label}</span>
+                        <strong>{row.value} · {row.pct}%</strong>
+                      </div>
+                      <div className="ts-hbar-track">
+                        <div className="ts-hbar-fill" style={{ width: `${row.pct}%`, background: row.color }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="ts-chart-grid">
+          <div className="ts-panel">
+            <div className="ts-panel-head">
+              <h3 className="ts-panel-title">Today’s schedule</h3>
+              <span className="ts-panel-meta">{loading ? "Loading…" : `${insights.todayCount} sessions`}</span>
+            </div>
+            {loading || insights.today.length > 0 ? (
+            <div className="ts-table-wrap">
+              <table className="ts-table">
+                <thead>
+                  <tr>
+                    <th>Meeting</th>
+                    <th>Time</th>
+                    <th>Device</th>
+                    <th className="ts-col-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="4" className="ts-empty">Loading today’s sessions…</td>
+                    </tr>
+                  ) : (
+                    insights.today.map((a) => {
+                      const overdue = isOverdue(a.AppointmentDate, a.AppointmentTime);
+                      const done = a.Checkup_Status === "Complete";
+                      return (
+                        <tr key={`today-${a.ID || a._id}`}>
+                          <td>
+                            <strong>{String(a.ID ?? "—").padStart(5, "0")}</strong>
+                          </td>
+                          <td>{formatTime(a.AppointmentTime)}</td>
+                          <td className="ts-muted">{a.DeviceID || "—"}</td>
+                          <td className="ts-col-center">
+                            <span className={`ts-badge ${done ? "ts-badge-ok" : overdue ? "ts-badge-warn" : "ts-badge-accent"}`}>
+                              {done ? "Complete" : overdue ? "Overdue" : a.Checkup_Status || "Pending"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+            ) : (
+              <EmptyState
+                icon={CalendarDays}
+                title="Nothing on today’s list"
+                text="Create an instant meeting or schedule an appointment to fill this board."
+                to="/meeting"
+                action="Start instant meeting"
+              />
+            )}
+          </div>
+
+          <div className="ts-panel">
+            <div className="ts-panel-head">
+              <h3 className="ts-panel-title">Device mix</h3>
+              <span className="ts-panel-meta">{insights.total} appointments</span>
+            </div>
+            <div className="ts-chart-body">
+              {loading ? (
+                <div className="ts-chart-empty">Loading chart…</div>
+              ) : insights.deviceBars.length > 0 ? (
+                <div className="ts-hbars">
+                  {insights.deviceBars.map((row) => (
+                    <div key={row.label} className="ts-hbar-row">
+                      <div className="ts-hbar-meta">
+                        <span>{row.label}</span>
+                        <strong>{row.value}</strong>
+                      </div>
+                      <div className="ts-hbar-track">
+                        <div
+                          className="ts-hbar-fill"
+                          style={{ width: `${Math.round((row.value / insights.deviceMax) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={Monitor}
+                  title="No device mix yet"
+                  text="Device usage appears here once appointments are linked to a device ID."
+                  to="/appointment"
+                  action="Schedule appointment"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="ts-panel">
+          <div className="ts-panel-head">
+            <h3 className="ts-panel-title">Upcoming appointments</h3>
+            <span className="ts-panel-meta">
+              {loading ? "Loading…" : `next ${insights.upcoming.length}`}
+            </span>
+          </div>
+          {loading || insights.upcoming.length > 0 ? (
+            <div className="ts-table-wrap">
+              <table className="ts-table">
+                <thead>
+                  <tr>
+                    <th>Meeting</th>
+                    <th>Device</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th className="ts-col-center">Status</th>
+                    <th className="ts-col-center">Join</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="6" className="ts-empty">Loading appointments…</td>
+                    </tr>
+                  ) : (
+                    insights.upcoming.map((a) => {
+                      const overdue = isOverdue(a.AppointmentDate, a.AppointmentTime);
+                      return (
+                        <tr key={a.ID || a._id}>
+                          <td>
+                            <div className="ts-user-cell">
+                              <div className="ts-avatar">{String(a.ID || "?").slice(-2)}</div>
+                              <div>
+                                <strong>{String(a.ID ?? "—").padStart(5, "0")}</strong>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="ts-muted">{a.DeviceID || "—"}</td>
+                          <td>{formatDate(a.AppointmentDate)}</td>
+                          <td>{formatTime(a.AppointmentTime)}</td>
+                          <td className="ts-col-center">
+                            <span className={`ts-badge ${overdue ? "ts-badge-warn" : "ts-badge-accent"}`}>
+                              {overdue ? "Overdue" : a.Checkup_Status || "Pending"}
+                            </span>
+                          </td>
+                          <td className="ts-col-center">
+                            {a.meetingId ? (
+                              <Link to={`/emr/${a.ID}/${a.meetingId}`} className="ts-btn ts-btn-primary">
+                                Join
+                              </Link>
+                            ) : (
+                              <span className="ts-muted">N/A</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState
+              icon={Calendar}
+              title="No upcoming appointments"
+              text="Schedule a remote exam to populate this list, or start an instant meeting now."
+              to="/appointment"
+              action="Schedule appointment"
+            />
           )}
-        </main>
+        </div>
+
+        <div className="ts-panel">
+          <div className="ts-panel-head">
+            <h3 className="ts-panel-title">Recently completed</h3>
+            <span className="ts-panel-meta">
+              {loading ? "Loading…" : `${insights.completedRecent.length} latest`}
+            </span>
+          </div>
+          {loading || insights.completedRecent.length > 0 ? (
+            <div className="ts-table-wrap">
+              <table className="ts-table">
+                <thead>
+                  <tr>
+                    <th>Meeting</th>
+                    <th>Device</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th className="ts-col-center">Report</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="5" className="ts-empty">Loading completed exams…</td>
+                    </tr>
+                  ) : (
+                    insights.completedRecent.map((a) => (
+                      <tr key={`done-${a.ID || a._id}`}>
+                        <td>
+                          <strong>{String(a.ID ?? "—").padStart(5, "0")}</strong>
+                        </td>
+                        <td className="ts-muted">{a.DeviceID || "—"}</td>
+                        <td>{formatDate(a.AppointmentDate)}</td>
+                        <td>{formatTime(a.AppointmentTime)}</td>
+                        <td className="ts-col-center">
+                          <Link to="/emr" className="ts-btn ts-btn-ghost">EMR</Link>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState
+              icon={CalendarCheck}
+              title="No completed exams yet"
+              text="Finished sessions will show here with a shortcut to the EMR report."
+              to="/emr"
+              action="Open EMR reports"
+            />
+          )}
+        </div>
       </div>
-    </>
+    </AppShell>
   );
 }
 
