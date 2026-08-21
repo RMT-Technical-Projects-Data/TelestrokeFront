@@ -23,7 +23,7 @@ const EMRpage = () => {
   const [selectedEye, setSelectedEye] = useState(null);
   const [meetingJoined, setMeetingJoined] = useState(false);
   const [centerFocus, setCenterFocus] = useState(null);
-  const [controlTab, setControlTab] = useState("camera");
+  const [tab, setTab] = useState(0);
   const [settings, setSettings] = useState({
     eye_camera_control: "",
     exam_mode: "",
@@ -1185,7 +1185,6 @@ const EMRpage = () => {
     <AppShell
       page="PATIENTS"
       dense
-      lockRail={meetingJoined}
       title="Live exam"
       subtitle={meetingid ? `Meeting ${patientid || "—"} · ${meetingid}` : "Join a scheduled or instant session."}
       actions={
@@ -1198,8 +1197,7 @@ const EMRpage = () => {
     >
       {meetingid ? (
         <>
-          <div className={`ts-exam-grid ${meetingJoined ? "is-live" : "is-prejoin"}`}>
-            <div className={meetingJoined ? "ts-exam-stage" : undefined}>
+          <div className={`ts-exam-grid ${meetingJoined ? "" : "is-prejoin"}`}>
             <div className="ts-panel ts-exam-video">
               <div className="ts-panel-head">
                 <h3 className="ts-panel-title">Video</h3>
@@ -1234,7 +1232,7 @@ const EMRpage = () => {
                                 animation: { duration: 0 },
                                 hover: { animationDuration: 0 },
                                 responsiveAnimationDuration: 0,
-                                layout: { padding: { top: 0, bottom: 6 } },
+                                layout: { padding: { top: 4, bottom: 18 } },
                                 plugins: {
                                   legend: {
                                     display: true,
@@ -1259,8 +1257,8 @@ const EMRpage = () => {
                                     title: {
                                       display: true,
                                       text: "Time (s)",
-                                      padding: { top: 0, bottom: 2 },
-                                      font: { weight: 'bold', size: 10 }
+                                      padding: { top: 2, bottom: 8 },
+                                      font: { weight: 'bold', size: 12 }
                                     },
                                     ticks: {
                                       font: { weight: 'bold' }
@@ -1313,7 +1311,7 @@ const EMRpage = () => {
                                 animation: { duration: 0 },
                                 hover: { animationDuration: 0 },
                                 responsiveAnimationDuration: 0,
-                                layout: { padding: { top: 0, bottom: 6 } },
+                                layout: { padding: { top: 4, bottom: 18 } },
                                 plugins: {
                                   legend: {
                                     display: true,
@@ -1338,8 +1336,8 @@ const EMRpage = () => {
                                     title: {
                                       display: true,
                                       text: "Time (s)",
-                                      padding: { top: 0, bottom: 2 },
-                                      font: { weight: 'bold', size: 10 }
+                                      padding: { top: 2, bottom: 8 },
+                                      font: { weight: 'bold', size: 12 }
                                     },
                                     ticks: {
                                       font: { weight: 'bold' }
@@ -1374,46 +1372,13 @@ const EMRpage = () => {
                 </div>
               </div>
             )}
-            </div>
             {meetingJoined && (
               <div className="ts-panel ts-exam-side">
                 <div className="ts-panel-head">
                   <h3 className="ts-panel-title">Controls</h3>
-                  <span className="ts-panel-meta">Exam</span>
-                </div>
-                <div className="ts-exam-tabs">
-                  <button
-                    type="button"
-                    className={controlTab === "camera" ? "is-active" : ""}
-                    onClick={() => setControlTab("camera")}
-                  >
-                    Camera
-                  </button>
-                  <button
-                    type="button"
-                    className={controlTab === "patient" ? "is-active" : ""}
-                    onClick={() => setControlTab("patient")}
-                  >
-                    Patient
-                  </button>
-                  <button
-                    type="button"
-                    className={controlTab === "bedside" ? "is-active" : ""}
-                    onClick={() => setControlTab("bedside")}
-                  >
-                    Bedside
-                  </button>
-                  <button
-                    type="button"
-                    className={controlTab === "telestroke" ? "is-active" : ""}
-                    onClick={() => setControlTab("telestroke")}
-                  >
-                    Telestroke
-                  </button>
+                  <span className="ts-panel-meta">Camera</span>
                 </div>
                 <div className="ts-exam-side-body">
-                  {controlTab === "camera" && (
-                    <>
                         <div className="ts-exam-inline-field ts-exam-inline-field-stack">
                           <label>Eye camera</label>
                           <div className="ts-exam-field-box ts-exam-radio-row">
@@ -1570,15 +1535,49 @@ const EMRpage = () => {
                             )}
                           </div>
                         </div>
-                    </>
-                  )}
-                  {controlTab === "patient" && <EMRPatientInfo />}
-                  {controlTab === "bedside" && <EMRBedSide />}
-                  {controlTab === "telestroke" && <EMRTelestrokeExam />}
                 </div>
               </div>
             )}
           </div>
+
+          {meetingJoined && (
+            <div className="ts-panel ts-exam-forms">
+              <div className="ts-exam-tabs">
+                <button
+                  type="button"
+                  className={tab === 0 ? "is-active" : ""}
+                  onClick={() => setTab(0)}
+                >
+                  Patient Info
+                </button>
+                <button
+                  type="button"
+                  className={tab === 1 ? "is-active" : ""}
+                  onClick={() => setTab(1)}
+                >
+                  Bedside Exam
+                </button>
+                <button
+                  type="button"
+                  className={tab === 2 ? "is-active" : ""}
+                  onClick={() => setTab(2)}
+                >
+                  Telestroke Exam
+                </button>
+              </div>
+              <div className="ts-exam-form-body">
+                <div className={tab === 0 ? "block" : "hidden"}>
+                  <EMRPatientInfo />
+                </div>
+                <div className={tab === 1 ? "block" : "hidden"}>
+                  <EMRBedSide />
+                </div>
+                <div className={tab === 2 ? "block" : "hidden"}>
+                  <EMRTelestrokeExam />
+                </div>
+              </div>
+            </div>
+          )}
         </>
       ) : (
         <div className="ts-panel">
