@@ -7,7 +7,6 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import logo from "../assets/Telestroke-logo.png";
 import brandBg from "../assets/bg.jpg";
-import ThemeToggle from "../components/ThemeToggle";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -97,10 +96,6 @@ const Login = () => {
         style={{ backgroundImage: `url(${brandBg})` }}
         aria-hidden="true"
       />
-
-      <div className="ts-auth-theme">
-        <ThemeToggle />
-      </div>
 
       <div className="ts-auth-box">
         <aside className="ts-auth-brand">

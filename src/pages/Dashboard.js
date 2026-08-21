@@ -172,13 +172,6 @@ function Dashboard() {
           </div>
         )}
 
-        <div className="ts-quick-links">
-          <Link to="/appointment" className="ts-btn ts-btn-ghost">All appointments</Link>
-          <Link to="/meeting" className="ts-btn ts-btn-ghost">Create meeting</Link>
-          <Link to="/emr" className="ts-btn ts-btn-ghost">EMR reports</Link>
-          <Link to="/settings" className="ts-btn ts-btn-ghost">Settings</Link>
-        </div>
-
         <div className="ts-chart-grid">
           <div className="ts-panel">
             <div className="ts-panel-head">

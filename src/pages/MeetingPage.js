@@ -153,9 +153,6 @@ const MeetingPage = () => {
                 Session details are filled in automatically.
               </p>
             </div>
-            <span className={`ts-badge ${isMeetingCreated ? "ts-badge-ok" : "ts-badge-accent"}`}>
-              {isMeetingCreated ? "Ready" : "Pending"}
-            </span>
           </div>
 
           <div className="ts-modal-body">
@@ -168,19 +165,9 @@ const MeetingPage = () => {
                 <label htmlFor="meeting-id">Meeting ID</label>
                 <input id="meeting-id" type="text" value={patientID} readOnly className="ts-input" />
               </div>
-              <div className="ts-field">
+              <div className="ts-field ts-field-span">
                 <label htmlFor="meeting-doctor">Doctor</label>
                 <input id="meeting-doctor" type="text" value={doctor} readOnly className="ts-input" />
-              </div>
-              <div className="ts-field">
-                <label htmlFor="meeting-status">Checkup status</label>
-                <input
-                  id="meeting-status"
-                  type="text"
-                  value={isMeetingCreated ? "Ready to join" : "Pending"}
-                  readOnly
-                  className="ts-input"
-                />
               </div>
             </div>
 

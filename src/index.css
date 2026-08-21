@@ -99,16 +99,18 @@ code {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.9rem 0.7rem;
+  height: 72px;
+  padding: 0.65rem 0.75rem;
   overflow: hidden;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
 .ts-rail-logo img {
   display: block;
-  height: 96px;
+  height: 44px;
   width: auto;
-  max-width: 220px;
+  max-width: 100%;
   object-fit: contain;
   object-position: center;
   background: none;
@@ -119,15 +121,16 @@ code {
 }
 
 .ts-shell.is-rail-collapsed .ts-rail-logo {
-  padding: 0.85rem 0.4rem;
+  height: 64px;
+  padding: 0.7rem 0.35rem;
 }
 
 .ts-shell.is-rail-collapsed .ts-rail-logo img {
-  height: 40px;
-  width: 40px;
-  max-width: 40px;
-  object-fit: cover;
-  object-position: left center;
+  height: 32px;
+  width: auto;
+  max-width: 52px;
+  object-fit: contain;
+  object-position: center;
 }
 
 .ts-shell.is-rail-collapsed .ts-rail-nav {
@@ -1466,6 +1469,10 @@ code {
 
 .ts-form-grid .ts-field {
   margin-bottom: 0;
+}
+
+.ts-form-grid .ts-field-span {
+  grid-column: 1 / -1;
 }
 
 .ts-form-grid .ts-input {
