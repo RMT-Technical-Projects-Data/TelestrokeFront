@@ -87,6 +87,7 @@ code {
   border-right: 1px solid rgba(255, 255, 255, 0.06);
   z-index: 40;
   overflow: hidden;
+  position: relative;
   transition: width 0.22s ease, transform 0.25s ease, border-color 0.22s ease;
 }
 
@@ -286,6 +287,38 @@ code {
 .ts-rail-toggle {
   display: inline-flex;
   flex-shrink: 0;
+}
+
+.ts-shell.is-rail-locked .ts-rail {
+  pointer-events: none;
+  user-select: none;
+}
+
+.ts-shell.is-rail-locked .ts-rail::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 18, 28, 0.52);
+  z-index: 6;
+}
+
+.ts-shell.is-rail-locked .ts-nav-item {
+  opacity: 0.55;
+}
+
+.ts-shell.is-exam-live .ts-topbar {
+  padding: 0.5rem 0.85rem;
+}
+
+.ts-shell.is-exam-live .ts-topbar-title {
+  font-size: 1.05rem;
+}
+
+.ts-shell.is-exam-live .ts-main {
+  overflow: hidden;
+  padding: 0.55rem 0.7rem 0.65rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .ts-overlay {
@@ -1650,13 +1683,138 @@ code {
   min-width: 0;
 }
 
+.ts-exam-video {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .ts-exam-video-inner {
   min-height: 320px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ts-exam-video-live {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ts-exam-player {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  background: #0b1220;
+}
+
+.ts-exam-player-frame,
+.ts-exam-player-frame .react-player {
+  position: absolute;
+  inset: 0;
 }
 
 .ts-exam-player video,
-.ts-exam-player .react-player {
+.ts-exam-player .react-player,
+.ts-exam-player-frame video {
   width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+}
+
+.ts-exam-stage {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.ts-exam-grid.is-live {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  margin-bottom: 0;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0.55rem;
+}
+
+.ts-exam-grid.is-live .ts-exam-video {
+  flex: 1.08 1 0;
+}
+
+.ts-exam-grid.is-live .ts-exam-charts {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ts-exam-grid.is-live .ts-exam-side {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ts-exam-grid.is-live .ts-exam-video-inner {
+  min-height: 0;
+}
+
+.ts-exam-grid.is-live .ts-panel-head {
+  padding: 0.45rem 0.75rem;
+}
+
+.ts-exam-grid.is-live .ts-exam-charts-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  gap: 0.2rem;
+  padding: 0.15rem 0.45rem 0.35rem;
+}
+
+.ts-exam-grid.is-live .ts-exam-chart {
+  height: auto;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+}
+
+.ts-exam-grid.is-live .ts-exam-chart-title {
+  font-size: 0.7rem;
+  margin: 0;
+}
+
+.ts-exam-grid.is-live .ts-exam-side-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ts-exam-grid.is-live .ts-exam-patient-row {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ts-exam-grid.is-live .ts-exam-inline-field .ts-input,
+.ts-exam-grid.is-live .ts-exam-inline-field-grow .ts-exam-textarea {
+  width: 100%;
+}
+
+.ts-exam-grid.is-live .ts-exam-controls-bar {
+  padding: 0.4rem 0.6rem 0.5rem;
+}
+
+.ts-exam-grid.is-live .ts-exam-tabs {
+  flex-shrink: 0;
+  padding: 0.4rem 0.5rem 0;
+}
+
+.ts-exam-grid.is-live .ts-exam-tabs button {
+  padding: 0.4rem 0.55rem;
+  font-size: 0.75rem;
 }
 
 .ts-exam-join {
@@ -1939,6 +2097,14 @@ code {
 
   .ts-exam-side {
     grid-column: 1 / -1;
+  }
+
+  .ts-exam-grid.is-live {
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+
+  .ts-exam-grid.is-live .ts-exam-side {
+    grid-column: auto;
   }
 }
 

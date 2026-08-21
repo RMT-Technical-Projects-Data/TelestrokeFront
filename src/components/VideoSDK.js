@@ -76,7 +76,7 @@ function ParticipantView(props) {
   return (
     <>
       {props.index > 0 ? (
-        <div className="p-2">
+        <div className="ts-exam-player-frame">
           <audio ref={micRef} autoPlay playsInline muted={isLocal} />
           {webcamOn ? (
             <ReactPlayer
@@ -87,7 +87,7 @@ function ParticipantView(props) {
               muted={false}
               playing={true}
               url={videoStream}
-              height="360px"
+              height="100%"
               width="100%"
               onError={(err) => {
                 console.log(err, "participant video error");
@@ -290,7 +290,7 @@ function MeetingView(props) {
   return (
     <div className="ts-exam-video-inner">
       {joined && joined === "JOINED" ? (
-        <div>
+        <div className="ts-exam-video-live">
           <div className="ts-exam-player">
             {[...participants.keys()].map((participantId, index) => (
               <ParticipantView

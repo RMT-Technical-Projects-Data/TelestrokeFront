@@ -38,11 +38,11 @@ const adminNav = [
   },
 ];
 
-const Sidebar = ({ page, variant = "user", isOpen, collapsed, onClose }) => {
+const Sidebar = ({ page, variant = "user", isOpen, collapsed, locked = false, onClose }) => {
   const groups = variant === "admin" ? adminNav : clinicianNav;
 
   return (
-    <aside className={`ts-rail ${isOpen ? "is-open" : "is-collapsed"}`}>
+    <aside className={`ts-rail ${isOpen ? "is-open" : "is-collapsed"} ${locked ? "is-locked" : ""}`}>
       <div className="ts-rail-logo">
         <img src={logo} alt="Telestroke" />
       </div>
@@ -56,8 +56,16 @@ const Sidebar = ({ page, variant = "user", isOpen, collapsed, onClose }) => {
                 <NavLink
                   key={item.page}
                   to={item.to}
-                  onClick={onClose}
-                  title={item.text}
+                  onClick={(event) => {
+                    if (locked) {
+                      event.preventDefault();
+                      return;
+                    }
+                    onClose?.();
+                  }}
+                  title={locked ? "Navigation is locked during the live exam" : item.text}
+                  tabIndex={locked ? -1 : undefined}
+                  aria-disabled={locked}
                   className={`ts-nav-item ${page === item.page ? "is-active" : ""}`}
                 >
                   <Icon size={18} />
