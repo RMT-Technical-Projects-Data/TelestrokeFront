@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getAllAppointments, parseAppointmentList, AppointmentFormSubmit } from "../utils/auth";
 import { getToken, createMeeting } from "../API";
-import { Copy, Phone, Video, Calendar, FileText } from "lucide-react";
+import { Copy, Phone, Video } from "lucide-react";
 import AppShell from "../components/AppShell";
 import { buildAppointmentInsights } from "../utils/overviewInsights";
 
@@ -264,23 +264,6 @@ const MeetingPage = () => {
                 <p>Create a meeting on the left to start an exam immediately.</p>
               </div>
             )}
-          </div>
-
-          <div className="ts-panel">
-            <div className="ts-panel-head">
-              <h3 className="ts-panel-title">Quick links</h3>
-            </div>
-            <div className="ts-meeting-steps">
-              <Link to="/appointment" className="ts-btn ts-btn-ghost" style={{ justifyContent: "flex-start" }}>
-                <Calendar size={15} /> Schedule appointment
-              </Link>
-              <Link to="/emr" className="ts-btn ts-btn-ghost" style={{ justifyContent: "flex-start" }}>
-                <FileText size={15} /> EMR reports
-              </Link>
-              <Link to="/dashboard" className="ts-btn ts-btn-ghost" style={{ justifyContent: "flex-start" }}>
-                <Video size={15} /> Back to overview
-              </Link>
-            </div>
           </div>
         </div>
       </div>

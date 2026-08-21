@@ -3,7 +3,6 @@ import AppShell from "../components/AppShell";
 import { Search } from "lucide-react";
 import client from "../api/client";
 import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faDownload, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { Line } from 'react-chartjs-2';
@@ -12,6 +11,15 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Papa from 'papaparse';
 
+const getReportId = (exam) =>
+  exam?.reportId || exam?.patientData?.reportId || null;
+
+const downsamplePoints = (points, maxPoints) => {
+  if (!maxPoints || points.length <= maxPoints) return points;
+  const step = Math.ceil(points.length / maxPoints);
+  return points.filter((_, index) => index % step === 0 || index === points.length - 1);
+};
+
 const EMRReportpage = () => {
   const [examData, setExamData] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,6 +27,7 @@ const EMRReportpage = () => {
   const [stimulusTemplates, setStimulusTemplates] = useState({});
   const [loading, setLoading] = useState(true);
   const [generatingPDFs, setGeneratingPDFs] = useState({}); // Track generating state per row
+  const [viewingReports, setViewingReports] = useState({});
   const rowsPerPage = 6;
 
   useEffect(() => {
@@ -126,16 +135,29 @@ const EMRReportpage = () => {
     }
   };
 
-  const generateChartData = (session, isEyeOnly = false) => {
+  const fetchFullExam = async (exam) => {
+    const hasPoints = exam?.trackingSessions?.some(
+      (session) => Array.isArray(session.dataPoints) && session.dataPoints.length > 0
+    );
+    const needsPoints = Boolean(exam?.trackingSessions?.length) && !hasPoints;
+    if (!needsPoints || !exam?._id) return exam;
+    const response = await client.get(`/api/examdatas/${exam._id}`);
+    return response.data;
+  };
+
+  const generateChartData = (session, isEyeOnly = false, maxPoints) => {
     if (!session?.dataPoints || session.dataPoints.length === 0) {
       console.warn("No data points in session:", session);
       return null;
     }
 
     // Use the actual recorded data points
-    const dataPoints = session.dataPoints
-      .filter(dp => dp.relativeTime != null && (dp.eyeX != null || dp.eyeY != null))
-      .sort((a, b) => a.relativeTime - b.relativeTime);
+    const dataPoints = downsamplePoints(
+      session.dataPoints
+        .filter(dp => dp.relativeTime != null && (dp.eyeX != null || dp.eyeY != null))
+        .sort((a, b) => a.relativeTime - b.relativeTime),
+      maxPoints
+    );
 
     if (dataPoints.length === 0) {
       console.warn("No valid data points after filtering:", session);
@@ -323,29 +345,25 @@ const EMRReportpage = () => {
     return currentY;
   };
 
-  // Improved chart generation with better quality
-  const generateHighQualityChart = async (chartData, title, isEyeOnly, sessionCount, chartType) => {
+  const generateChartImage = async (chartData, title, isEyeOnly, chartType, preview = false) => {
+    const width = preview ? 800 : 1200;
+    const height = preview ? 400 : 600;
     const container = document.createElement("div");
-    container.style.width = "1200px"; // Increased width for much better quality
-    container.style.height = "600px";
+    container.style.width = `${width}px`;
+    container.style.height = `${height}px`;
     container.style.position = "absolute";
     container.style.left = "-9999px";
     container.style.top = "-9999px";
     container.style.background = "#ffffff";
-    container.style.padding = "40px"; // More padding for cleaner look
-    container.style.border = "1px solid #ddd";
     document.body.appendChild(container);
 
     try {
-      container.innerHTML = '<canvas id="highQualityChart"></canvas>';
-      const canvas = container.querySelector('#highQualityChart');
-      // Set high internal resolution
-      canvas.width = 2400;
-      canvas.height = 1200;
-      canvas.style.width = "1200px";
-      canvas.style.height = "600px";
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      container.appendChild(canvas);
 
-      const datasets = chartType === 'horizontal'
+      const datasets = chartType === "horizontal"
         ? (isEyeOnly ? [chartData.datasets[0]] : [chartData.datasets[0], chartData.datasets[1]])
         : (isEyeOnly ? [chartData.datasets[1]] : [chartData.datasets[2], chartData.datasets[3]]);
 
@@ -353,110 +371,59 @@ const EMRReportpage = () => {
         type: "line",
         data: {
           labels: chartData.labels,
-          datasets: datasets
+          datasets
         },
         options: {
           responsive: false,
           maintainAspectRatio: false,
-          animation: { duration: 0 },
+          animation: false,
           plugins: {
             legend: {
               display: true,
-              position: 'top',
+              position: "top",
               labels: {
-                font: {
-                  size: 16, // Larger font for better readability
-                  weight: 'bold',
-                  family: "'Helvetica', 'Arial', sans-serif"
-                },
+                font: { size: preview ? 12 : 16, weight: "bold" },
                 usePointStyle: true,
-                padding: 20
+                padding: preview ? 10 : 20
               }
             },
             title: {
               display: true,
               text: title,
-              font: {
-                size: 20,
-                weight: 'bold',
-                family: "'Helvetica', 'Arial', sans-serif"
-              },
-              padding: { bottom: 20 }
+              font: { size: preview ? 14 : 20, weight: "bold" },
+              padding: { bottom: preview ? 10 : 20 }
             },
           },
           scales: {
             x: {
-              type: 'linear',
+              type: "linear",
               title: {
                 display: true,
-                text: 'Time (seconds)',
-                font: {
-                  size: 14,
-                  weight: 'bold',
-                  family: "'Helvetica', 'Arial', sans-serif"
-                }
-              },
-              ticks: {
-                font: {
-                  size: 12,
-                  family: "'Helvetica', 'Arial', sans-serif"
-                }
+                text: "Time (seconds)",
+                font: { size: preview ? 11 : 14, weight: "bold" }
               }
             },
             y: {
-              min: chartType === 'horizontal' ? -70 : -40,
-              max: chartType === 'horizontal' ? 70 : 40,
+              min: chartType === "horizontal" ? -70 : -40,
+              max: chartType === "horizontal" ? 70 : 40,
               title: {
                 display: true,
-                text: chartType === 'horizontal' ? 'Horizontal Position' : 'Vertical Position',
-                font: {
-                  size: 14,
-                  weight: 'bold',
-                  family: "'Helvetica', 'Arial', sans-serif"
-                }
-              },
-              ticks: {
-                font: {
-                  size: 12,
-                  family: "'Helvetica', 'Arial', sans-serif"
-                }
+                text: chartType === "horizontal" ? "Horizontal Position" : "Vertical Position",
+                font: { size: preview ? 11 : 14, weight: "bold" }
               }
             },
           },
           elements: {
-            line: {
-              borderWidth: 2, // Thicker lines for better visibility
-            },
-            point: {
-              radius: 0, // No points for cleaner look
-            }
+            line: { borderWidth: 2 },
+            point: { radius: 0 }
           },
         },
       });
 
-      // Wait for chart to render completely
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Generate high-quality image
-      const chartImage = await html2canvas(container, {
-        scale: 3, // Triple the scale for ultra-high resolution
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        width: 1200,
-        height: 600,
-        onclone: (clonedDoc) => {
-          const clonedCanvas = clonedDoc.querySelector('#highQualityChart');
-          if (clonedCanvas) {
-            clonedCanvas.style.width = '1200px';
-            clonedCanvas.style.height = '600px';
-          }
-        }
-      });
-
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const image = chart.toBase64Image("image/png", preview ? 0.85 : 1);
       chart.destroy();
-      return chartImage;
-
+      return image;
     } finally {
       if (container.parentNode) {
         container.parentNode.removeChild(container);
@@ -464,7 +431,7 @@ const EMRReportpage = () => {
     }
   };
 
-  const generatePDF = async (patientData, patientId, rowIndex) => {
+  const generatePDF = async (examSummary, patientId, rowIndex) => {
     // Create a unique key for this specific row
     const rowKey = `${patientId}-${rowIndex}`;
 
@@ -472,6 +439,8 @@ const EMRReportpage = () => {
     setGeneratingPDFs(prev => ({ ...prev, [rowKey]: true }));
 
     try {
+      const patientData = await fetchFullExam(examSummary);
+      const reportId = getReportId(patientData) || "N/A";
       const doc = new jsPDF();
       const margin = 15;
       const pageWidth = doc.internal.pageSize.width;
@@ -492,7 +461,7 @@ const EMRReportpage = () => {
 
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
-      doc.text(`Report ID: ${patientData.reportId || 'N/A'}`, pageWidth / 2, 35, { align: "center" });
+      doc.text(`Report ID: ${reportId}`, pageWidth / 2, 35, { align: "center" });
       // doc.text(`Patient ID: ${patientId}`, pageWidth / 2, 42, { align: "center" });
       doc.text(`Exam Date: ${new Date().toLocaleDateString()}`, pageWidth / 2, 49, { align: "center" });
 
@@ -506,7 +475,7 @@ const EMRReportpage = () => {
       yPosition += 10;
 
       const patientInfoData = [
-        ['Report ID', patientData.reportId || 'N/A'],
+        ['Report ID', reportId],
         ['Patient ID', patientData.patientData.patientid || 'N/A'],
         ['Name', patientData.patientData.Name || 'N/A'],
         ['Date of Birth', patientData.patientData.patientDOB ? new Date(patientData.patientData.patientDOB).toLocaleDateString() : 'N/A'],
@@ -649,11 +618,10 @@ const EMRReportpage = () => {
 
               if (chartData) {
                 // Generate high-quality X Chart
-                const xChartImage = await generateHighQualityChart(
+                const xChartImage = await generateChartImage(
                   chartData,
                   `Horizontal Eye Movement - Session ${sessionCount}`,
                   isEyeOnly,
-                  sessionCount,
                   'horizontal'
                 );
 
@@ -674,11 +642,10 @@ const EMRReportpage = () => {
                 yPosition += chartHeight + 10;
 
                 // Generate high-quality Y Chart
-                const yChartImage = await generateHighQualityChart(
+                const yChartImage = await generateChartImage(
                   chartData,
                   `Vertical Eye Movement - Session ${sessionCount}`,
                   isEyeOnly,
-                  sessionCount,
                   'vertical'
                 );
 
@@ -743,15 +710,19 @@ const EMRReportpage = () => {
     }
   };
 
-  const handleShowReport = async (patientData) => {
-    if (!patientData) {
+  const handleShowReport = async (examSummary) => {
+    if (!examSummary) {
       console.error(`No patient data provided`);
       toast.error("Patient data not found");
       return;
     }
 
+    const reportKey = examSummary._id || examSummary.patientData?.patientid;
+    setViewingReports((prev) => ({ ...prev, [reportKey]: true }));
+
     const reportWindow = window.open("", "_blank");
     if (!reportWindow) {
+      setViewingReports((prev) => ({ ...prev, [reportKey]: false }));
       toast.error("Please allow popups to view the report");
       return;
     }
@@ -769,29 +740,28 @@ const EMRReportpage = () => {
         <body>
           <div style="text-align: center;">
             <div class="loader" style="margin: 0 auto 20px;"></div>
-            <p>Generating high-quality report with charts...</p>
+            <p>Opening report...</p>
           </div>
         </body>
       </html>
     `);
 
-    // Generate chart images for all sessions
-    const sessionCharts = [];
-    if (patientData.trackingSessions) {
-      for (let i = 0; i < patientData.trackingSessions.length; i++) {
-        const session = patientData.trackingSessions[i];
-        const isEyeOnly = session.stimulusType === "none";
-        const chartData = generateChartData(session, isEyeOnly);
+    try {
+    const patientData = await fetchFullExam(examSummary);
+    const reportId = getReportId(patientData) || "N/A";
 
-        if (chartData) {
-          const xChart = await generateHighQualityChart(chartData, `Horizontal Movement - Session ${i + 1}`, isEyeOnly, i + 1, 'horizontal');
-          const yChart = await generateHighQualityChart(chartData, `Vertical Movement - Session ${i + 1}`, isEyeOnly, i + 1, 'vertical');
-          sessionCharts.push({ x: xChart.toDataURL(), y: yChart.toDataURL() });
-        } else {
-          sessionCharts.push(null);
-        }
-      }
-    }
+    const sessionCharts = await Promise.all(
+      (patientData.trackingSessions || []).map(async (session, i) => {
+        const isEyeOnly = session.stimulusType === "none";
+        const chartData = generateChartData(session, isEyeOnly, 400);
+        if (!chartData) return null;
+        const [x, y] = await Promise.all([
+          generateChartImage(chartData, `Horizontal Movement - Session ${i + 1}`, isEyeOnly, "horizontal", true),
+          generateChartImage(chartData, `Vertical Movement - Session ${i + 1}`, isEyeOnly, "vertical", true),
+        ]);
+        return { x, y };
+      })
+    );
 
     const reportHtml = `
       <!DOCTYPE html>
@@ -899,7 +869,7 @@ const EMRReportpage = () => {
           <div class="report-container">
             <div class="header">
               <div>
-                <h1 style="color: #4f46e5; font-size: 24px;">REPORT ID: ${patientData.reportId || 'N/A'}</h1>
+                <h1 style="color: #4f46e5; font-size: 24px;">REPORT ID: ${reportId}</h1>
                 <!-- <div style="color: #64748b; font-weight: 600; margin-top: 4px;">Patient ID: ${patientData.patientData.patientid}</div> -->
               </div>
               <div class="header-meta">
@@ -975,6 +945,17 @@ const EMRReportpage = () => {
     reportWindow.document.open();
     reportWindow.document.write(reportHtml);
     reportWindow.document.close();
+    } catch (error) {
+      console.error("Error opening report:", error);
+      toast.error("Failed to open report");
+      if (reportWindow && !reportWindow.closed) {
+        reportWindow.document.open();
+        reportWindow.document.write("<p style='font-family:sans-serif;padding:40px;'>Failed to load report.</p>");
+        reportWindow.document.close();
+      }
+    } finally {
+      setViewingReports((prev) => ({ ...prev, [reportKey]: false }));
+    }
   };
 
   const handleSearchChange = (event) => {
@@ -983,10 +964,18 @@ const EMRReportpage = () => {
   };
 
   const filteredExamData = useMemo(() => {
-    return examData.filter((exam) =>
-      exam.patientData.patientid.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (exam.patientData.Name || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return examData;
+    return examData.filter((exam) => {
+      const patientId = exam.patientData?.patientid || "";
+      const name = exam.patientData?.Name || "";
+      const reportId = getReportId(exam) || "";
+      return (
+        patientId.toLowerCase().includes(query) ||
+        name.toLowerCase().includes(query) ||
+        reportId.toLowerCase().includes(query)
+      );
+    });
   }, [examData, searchQuery]);
 
   const totalPages = Math.ceil(filteredExamData.length / rowsPerPage);
@@ -1014,7 +1003,7 @@ const EMRReportpage = () => {
         type="search"
         value={searchQuery}
         onChange={handleSearchChange}
-        placeholder="Search by Meeting ID"
+        placeholder="Search by report ID or meeting ID"
         className="ts-search"
       />
     </div>
@@ -1055,28 +1044,31 @@ const EMRReportpage = () => {
             <tbody>
               {currentRows.length > 0 ? (
                 currentRows.map((exam, index) => {
-                  const patientId = exam.patientData.patientid;
+                  const patientId = exam.patientData?.patientid || "N/A";
+                  const reportId = getReportId(exam) || "N/A";
                   const isGenerating = isGeneratingPDF(patientId, index);
+                  const isViewing = Boolean(viewingReports[exam._id] || viewingReports[patientId]);
 
                   return (
-                    <tr key={`${patientId}-${index}`}>
+                    <tr key={exam._id || `${patientId}-${index}`}>
                       <td>
                         <div className="ts-user-cell">
-                          <div className="ts-avatar">{String(exam.reportId || "?").charAt(0)}</div>
-                          <div><strong>{exam.reportId || "N/A"}</strong></div>
+                          <div className="ts-avatar">{reportId === "N/A" ? "?" : reportId.replace(/^RPT-0*/, "").slice(-2) || "0"}</div>
+                          <div><strong>{reportId}</strong></div>
                         </div>
                       </td>
                       <td className="ts-muted">{patientId}</td>
-                      <td>{exam.patientData.Name || "N/A"}</td>
+                      <td>{exam.patientData?.Name || "N/A"}</td>
                       <td className="ts-col-center">
                         <div className="ts-actions">
                           <button
                             type="button"
                             onClick={() => handleShowReport(exam)}
+                            disabled={isViewing}
                             className="ts-btn ts-btn-ghost"
                           >
                             <FontAwesomeIcon icon={faEye} className="mr-1" />
-                            View
+                            {isViewing ? "Opening..." : "View"}
                           </button>
                           <button
                             type="button"
