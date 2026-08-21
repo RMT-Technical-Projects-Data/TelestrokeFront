@@ -24,9 +24,15 @@ function QuadrantTracking({ settings, updateSetting }) {
     };
 
     return (
-        <div style={styles.container}>
-            <p className="font-bold text-lg">Select Quadrant Shape</p>
-            <select onChange={handleShapeChange} value={selectedShape}>
+        <div className="ts-exam-control-stack">
+            <div className="ts-exam-inline-field ts-exam-inline-field-stack">
+            <label htmlFor="quadrant-shape">Select Quadrant Shape</label>
+            <select
+              id="quadrant-shape"
+              className="ts-input"
+              onChange={handleShapeChange}
+              value={selectedShape}
+            >
             <option value="" disabled>
                 Select
             </option>
@@ -34,13 +40,9 @@ function QuadrantTracking({ settings, updateSetting }) {
             <option value="star">Star</option>
             <option value="square">Square</option>
             </select>
-            {/* <select onChange={handleShapeChange} value={selectedShape}>
-                <option value="circle">Circle</option>
-                <option value="star">Star</option>
-                <option value="square">Square</option>
-            </select> */}
+            </div>
 
-            <h1 className="font-bold text-lg">Button Matrix</h1>
+            <h1 className="ts-exam-side-label">Button Matrix</h1>
             <div style={styles.matrix}>
                 {[...Array(gridSize)].map((_, row) => (
                     <div key={row} style={styles.row}>

@@ -11,9 +11,6 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Papa from 'papaparse';
 
-const getReportId = (exam) =>
-  exam?.reportId || exam?.patientData?.reportId || null;
-
 const downsamplePoints = (points, maxPoints) => {
   if (!maxPoints || points.length <= maxPoints) return points;
   const step = Math.ceil(points.length / maxPoints);
@@ -440,7 +437,6 @@ const EMRReportpage = () => {
 
     try {
       const patientData = await fetchFullExam(examSummary);
-      const reportId = getReportId(patientData) || "N/A";
       const doc = new jsPDF();
       const margin = 15;
       const pageWidth = doc.internal.pageSize.width;
@@ -461,8 +457,7 @@ const EMRReportpage = () => {
 
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
-      doc.text(`Report ID: ${reportId}`, pageWidth / 2, 35, { align: "center" });
-      // doc.text(`Patient ID: ${patientId}`, pageWidth / 2, 42, { align: "center" });
+      doc.text(`Meeting ID: ${patientId || "N/A"}`, pageWidth / 2, 35, { align: "center" });
       doc.text(`Exam Date: ${new Date().toLocaleDateString()}`, pageWidth / 2, 49, { align: "center" });
 
       yPosition = 65;
@@ -475,8 +470,7 @@ const EMRReportpage = () => {
       yPosition += 10;
 
       const patientInfoData = [
-        ['Report ID', reportId],
-        ['Patient ID', patientData.patientData.patientid || 'N/A'],
+        ['Meeting ID', patientData.patientData.patientid || 'N/A'],
         ['Name', patientData.patientData.Name || 'N/A'],
         ['Date of Birth', patientData.patientData.patientDOB ? new Date(patientData.patientData.patientDOB).toLocaleDateString() : 'N/A'],
         ['Sex', patientData.patientData.patientSex || 'N/A'],
@@ -748,7 +742,6 @@ const EMRReportpage = () => {
 
     try {
     const patientData = await fetchFullExam(examSummary);
-    const reportId = getReportId(patientData) || "N/A";
 
     const sessionCharts = await Promise.all(
       (patientData.trackingSessions || []).map(async (session, i) => {
@@ -869,8 +862,8 @@ const EMRReportpage = () => {
           <div class="report-container">
             <div class="header">
               <div>
-                <h1 style="color: #4f46e5; font-size: 24px;">REPORT ID: ${reportId}</h1>
-                <!-- <div style="color: #64748b; font-weight: 600; margin-top: 4px;">Patient ID: ${patientData.patientData.patientid}</div> -->
+                <h1 style="color: #4f46e5; font-size: 24px;">${patientData.patientData.Name || "Examination Report"}</h1>
+                <div style="color: #64748b; font-weight: 600; margin-top: 4px;">Meeting ID: ${patientData.patientData.patientid || "N/A"}</div>
               </div>
               <div class="header-meta">
                 <div>Doctor: <strong>${patientData.patientData.Doctor || 'N/A'}</strong></div>
@@ -969,11 +962,9 @@ const EMRReportpage = () => {
     return examData.filter((exam) => {
       const patientId = exam.patientData?.patientid || "";
       const name = exam.patientData?.Name || "";
-      const reportId = getReportId(exam) || "";
       return (
         patientId.toLowerCase().includes(query) ||
-        name.toLowerCase().includes(query) ||
-        reportId.toLowerCase().includes(query)
+        name.toLowerCase().includes(query)
       );
     });
   }, [examData, searchQuery]);
@@ -1003,7 +994,7 @@ const EMRReportpage = () => {
         type="search"
         value={searchQuery}
         onChange={handleSearchChange}
-        placeholder="Search by report ID or meeting ID"
+        placeholder="Search by meeting ID or patient"
         className="ts-search"
       />
     </div>
@@ -1035,7 +1026,6 @@ const EMRReportpage = () => {
           <table className="ts-table">
             <thead>
               <tr>
-                <th>Report ID</th>
                 <th>Meeting ID</th>
                 <th>Patient</th>
                 <th className="ts-col-center">Actions</th>
@@ -1045,19 +1035,18 @@ const EMRReportpage = () => {
               {currentRows.length > 0 ? (
                 currentRows.map((exam, index) => {
                   const patientId = exam.patientData?.patientid || "N/A";
-                  const reportId = getReportId(exam) || "N/A";
                   const isGenerating = isGeneratingPDF(patientId, index);
                   const isViewing = Boolean(viewingReports[exam._id] || viewingReports[patientId]);
+                  const avatarText = String(exam.patientData?.Name || patientId || "?").charAt(0).toUpperCase();
 
                   return (
                     <tr key={exam._id || `${patientId}-${index}`}>
                       <td>
                         <div className="ts-user-cell">
-                          <div className="ts-avatar">{reportId === "N/A" ? "?" : reportId.replace(/^RPT-0*/, "").slice(-2) || "0"}</div>
-                          <div><strong>{reportId}</strong></div>
+                          <div className="ts-avatar">{avatarText}</div>
+                          <div><strong>{patientId}</strong></div>
                         </div>
                       </td>
-                      <td className="ts-muted">{patientId}</td>
                       <td>{exam.patientData?.Name || "N/A"}</td>
                       <td className="ts-col-center">
                         <div className="ts-actions">
@@ -1086,7 +1075,7 @@ const EMRReportpage = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan="4" className="ts-empty">
+                  <td colSpan="3" className="ts-empty">
                     {examData.length === 0 ? "No exam data found" : "No reports match your search"}
                   </td>
                 </tr>

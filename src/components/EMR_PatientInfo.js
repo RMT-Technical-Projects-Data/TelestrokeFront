@@ -86,155 +86,135 @@ export default function EMR_PatientInfo() {
   };
 
   return (
-    <div className="p-2">
-      <div className="flex flex-wrap gap-4 ml-3">
-        {/* Name, Doctor, D.O.B, and Sex on a single line */}
-        <div className="flex flex-row gap-4 items-center">
-          <p className="font-bold text-lg">Patient</p> {/* Title on the left */}
-          <div>
-            <input
-              className="border-t-0 border-x-0 border-b-2"
-              type="text"
-              name="Name"
-              value={patientEMR.Name}
-              onChange={handleChange}
-              maxLength={30} // Limit to 20 characters
-              placeholder="Name"
-            />
-          </div>
-          <div className="flex flex-row gap-4 items-center">
-            <p className="font-bold text-lg">Doctor</p> {/* Title on the left */}
-
-            <div>
-              <input
-                className="border-t-0 border-x-0 border-b-2"
-                type="text"
-                name="Doctor"
-                value={patientEMR.Doctor}
-                onChange={handleChange}
-                readOnly
-                placeholder="Doctor"
-              />
-            </div>
-          </div>
-          <div className="flex flex-row gap-4 items-center">
-            <p className="font-bold text-lg">DOB</p> {/* Title on the left */}
-            <div>
-              <input
-                className="border-t-0 border-x-0 border-b-2"
-                type="date"
-                name="PatientDOB"
-                value={patientEMR.PatientDOB}
-                onChange={handleChange}
-                placeholder="D.O.B"
-              />
-            </div>
-          </div>
-          <div className="flex flex-row gap-4 items-center">
-            <p className="font-bold text-lg">Gender</p> {/* Title on the left */}
-            <div>
-              <select
-                className="border-t-0 border-x-0 border-b-2"
-                name="PatientSex"
-                value={patientEMR.PatientSex}
-                onChange={handleChange}
-              >
-                <option>Male</option>
-                <option>Female</option>
-                <option>Other</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Exam Date, Visual Activity OD/OS on a single line */}
-        <div className="flex flex-row gap-4 items-center">
-          <p className="font-bold text-lg">Exam Date</p> {/* Title on the left */}
+    <div className="ts-exam-patient">
+      <div className="ts-exam-patient-row">
+        <div className="ts-exam-inline-field">
+          <label htmlFor="patient-name">Patient</label>
           <input
-            className="border-t-0 border-x-0 border-b-2"
+            id="patient-name"
+            className="ts-input"
+            type="text"
+            name="Name"
+            value={patientEMR.Name}
+            onChange={handleChange}
+            maxLength={30}
+            placeholder="Name"
+          />
+        </div>
+        <div className="ts-exam-inline-field">
+          <label htmlFor="patient-doctor">Doctor</label>
+          <input
+            id="patient-doctor"
+            className="ts-input"
+            type="text"
+            name="Doctor"
+            value={patientEMR.Doctor}
+            onChange={handleChange}
+            readOnly
+            placeholder="Doctor"
+          />
+        </div>
+        <div className="ts-exam-inline-field">
+          <label htmlFor="patient-dob">DOB</label>
+          <input
+            id="patient-dob"
+            className="ts-input"
+            type="date"
+            name="PatientDOB"
+            value={patientEMR.PatientDOB}
+            onChange={handleChange}
+          />
+        </div>
+        <div className="ts-exam-inline-field">
+          <label htmlFor="patient-sex">Gender</label>
+          <select
+            id="patient-sex"
+            className="ts-input"
+            name="PatientSex"
+            value={patientEMR.PatientSex}
+            onChange={handleChange}
+          >
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="ts-exam-patient-row">
+        <div className="ts-exam-inline-field">
+          <label htmlFor="exam-date">Exam Date</label>
+          <input
+            id="exam-date"
+            className="ts-input"
             type="date"
             name="ExamDate"
             value={patientEMR.ExamDate}
             onChange={handleChange}
-            placeholder="Exam Date"
           />
-
-
-          <div className="flex flex-row gap-4 items-center">
-            <p className="font-bold text-lg">Visual</p> {/* Title on the left */}
-            <div className="flex flex-row gap-2">
-              <div>
-                <input
-                  className="border-t-0 border-x-0 border-b-2"
-                  type="text"
-                  name="VisualActivityOD"
-                  value={patientEMR.VisualActivityOD}
-                  onChange={handleChange}
-                  placeholder="OD"
-                  maxLength={30} // Limit text to 40 characters
-                />
-              </div>
-              <div>
-                <input
-                  className="border-t-0 border-x-0 border-b-2"
-                  type="text"
-                  name="VisualActivityOS"
-                  value={patientEMR.VisualActivityOS}
-                  onChange={handleChange}
-                  placeholder="OS"
-                  maxLength={30} // Limit text to 40 characters
-                />
-              </div>
-            </div>
-          </div>
         </div>
-
-
-        {/* Relevant Neurological Findings and Aphasia on a single line */}
-        <div className="flex flex-row gap-4">
-          <div>
-            <textarea
-              className="h-20 w-60 border border-gray-300 rounded p-2"
-              name="RelNeurologicalFinds"
-              value={patientEMR.RelNeurologicalFinds}
-              onChange={handleChange}
-              placeholder="Neurological Findings"
-              maxLength={50} // Limit text to 40 characters
-            />
-          </div>
-          <div className="flex flex-row gap-4">
-            <div className="flex items-center">
-
-            </div>
-            <textarea
-              className="h-20 w-60 border border-gray-300 rounded p-2"
-              name="AphasiaText"
-              value={patientEMR.AphasiaText}
-              onChange={handleChange}
-              placeholder="Aphasia Text"
-              maxLength={50} // Limit text to 40 characters
-
-            />
-            <div className="flex items-center mt-4"> {/* Added margin-top here */}
+        <div className="ts-exam-inline-field">
+          <label htmlFor="visual-od">Visual</label>
+          <input
+            id="visual-od"
+            className="ts-input"
+            type="text"
+            name="VisualActivityOD"
+            value={patientEMR.VisualActivityOD}
+            onChange={handleChange}
+            placeholder="OD"
+            maxLength={30}
+          />
+          <input
+            className="ts-input"
+            type="text"
+            name="VisualActivityOS"
+            value={patientEMR.VisualActivityOS}
+            onChange={handleChange}
+            placeholder="OS"
+            maxLength={30}
+          />
+        </div>
+        <div className="ts-exam-inline-field ts-exam-inline-field-grow">
+          <textarea
+            className="ts-input ts-exam-textarea"
+            name="RelNeurologicalFinds"
+            value={patientEMR.RelNeurologicalFinds}
+            onChange={handleChange}
+            placeholder="Neurological Findings"
+            maxLength={50}
+          />
+        </div>
+        <div className="ts-exam-inline-field ts-exam-inline-field-grow">
+          <textarea
+            className="ts-input ts-exam-textarea"
+            name="AphasiaText"
+            value={patientEMR.AphasiaText}
+            onChange={handleChange}
+            placeholder="Aphasia Text"
+            maxLength={50}
+          />
+          <div className="ts-exam-radio-row">
+            <label className="ts-exam-radio">
               <input
-                className="inline m-2"
                 type="radio"
                 value="true"
                 name="HasAphasia"
                 checked={patientEMR.HasAphasia === true}
                 onChange={handleChange}
               />
-              <label>Yes</label>
+              Yes
+            </label>
+            <label className="ts-exam-radio">
               <input
-                className="inline m-2"
                 type="radio"
                 value="false"
                 name="HasAphasia"
                 checked={patientEMR.HasAphasia === false}
                 onChange={handleChange}
               />
-              <label>No</label>
-            </div>
+              No
+            </label>
           </div>
         </div>
       </div>

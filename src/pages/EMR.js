@@ -1232,17 +1232,18 @@ const EMRpage = () => {
                                 animation: { duration: 0 },
                                 hover: { animationDuration: 0 },
                                 responsiveAnimationDuration: 0,
+                                layout: { padding: { top: 4, bottom: 18 } },
                                 plugins: {
                                   legend: {
                                     display: true,
                                     position: "top",
                                     labels: {
                                       color: "#000",
-                                      boxWidth: 15,
-                                      padding: 20,
+                                      boxWidth: 12,
+                                      padding: 8,
                                       font: {
                                         weight: 'bold',
-                                        size: 14
+                                        size: 12
                                       }
                                     },
                                   },
@@ -1256,7 +1257,8 @@ const EMRpage = () => {
                                     title: {
                                       display: true,
                                       text: "Time (s)",
-                                      font: { weight: 'bold', size: 14 }
+                                      padding: { top: 2, bottom: 8 },
+                                      font: { weight: 'bold', size: 12 }
                                     },
                                     ticks: {
                                       font: { weight: 'bold' }
@@ -1309,17 +1311,18 @@ const EMRpage = () => {
                                 animation: { duration: 0 },
                                 hover: { animationDuration: 0 },
                                 responsiveAnimationDuration: 0,
+                                layout: { padding: { top: 4, bottom: 18 } },
                                 plugins: {
                                   legend: {
                                     display: true,
                                     position: "top",
                                     labels: {
                                       color: "#000",
-                                      boxWidth: 15,
-                                      padding: 20,
+                                      boxWidth: 12,
+                                      padding: 8,
                                       font: {
                                         weight: 'bold',
-                                        size: 14
+                                        size: 12
                                       }
                                     },
                                   },
@@ -1333,7 +1336,8 @@ const EMRpage = () => {
                                     title: {
                                       display: true,
                                       text: "Time (s)",
-                                      font: { weight: 'bold', size: 14 }
+                                      padding: { top: 2, bottom: 8 },
+                                      font: { weight: 'bold', size: 12 }
                                     },
                                     ticks: {
                                       font: { weight: 'bold' }
@@ -1375,41 +1379,35 @@ const EMRpage = () => {
                   <span className="ts-panel-meta">Camera</span>
                 </div>
                 <div className="ts-exam-side-body">
-                        <h3 className="ts-exam-side-label">
-                          Eye camera
-                        </h3>
-                        <div className="flex items-center space-x-6">
-                          <div className="flex items-center">
-                            <input
-                              type="radio"
-                              id="left"
-                              name="eye"
-                              value="left"
-                              className="mr-2"
-                              checked={selectedEye === "left"}
-                              onChange={() => {
-                                setSelectedEye("left");
-                                updateSetting("eye_camera_control", "left");
-                              }}
-                            />
-                            <label htmlFor="left" className="text-lg">
+                        <div className="ts-exam-inline-field ts-exam-inline-field-stack">
+                          <label>Eye camera</label>
+                          <div className="ts-exam-field-box ts-exam-radio-row">
+                            <label className="ts-exam-radio">
+                              <input
+                                type="radio"
+                                id="left"
+                                name="eye"
+                                value="left"
+                                checked={selectedEye === "left"}
+                                onChange={() => {
+                                  setSelectedEye("left");
+                                  updateSetting("eye_camera_control", "left");
+                                }}
+                              />
                               Left
                             </label>
-                          </div>
-                          <div className="flex items-center">
-                            <input
-                              type="radio"
-                              id="right"
-                              name="eye"
-                              value="right"
-                              className="mr-2"
-                              checked={selectedEye === "right"}
-                              onChange={() => {
-                                setSelectedEye("right");
-                                updateSetting("eye_camera_control", "right");
-                              }}
-                            />
-                            <label htmlFor="right" className="text-lg">
+                            <label className="ts-exam-radio">
+                              <input
+                                type="radio"
+                                id="right"
+                                name="eye"
+                                value="right"
+                                checked={selectedEye === "right"}
+                                onChange={() => {
+                                  setSelectedEye("right");
+                                  updateSetting("eye_camera_control", "right");
+                                }}
+                              />
                               Right
                             </label>
                           </div>
@@ -1441,46 +1439,38 @@ const EMRpage = () => {
                         </div>
                         {selectedEye && (
                           <>
-                            <label
-                              htmlFor="examMode"
-                              className="text-lg font-semibold mr-4"
-                            >
-                              Exam Mode
-                            </label>
-                            <div className="flex items-center">
-                              <input
-                                onChange={() => {
-                                  updateSetting("exam_mode", "CenterFocus");
-                                  setCenterFocus(true);
-                                }}
-                                type="radio"
-                                id="centerFocus"
-                                name="examMode"
-                                value="centerFocus"
-                                className="mr-2"
-                                checked={centerFocus === true}
-                              />
-                              <label
-                                htmlFor="centerFocus"
-                                className="mr-6 text-lg"
-                              >
-                                Center Focus
-                              </label>
-                              <input
-                                onChange={() => {
-                                  updateSetting("exam_mode", "Quadrant");
-                                  setCenterFocus(false);
-                                }}
-                                type="radio"
-                                id="quadrant"
-                                name="examMode"
-                                value="quadrant"
-                                className="mr-2"
-                                checked={centerFocus === false}
-                              />
-                              <label htmlFor="quadrant" className="text-lg">
-                                Quadrant
-                              </label>
+                            <div className="ts-exam-inline-field ts-exam-inline-field-stack">
+                              <label>Exam Mode</label>
+                              <div className="ts-exam-field-box ts-exam-radio-row">
+                                <label className="ts-exam-radio">
+                                  <input
+                                    onChange={() => {
+                                      updateSetting("exam_mode", "CenterFocus");
+                                      setCenterFocus(true);
+                                    }}
+                                    type="radio"
+                                    id="centerFocus"
+                                    name="examMode"
+                                    value="centerFocus"
+                                    checked={centerFocus === true}
+                                  />
+                                  Center Focus
+                                </label>
+                                <label className="ts-exam-radio">
+                                  <input
+                                    onChange={() => {
+                                      updateSetting("exam_mode", "Quadrant");
+                                      setCenterFocus(false);
+                                    }}
+                                    type="radio"
+                                    id="quadrant"
+                                    name="examMode"
+                                    value="quadrant"
+                                    checked={centerFocus === false}
+                                  />
+                                  Quadrant
+                                </label>
+                              </div>
                             </div>
 
                             {centerFocus ? (
@@ -1502,43 +1492,44 @@ const EMRpage = () => {
                         {/* Session status display */}
                         <div className="ts-exam-status">
                           <h4>Session status</h4>
-                          <div className="text-sm">
+                          <div className="ts-exam-status-grid">
                             <p>
-                              <strong>Active:</strong>{" "}
-                              {currentSession ? "Yes" : "No"}
+                              <span>Active</span>
+                              <strong>{currentSession ? "Yes" : "No"}</strong>
                             </p>
                             <p>
-                              <strong>Stimulus:</strong>{" "}
-                              {isStimulusActive.current ? "ON" : "OFF"}
+                              <span>Stimulus</span>
+                              <strong>{isStimulusActive.current ? "ON" : "OFF"}</strong>
                             </p>
                             <p>
-                              <strong>Paused:</strong> {isPaused ? "Yes" : "No"}
+                              <span>Paused</span>
+                              <strong>{isPaused ? "Yes" : "No"}</strong>
                             </p>
                             <p>
-                              <strong>Data Points:</strong>{" "}
-                              {sessionDataPoints.current.length}
+                              <span>Data Points</span>
+                              <strong>{sessionDataPoints.current.length}</strong>
                             </p>
                             <p>
-                              <strong>CSV Complete:</strong>{" "}
-                              {stimulusDataComplete.current ? "Yes" : "No"}
+                              <span>CSV Complete</span>
+                              <strong>{stimulusDataComplete.current ? "Yes" : "No"}</strong>
                             </p>
                             <p>
-                              <strong>Plotting:</strong>{" "}
-                              {plottingEnabled ? "Enabled" : "Disabled"}
+                              <span>Plotting</span>
+                              <strong>{plottingEnabled ? "Enabled" : "Disabled"}</strong>
                             </p>
                             {currentSession && (
                               <>
                                 <p>
-                                  <strong>Type:</strong>{" "}
-                                  {currentSession.stimulusType}
+                                  <span>Type</span>
+                                  <strong>{currentSession.stimulusType}</strong>
                                 </p>
                                 <p>
-                                  <strong>Shape:</strong>{" "}
-                                  {currentSession.stimulusShape}
+                                  <span>Shape</span>
+                                  <strong>{currentSession.stimulusShape}</strong>
                                 </p>
                                 <p>
-                                  <strong>Eye:</strong>{" "}
-                                  {currentSession.selectedEye}
+                                  <span>Eye</span>
+                                  <strong>{currentSession.selectedEye}</strong>
                                 </p>
                               </>
                             )}

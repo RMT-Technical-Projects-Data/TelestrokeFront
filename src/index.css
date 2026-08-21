@@ -1705,11 +1705,20 @@ code {
 .ts-exam-charts-body {
   display: flex;
   flex-direction: column;
+  gap: 1.35rem;
+  padding: 0.35rem 0.85rem 1.15rem;
 }
 
 .ts-exam-chart {
-  height: 320px;
-  padding: 0.75rem 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 310px;
+  padding: 0.25rem 0.35rem 0.15rem;
+}
+
+.ts-exam-chart > div {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .ts-exam-chart-paused {
@@ -1721,7 +1730,7 @@ code {
 }
 
 .ts-exam-chart-title {
-  margin: 0 0 0.45rem;
+  margin: 0 0 0.2rem;
   text-align: center;
   font-size: 0.8125rem;
   font-weight: 700;
@@ -1790,6 +1799,137 @@ code {
 
 .ts-exam-form-body {
   padding: 1rem 1.1rem 1.15rem;
+}
+
+.ts-exam-patient {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.ts-exam-patient-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.ts-exam-inline-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ts-exam-inline-field label {
+  margin: 0;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ts-text);
+}
+
+.ts-exam-inline-field .ts-input {
+  width: 148px;
+  padding: 0.42rem 0.7rem;
+}
+
+.ts-exam-inline-field-grow {
+  flex: 1 1 220px;
+}
+
+.ts-exam-inline-field-grow .ts-exam-textarea {
+  width: 100%;
+  min-width: 180px;
+}
+
+.ts-exam-inline-field-stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ts-exam-inline-field-stack .ts-input {
+  width: 100%;
+}
+
+.ts-exam-textarea {
+  min-height: 76px;
+  resize: vertical;
+}
+
+.ts-exam-field-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--ts-border);
+  border-radius: var(--ts-radius);
+  background: var(--ts-surface);
+}
+
+.ts-exam-radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.ts-exam-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ts-text);
+  cursor: pointer;
+}
+
+.ts-exam-control-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.ts-exam-play-box {
+  justify-content: space-between;
+}
+
+.ts-exam-speed {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ts-exam-speed .slider {
+  width: 108px;
+}
+
+.ts-exam-speed span {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.ts-exam-status-grid {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.ts-exam-status-grid p {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.ts-exam-status-grid span {
+  color: var(--ts-text-muted);
+}
+
+.ts-exam-status-grid strong {
+  color: var(--ts-text);
 }
 
 @media (max-width: 1280px) {
