@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
+import { toast } from "react-toastify";
 import Sidebar from "./Sidebar";
 import ThemeToggle from "./ThemeToggle";
-import logo from "../assets/Telestroke-logo-mark.png";
+import ConfirmModal from "./ConfirmModal";
 
 const AppShell = ({
   page,
@@ -12,8 +14,12 @@ const AppShell = ({
   children,
   variant = "user",
   dense = false,
-  hideSidebar = false,
+  examLayout = false,
+  lockNavigation = false,
 }) => {
+  const navigate = useNavigate();
+  const wasLocked = useRef(false);
+  const [pendingLeave, setPendingLeave] = useState(null);
   const [railOpen, setRailOpen] = useState(() => {
     if (typeof window === "undefined") return true;
     const saved = localStorage.getItem("tsRailOpen");
@@ -26,45 +32,72 @@ const AppShell = ({
     localStorage.setItem("tsRailOpen", railOpen ? "1" : "0");
   }, [railOpen]);
 
+  useEffect(() => {
+    if (wasLocked.current && !lockNavigation) {
+      setRailOpen(true);
+      localStorage.setItem("tsRailOpen", "1");
+    }
+    wasLocked.current = lockNavigation;
+  }, [lockNavigation]);
+
   const closeIfMobile = () => {
     if (window.innerWidth <= 768) setRailOpen(false);
   };
 
+  const requestLeave = (target) => {
+    setPendingLeave(target);
+  };
+
+  const confirmLeave = () => {
+    const target = pendingLeave;
+    setPendingLeave(null);
+    if (!target) return;
+
+    setRailOpen(true);
+    localStorage.setItem("tsRailOpen", "1");
+
+    if (target.type === "signout") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("Doctor");
+      localStorage.removeItem("role");
+      sessionStorage.removeItem("tsOverdueToastShown");
+      toast.dismiss();
+      navigate("/login");
+      return;
+    }
+
+    navigate(target.to);
+  };
+
   return (
     <div
-      className={`ts-shell ${!hideSidebar && !railOpen ? "is-rail-collapsed" : ""} ${dense ? "is-dense" : ""} ${hideSidebar ? "is-no-rail" : ""}`.trim()}
+      className={`ts-shell ${railOpen ? "" : "is-rail-collapsed"} ${dense ? "is-dense" : ""} ${examLayout ? "is-exam" : ""}`.trim()}
     >
-      {!hideSidebar ? (
-        <>
-          <div
-            className={`ts-overlay ${railOpen ? "is-open" : ""}`}
-            onClick={() => setRailOpen(false)}
-          />
-          <Sidebar
-            page={page}
-            variant={variant}
-            isOpen={railOpen}
-            collapsed={!railOpen}
-            onClose={closeIfMobile}
-          />
-        </>
-      ) : null}
+      <div
+        className={`ts-overlay ${railOpen ? "is-open" : ""}`}
+        onClick={() => setRailOpen(false)}
+      />
+      <Sidebar
+        page={page}
+        variant={variant}
+        isOpen={railOpen}
+        collapsed={!railOpen}
+        onClose={closeIfMobile}
+        lockNavigation={lockNavigation}
+        onRequestLeave={requestLeave}
+      />
       <div className="ts-workspace">
         <header className="ts-topbar">
           <div className="flex items-center gap-3 min-w-0">
-            {!hideSidebar ? (
-              <button
-                type="button"
-                className="ts-btn-icon ts-rail-toggle"
-                onClick={() => setRailOpen((open) => !open)}
-                aria-label={railOpen ? "Collapse sidebar" : "Expand sidebar"}
-                title={railOpen ? "Collapse sidebar" : "Expand sidebar"}
-              >
-                <Menu size={18} />
-              </button>
-            ) : (
-              <img src={logo} alt="TeleStroke" className="ts-topbar-logo" />
-            )}
+            <button
+              type="button"
+              className="ts-btn-icon ts-rail-toggle"
+              onClick={() => setRailOpen((open) => !open)}
+              aria-label={railOpen ? "Collapse sidebar" : "Expand sidebar"}
+              title={railOpen ? "Collapse sidebar" : "Expand sidebar"}
+            >
+              <Menu size={18} />
+            </button>
             <div className="min-w-0">
               <h1 className="ts-topbar-title">{title}</h1>
               {subtitle ? <p className="ts-topbar-sub">{subtitle}</p> : null}
@@ -77,6 +110,15 @@ const AppShell = ({
         </header>
         <main className="ts-main custom-scrollbar">{children}</main>
       </div>
+      <ConfirmModal
+        isOpen={Boolean(pendingLeave)}
+        onClose={() => setPendingLeave(null)}
+        onConfirm={confirmLeave}
+        title="Leave meeting?"
+        message="Are you sure you want to leave the meeting?"
+        confirmLabel="Leave meeting"
+        danger
+      />
     </div>
   );
 };

@@ -141,7 +141,6 @@ const MeetingPage = () => {
   return (
     <AppShell
       page="PATIENTS"
-      hideSidebar
       title="Instant meeting"
       subtitle="Create a live session and join the exam immediately."
     >

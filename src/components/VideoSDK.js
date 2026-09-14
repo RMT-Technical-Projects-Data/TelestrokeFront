@@ -481,7 +481,8 @@ function VIDEOSDK(props) {
     props.setMeetingJoined(false);
     setMeetingId(null);
     setPatientId(null);
-    navigate("/dashboard"); // Navigate to the dashboard on meeting leave
+    localStorage.setItem("tsRailOpen", "1");
+    navigate("/dashboard");
   };
 
   // Log MeetingProvider configuration

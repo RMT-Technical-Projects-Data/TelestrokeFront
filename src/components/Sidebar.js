@@ -38,11 +38,28 @@ const adminNav = [
   },
 ];
 
-const Sidebar = ({ page, variant = "user", isOpen, collapsed, onClose }) => {
+const Sidebar = ({
+  page,
+  variant = "user",
+  isOpen,
+  collapsed,
+  onClose,
+  lockNavigation = false,
+  onRequestLeave,
+}) => {
   const groups = variant === "admin" ? adminNav : clinicianNav;
 
+  const handleNavClick = (event, to) => {
+    if (lockNavigation) {
+      event.preventDefault();
+      onRequestLeave?.({ type: "route", to });
+      return;
+    }
+    onClose?.();
+  };
+
   return (
-    <aside className={`ts-rail ${isOpen ? "is-open" : "is-collapsed"}`}>
+    <aside className={`ts-rail ${isOpen ? "is-open" : "is-collapsed"} ${lockNavigation ? "is-nav-locked" : ""}`}>
       <div className="ts-rail-logo">
         <img src={logo} alt="Telestroke" />
       </div>
@@ -56,8 +73,8 @@ const Sidebar = ({ page, variant = "user", isOpen, collapsed, onClose }) => {
                 <NavLink
                   key={item.page}
                   to={item.to}
-                  onClick={onClose}
-                  title={item.text}
+                  onClick={(event) => handleNavClick(event, item.to)}
+                  title={lockNavigation ? "Leave meeting to open this page" : item.text}
                   className={`ts-nav-item ${page === item.page ? "is-active" : ""}`}
                 >
                   <Icon size={18} />
@@ -69,7 +86,12 @@ const Sidebar = ({ page, variant = "user", isOpen, collapsed, onClose }) => {
         ))}
       </nav>
       <div className="ts-rail-footer">
-        <UserProfileBadge compact={collapsed} />
+        <UserProfileBadge
+          compact={collapsed}
+          onSignOutRequest={
+            lockNavigation ? () => onRequestLeave?.({ type: "signout" }) : undefined
+          }
+        />
       </div>
     </aside>
   );

@@ -4,7 +4,7 @@ import { CircleUserRound, LogOut } from "lucide-react";
 import ConfirmModal from "./ConfirmModal";
 import { toast } from "react-toastify";
 
-const UserProfileBadge = ({ compact = false }) => {
+const UserProfileBadge = ({ compact = false, onSignOutRequest }) => {
   const navigate = useNavigate();
   const [showSignOut, setShowSignOut] = useState(false);
   const displayName = localStorage.getItem("Doctor") || "User";
@@ -39,7 +39,7 @@ const UserProfileBadge = ({ compact = false }) => {
       </div>
       <button
         type="button"
-        onClick={() => setShowSignOut(true)}
+        onClick={() => (onSignOutRequest ? onSignOutRequest() : setShowSignOut(true))}
         className="ts-btn ts-btn-ghost ts-signout-btn w-full"
         title="Sign Out"
       >

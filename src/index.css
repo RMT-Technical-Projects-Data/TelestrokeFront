@@ -282,39 +282,27 @@ code {
   padding: 0.85rem 1rem 1.15rem;
 }
 
-.ts-shell.is-no-rail .ts-rail,
-.ts-shell.is-no-rail .ts-overlay,
-.ts-shell.is-no-rail .ts-rail-toggle {
-  display: none;
+.ts-shell.is-exam .ts-topbar {
+  padding: 0.4rem 0.85rem;
 }
 
-.ts-shell.is-no-rail .ts-topbar {
-  padding: 0.3rem 0.85rem;
-  min-height: 68px;
-}
-
-.ts-shell.is-no-rail .ts-topbar-title {
+.ts-shell.is-exam .ts-topbar-title {
   font-size: 1.05rem;
 }
 
-.ts-shell.is-no-rail .ts-topbar-sub {
+.ts-shell.is-exam .ts-topbar-sub {
   font-size: 0.75rem;
 }
 
-.ts-shell.is-no-rail .ts-main {
+.ts-shell.is-exam .ts-main {
   overflow: hidden;
   padding: 0.45rem 0.6rem 0.5rem;
   display: flex;
   flex-direction: column;
 }
 
-.ts-topbar-logo {
-  display: block;
-  height: 36px;
-  width: auto;
-  max-width: 200px;
-  object-fit: contain;
-  flex-shrink: 0;
+.ts-rail.is-nav-locked .ts-nav-item {
+  opacity: 0.72;
 }
 
 .ts-rail-toggle {
@@ -2105,7 +2093,7 @@ code {
 }
 
 @media (max-width: 900px) {
-  .ts-shell.is-no-rail .ts-main {
+  .ts-shell.is-exam .ts-main {
     overflow-y: auto;
   }
 
