@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getAllAppointments, parseAppointmentList, AppointmentFormSubmit } from "../utils/auth";
 import { getToken, createMeeting } from "../API";
-import { Copy, Phone, Video } from "lucide-react";
+import { Copy, Phone } from "lucide-react";
 import AppShell from "../components/AppShell";
-import { buildAppointmentInsights } from "../utils/overviewInsights";
 
 const MeetingPage = () => {
   const navigate = useNavigate();
@@ -50,8 +49,6 @@ const MeetingPage = () => {
   useEffect(() => {
     if (doctor) refreshAppointments();
   }, [doctor]);
-
-  const insights = useMemo(() => buildAppointmentInsights(appointments), [appointments]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -229,41 +226,6 @@ const MeetingPage = () => {
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className="ts-panel">
-            <div className="ts-panel-head">
-              <h3 className="ts-panel-title">Today’s sessions</h3>
-              <span className="ts-panel-meta">{insights.todayCount}</span>
-            </div>
-            {insights.today.length > 0 ? (
-              <div className="ts-table-wrap">
-                <table className="ts-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Time</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {insights.today.slice(0, 6).map((a) => (
-                      <tr key={`meet-today-${a.ID || a._id}`}>
-                        <td><strong>{String(a.ID ?? "—").padStart(5, "0")}</strong></td>
-                        <td>{a.AppointmentTime || "—"}</td>
-                        <td className="ts-muted">{a.Checkup_Status || "Pending"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="ts-empty-state" style={{ minHeight: 120 }}>
-                <div className="ts-empty-icon"><Video size={18} /></div>
-                <strong>No live sessions today</strong>
-                <p>Create a meeting on the left to start an exam immediately.</p>
-              </div>
-            )}
           </div>
         </div>
       </div>

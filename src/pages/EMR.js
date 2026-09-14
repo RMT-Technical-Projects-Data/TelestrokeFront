@@ -1183,6 +1183,7 @@ const EMRpage = () => {
       page="PATIENTS"
       dense
       examLayout
+      defaultRailOpen={false}
       lockNavigation={meetingJoined}
       title="Live exam"
       subtitle={meetingid ? `Meeting ${patientid || "—"} · ${meetingid}` : "Join a scheduled or instant session."}

@@ -16,17 +16,25 @@ const AppShell = ({
   dense = false,
   examLayout = false,
   lockNavigation = false,
+  defaultRailOpen,
 }) => {
   const navigate = useNavigate();
   const wasLocked = useRef(false);
   const [pendingLeave, setPendingLeave] = useState(null);
   const [railOpen, setRailOpen] = useState(() => {
+    if (typeof defaultRailOpen === "boolean") return defaultRailOpen;
     if (typeof window === "undefined") return true;
     const saved = localStorage.getItem("tsRailOpen");
     if (saved === "0") return false;
     if (saved === "1") return true;
     return window.innerWidth > 768;
   });
+
+  useEffect(() => {
+    if (typeof defaultRailOpen === "boolean") {
+      setRailOpen(defaultRailOpen);
+    }
+  }, [defaultRailOpen]);
 
   useEffect(() => {
     localStorage.setItem("tsRailOpen", railOpen ? "1" : "0");
