@@ -2,8 +2,18 @@ import React, { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 import ThemeToggle from "./ThemeToggle";
+import logo from "../assets/Telestroke-logo-mark.png";
 
-const AppShell = ({ page, title, subtitle, actions, children, variant = "user", dense = false }) => {
+const AppShell = ({
+  page,
+  title,
+  subtitle,
+  actions,
+  children,
+  variant = "user",
+  dense = false,
+  hideSidebar = false,
+}) => {
   const [railOpen, setRailOpen] = useState(() => {
     if (typeof window === "undefined") return true;
     const saved = localStorage.getItem("tsRailOpen");
@@ -21,30 +31,40 @@ const AppShell = ({ page, title, subtitle, actions, children, variant = "user", 
   };
 
   return (
-    <div className={`ts-shell ${railOpen ? "" : "is-rail-collapsed"} ${dense ? "is-dense" : ""}`.trim()}>
-      <div
-        className={`ts-overlay ${railOpen ? "is-open" : ""}`}
-        onClick={() => setRailOpen(false)}
-      />
-      <Sidebar
-        page={page}
-        variant={variant}
-        isOpen={railOpen}
-        collapsed={!railOpen}
-        onClose={closeIfMobile}
-      />
+    <div
+      className={`ts-shell ${!hideSidebar && !railOpen ? "is-rail-collapsed" : ""} ${dense ? "is-dense" : ""} ${hideSidebar ? "is-no-rail" : ""}`.trim()}
+    >
+      {!hideSidebar ? (
+        <>
+          <div
+            className={`ts-overlay ${railOpen ? "is-open" : ""}`}
+            onClick={() => setRailOpen(false)}
+          />
+          <Sidebar
+            page={page}
+            variant={variant}
+            isOpen={railOpen}
+            collapsed={!railOpen}
+            onClose={closeIfMobile}
+          />
+        </>
+      ) : null}
       <div className="ts-workspace">
         <header className="ts-topbar">
-          <div className="flex items-start gap-3 min-w-0">
-            <button
-              type="button"
-              className="ts-btn-icon ts-rail-toggle"
-              onClick={() => setRailOpen((open) => !open)}
-              aria-label={railOpen ? "Collapse sidebar" : "Expand sidebar"}
-              title={railOpen ? "Collapse sidebar" : "Expand sidebar"}
-            >
-              <Menu size={18} />
-            </button>
+          <div className="flex items-center gap-3 min-w-0">
+            {!hideSidebar ? (
+              <button
+                type="button"
+                className="ts-btn-icon ts-rail-toggle"
+                onClick={() => setRailOpen((open) => !open)}
+                aria-label={railOpen ? "Collapse sidebar" : "Expand sidebar"}
+                title={railOpen ? "Collapse sidebar" : "Expand sidebar"}
+              >
+                <Menu size={18} />
+              </button>
+            ) : (
+              <img src={logo} alt="TeleStroke" className="ts-topbar-logo" />
+            )}
             <div className="min-w-0">
               <h1 className="ts-topbar-title">{title}</h1>
               {subtitle ? <p className="ts-topbar-sub">{subtitle}</p> : null}

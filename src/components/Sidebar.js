@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, Calendar, Video, FileText, Users, Settings } from "lucide-react";
-import logo from "../assets/Telestroke-logo.png";
+import logo from "../assets/Telestroke-logo-rail.png";
 import UserProfileBadge from "./UserProfileBadge";
 
 const clinicianNav = [

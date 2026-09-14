@@ -61,8 +61,8 @@ function EMR_TelestrokeExam() {
   };
 
   return (
-    <div className="p-2">
-      <div className="flex flex-col gap-4 ml-3">
+    <div className="ts-exam-form-compact">
+      <div className="ts-exam-form-compact-grid">
         <div className="flex flex-row gap-8 justify-between">
           <div className="basis-2/4">
             <div className="flex items-center gap-4 mb-2">

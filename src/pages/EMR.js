@@ -1,6 +1,3 @@
-
-
-
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { getApiBaseUrl } from "../api/client";
@@ -1185,6 +1182,7 @@ const EMRpage = () => {
     <AppShell
       page="PATIENTS"
       dense
+      hideSidebar
       title="Live exam"
       subtitle={meetingid ? `Meeting ${patientid || "—"} · ${meetingid}` : "Join a scheduled or instant session."}
       actions={
@@ -1196,7 +1194,7 @@ const EMRpage = () => {
       }
     >
       {meetingid ? (
-        <>
+        <div className="ts-exam-workspace">
           <div className={`ts-exam-grid ${meetingJoined ? "" : "is-prejoin"}`}>
             <div className="ts-panel ts-exam-video">
               <div className="ts-panel-head">
@@ -1232,18 +1230,18 @@ const EMRpage = () => {
                                 animation: { duration: 0 },
                                 hover: { animationDuration: 0 },
                                 responsiveAnimationDuration: 0,
-                                layout: { padding: { top: 4, bottom: 18 } },
+                                layout: { padding: { top: 2, bottom: 6 } },
                                 plugins: {
                                   legend: {
                                     display: true,
                                     position: "top",
                                     labels: {
                                       color: "#000",
-                                      boxWidth: 12,
-                                      padding: 8,
+                                      boxWidth: 8,
+                                      padding: 4,
                                       font: {
                                         weight: 'bold',
-                                        size: 12
+                                        size: 10
                                       }
                                     },
                                   },
@@ -1257,8 +1255,8 @@ const EMRpage = () => {
                                     title: {
                                       display: true,
                                       text: "Time (s)",
-                                      padding: { top: 2, bottom: 8 },
-                                      font: { weight: 'bold', size: 12 }
+                                      padding: { top: 0, bottom: 2 },
+                                      font: { weight: 'bold', size: 10 }
                                     },
                                     ticks: {
                                       font: { weight: 'bold' }
@@ -1274,7 +1272,7 @@ const EMRpage = () => {
                                     title: {
                                       display: true,
                                       text: "Angle/Position (X)",
-                                      font: { weight: 'bold', size: 14 }
+                                      font: { weight: 'bold', size: 10 }
                                     },
                                     ticks: {
                                       font: { weight: 'bold' }
@@ -1311,18 +1309,18 @@ const EMRpage = () => {
                                 animation: { duration: 0 },
                                 hover: { animationDuration: 0 },
                                 responsiveAnimationDuration: 0,
-                                layout: { padding: { top: 4, bottom: 18 } },
+                                layout: { padding: { top: 2, bottom: 6 } },
                                 plugins: {
                                   legend: {
                                     display: true,
                                     position: "top",
                                     labels: {
                                       color: "#000",
-                                      boxWidth: 12,
-                                      padding: 8,
+                                      boxWidth: 8,
+                                      padding: 4,
                                       font: {
                                         weight: 'bold',
-                                        size: 12
+                                        size: 10
                                       }
                                     },
                                   },
@@ -1336,8 +1334,8 @@ const EMRpage = () => {
                                     title: {
                                       display: true,
                                       text: "Time (s)",
-                                      padding: { top: 2, bottom: 8 },
-                                      font: { weight: 'bold', size: 12 }
+                                      padding: { top: 0, bottom: 2 },
+                                      font: { weight: 'bold', size: 10 }
                                     },
                                     ticks: {
                                       font: { weight: 'bold' }
@@ -1353,7 +1351,7 @@ const EMRpage = () => {
                                     title: {
                                       display: true,
                                       text: "Angle/Position (Y)",
-                                      font: { weight: 'bold', size: 14 }
+                                      font: { weight: 'bold', size: 10 }
                                     },
                                     ticks: {
                                       font: { weight: 'bold' }
@@ -1489,52 +1487,6 @@ const EMRpage = () => {
                             )}
                           </>
                         )}
-                        {/* Session status display */}
-                        <div className="ts-exam-status">
-                          <h4>Session status</h4>
-                          <div className="ts-exam-status-grid">
-                            <p>
-                              <span>Active</span>
-                              <strong>{currentSession ? "Yes" : "No"}</strong>
-                            </p>
-                            <p>
-                              <span>Stimulus</span>
-                              <strong>{isStimulusActive.current ? "ON" : "OFF"}</strong>
-                            </p>
-                            <p>
-                              <span>Paused</span>
-                              <strong>{isPaused ? "Yes" : "No"}</strong>
-                            </p>
-                            <p>
-                              <span>Data Points</span>
-                              <strong>{sessionDataPoints.current.length}</strong>
-                            </p>
-                            <p>
-                              <span>CSV Complete</span>
-                              <strong>{stimulusDataComplete.current ? "Yes" : "No"}</strong>
-                            </p>
-                            <p>
-                              <span>Plotting</span>
-                              <strong>{plottingEnabled ? "Enabled" : "Disabled"}</strong>
-                            </p>
-                            {currentSession && (
-                              <>
-                                <p>
-                                  <span>Type</span>
-                                  <strong>{currentSession.stimulusType}</strong>
-                                </p>
-                                <p>
-                                  <span>Shape</span>
-                                  <strong>{currentSession.stimulusShape}</strong>
-                                </p>
-                                <p>
-                                  <span>Eye</span>
-                                  <strong>{currentSession.selectedEye}</strong>
-                                </p>
-                              </>
-                            )}
-                          </div>
-                        </div>
                 </div>
               </div>
             )}
@@ -1578,7 +1530,7 @@ const EMRpage = () => {
               </div>
             </div>
           )}
-        </>
+        </div>
       ) : (
         <div className="ts-panel">
           <div className="ts-exam-join">

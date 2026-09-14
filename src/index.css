@@ -99,8 +99,8 @@ code {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 72px;
-  padding: 0.65rem 0.75rem;
+  height: 88px;
+  padding: 1rem 0.9rem 0.85rem;
   overflow: hidden;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
@@ -108,29 +108,28 @@ code {
 
 .ts-rail-logo img {
   display: block;
-  height: 44px;
+  height: 42px;
   width: auto;
-  max-width: 100%;
+  max-width: 214px;
   object-fit: contain;
   object-position: center;
   background: none;
   padding: 0;
   border: 0;
   border-radius: 0;
-  mix-blend-mode: screen;
 }
 
 .ts-shell.is-rail-collapsed .ts-rail-logo {
-  height: 64px;
-  padding: 0.7rem 0.35rem;
+  height: 72px;
+  padding: 0.85rem 0.4rem;
 }
 
 .ts-shell.is-rail-collapsed .ts-rail-logo img {
   height: 32px;
   width: auto;
-  max-width: 52px;
+  max-width: 44px;
   object-fit: contain;
-  object-position: center;
+  object-position: left center;
 }
 
 .ts-shell.is-rail-collapsed .ts-rail-nav {
@@ -281,6 +280,41 @@ code {
 
 .ts-shell.is-dense .ts-main {
   padding: 0.85rem 1rem 1.15rem;
+}
+
+.ts-shell.is-no-rail .ts-rail,
+.ts-shell.is-no-rail .ts-overlay,
+.ts-shell.is-no-rail .ts-rail-toggle {
+  display: none;
+}
+
+.ts-shell.is-no-rail .ts-topbar {
+  padding: 0.3rem 0.85rem;
+  min-height: 68px;
+}
+
+.ts-shell.is-no-rail .ts-topbar-title {
+  font-size: 1.05rem;
+}
+
+.ts-shell.is-no-rail .ts-topbar-sub {
+  font-size: 0.75rem;
+}
+
+.ts-shell.is-no-rail .ts-main {
+  overflow: hidden;
+  padding: 0.45rem 0.6rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.ts-topbar-logo {
+  display: block;
+  height: 36px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .ts-rail-toggle {
@@ -1190,9 +1224,9 @@ code {
 }
 
 .ts-auth-logo {
-  height: 148px;
+  height: 210px;
   width: auto;
-  max-width: 92%;
+  max-width: 96%;
   object-fit: contain;
 }
 
@@ -1521,7 +1555,7 @@ code {
   }
 
   .ts-auth-logo {
-    height: 110px;
+    height: 150px;
   }
 
   .ts-auth-brand h1 {
@@ -1632,31 +1666,61 @@ code {
 }
 
 /* ── Live exam ─────────────────────────────────────── */
+.ts-exam-workspace {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 0.45rem;
+  height: 100%;
+}
+
 .ts-exam-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) 280px;
-  gap: 0.85rem;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) 250px;
+  gap: 0.45rem;
   align-items: stretch;
-  margin-bottom: 0.85rem;
+  flex: 1 1 58%;
+  min-height: 0;
+  margin-bottom: 0;
 }
 
 .ts-exam-grid.is-prejoin {
   grid-template-columns: 1fr;
+  flex: 1;
 }
 
 .ts-exam-video,
 .ts-exam-charts,
 .ts-exam-side {
   min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .ts-exam-video-inner {
-  min-height: 320px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ts-exam-player {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.ts-exam-participant {
+  position: absolute;
+  inset: 0;
 }
 
 .ts-exam-player video,
 .ts-exam-player .react-player {
   width: 100% !important;
+  height: 100% !important;
 }
 
 .ts-exam-join {
@@ -1666,8 +1730,9 @@ code {
   justify-content: center;
   text-align: center;
   gap: 0.4rem;
-  min-height: 360px;
-  padding: 2.25rem 1.5rem;
+  flex: 1;
+  min-height: 0;
+  padding: 1.25rem 1.25rem;
 }
 
 .ts-exam-join h3 {
@@ -1698,22 +1763,27 @@ code {
 .ts-exam-controls-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem 1rem;
+  gap: 0.4rem;
+  padding: 0.4rem 0.65rem 0.5rem;
+  flex-shrink: 0;
 }
 
 .ts-exam-charts-body {
   display: flex;
   flex-direction: column;
-  gap: 1.35rem;
-  padding: 0.35rem 0.85rem 1.15rem;
+  flex: 1;
+  min-height: 0;
+  gap: 0.4rem;
+  padding: 0.25rem 0.55rem 0.45rem;
 }
 
 .ts-exam-chart {
   display: flex;
   flex-direction: column;
-  height: 310px;
-  padding: 0.25rem 0.35rem 0.15rem;
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  padding: 0.1rem 0.2rem;
 }
 
 .ts-exam-chart > div {
@@ -1730,9 +1800,9 @@ code {
 }
 
 .ts-exam-chart-title {
-  margin: 0 0 0.2rem;
+  margin: 0 0 0.1rem;
   text-align: center;
-  font-size: 0.8125rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--ts-text);
 }
@@ -1740,8 +1810,11 @@ code {
 .ts-exam-side-body {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
-  padding: 1rem 1.1rem 1.15rem;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  gap: 0.45rem;
+  padding: 0.55rem 0.7rem 0.65rem;
 }
 
 .ts-exam-side-label {
@@ -1766,27 +1839,33 @@ code {
 
 .ts-exam-forms {
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 36%;
+  min-height: 168px;
+  max-height: 38%;
 }
 
 .ts-exam-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  padding: 0.55rem 0.85rem 0;
+  gap: 0.25rem;
+  padding: 0.3rem 0.6rem 0;
   border-bottom: 1px solid var(--ts-border);
   background: var(--ts-surface-muted);
+  flex-shrink: 0;
 }
 
 .ts-exam-tabs button {
   margin: 0;
-  padding: 0.5rem 0.9rem;
+  padding: 0.35rem 0.7rem;
   border: 1px solid transparent;
   border-bottom: 0;
   border-radius: 8px 8px 0 0;
   background: transparent;
   color: var(--ts-text-muted);
   font-family: inherit;
-  font-size: 0.8125rem;
+  font-size: 0.78rem;
   font-weight: 650;
   cursor: pointer;
 }
@@ -1798,40 +1877,45 @@ code {
 }
 
 .ts-exam-form-body {
-  padding: 1rem 1.1rem 1.15rem;
+  padding: 0.45rem 0.65rem 0.5rem;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  font-size: 0.78rem;
 }
 
 .ts-exam-patient {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.4rem;
 }
 
 .ts-exam-patient-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem 1rem;
+  gap: 0.4rem 0.65rem;
 }
 
 .ts-exam-inline-field {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   min-width: 0;
 }
 
 .ts-exam-inline-field label {
   margin: 0;
   white-space: nowrap;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--ts-text);
 }
 
 .ts-exam-inline-field .ts-input {
-  width: 148px;
-  padding: 0.42rem 0.7rem;
+  width: 128px;
+  padding: 0.28rem 0.5rem;
+  font-size: 0.75rem;
 }
 
 .ts-exam-inline-field-grow {
@@ -1853,15 +1937,16 @@ code {
 }
 
 .ts-exam-textarea {
-  min-height: 76px;
-  resize: vertical;
+  min-height: 40px;
+  resize: none;
+  font-size: 0.75rem;
 }
 
 .ts-exam-field-box {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.55rem 0.75rem;
+  gap: 0.5rem;
+  padding: 0.35rem 0.55rem;
   border: 1px solid var(--ts-border);
   border-radius: var(--ts-radius);
   background: var(--ts-surface);
@@ -1877,8 +1962,8 @@ code {
 .ts-exam-radio {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8125rem;
+  gap: 0.3rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--ts-text);
   cursor: pointer;
@@ -1932,18 +2017,105 @@ code {
   color: var(--ts-text);
 }
 
+.ts-exam-form-compact {
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.ts-exam-form-compact-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ts-exam-form-compact p,
+.ts-exam-form-compact label,
+.ts-exam-form-compact span {
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.ts-exam-form-compact .text-lg,
+.ts-exam-form-compact .font-bold.text-lg {
+  font-size: 0.78rem !important;
+  font-weight: 700;
+}
+
+.ts-exam-form-compact textarea {
+  height: 2.15rem !important;
+  min-height: 2.15rem;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.75rem;
+}
+
+.ts-exam-form-compact .gap-8 {
+  gap: 0.55rem;
+}
+
+.ts-exam-form-compact .gap-4 {
+  gap: 0.35rem;
+}
+
+.ts-exam-form-compact .mb-2,
+.ts-exam-form-compact .mt-2 {
+  margin-top: 0.15rem;
+  margin-bottom: 0.15rem;
+}
+
+.ts-exam-form-compact .ml-24 {
+  margin-left: 1rem;
+}
+
+.ts-exam-form-compact .m-2 {
+  margin: 0.15rem;
+}
+
+.ts-exam-form-compact .w-4,
+.ts-exam-form-compact .h-4 {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.ts-exam-workspace .ts-panel-head {
+  padding: 0.35rem 0.65rem;
+}
+
+.ts-exam-workspace .ts-panel-title {
+  font-size: 0.8rem;
+}
+
+.ts-exam-workspace .ts-btn {
+  padding: 0.32rem 0.65rem;
+  font-size: 0.75rem;
+}
+
 @media (max-width: 1280px) {
   .ts-exam-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .ts-exam-side {
-    grid-column: 1 / -1;
+    grid-column: auto;
+    max-height: none;
+  }
+
+  .ts-exam-forms {
+    max-height: 42%;
   }
 }
 
 @media (max-width: 900px) {
+  .ts-shell.is-no-rail .ts-main {
+    overflow-y: auto;
+  }
+
   .ts-exam-grid {
     grid-template-columns: 1fr;
+    flex: none;
+  }
+
+  .ts-exam-forms {
+    max-height: none;
+    flex: none;
   }
 }
