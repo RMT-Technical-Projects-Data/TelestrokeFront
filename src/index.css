@@ -1800,9 +1800,11 @@ code {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   gap: 0.45rem;
   padding: 0.55rem 0.7rem 0.65rem;
+  scrollbar-width: thin;
 }
 
 .ts-exam-side-label {

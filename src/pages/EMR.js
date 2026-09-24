@@ -1378,7 +1378,7 @@ const EMRpage = () => {
                   <h3 className="ts-panel-title">Controls</h3>
                   <span className="ts-panel-meta">Camera</span>
                 </div>
-                <div className="ts-exam-side-body">
+                <div className="ts-exam-side-body custom-scrollbar">
                         <div className="ts-exam-inline-field ts-exam-inline-field-stack">
                           <label>Eye camera</label>
                           <div className="ts-exam-field-box ts-exam-radio-row">
