@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { getApiBaseUrl } from "../api/client";
-import VIDEOSDK from "../components/VideoSDK";
+// import VIDEOSDK from "../components/VideoSDK";
+import VideoCall from "../components/VideoCall";
 import { useParams } from "react-router-dom";
 import EMRPatientInfo from "../components/EMR_PatientInfo";
 import EMRBedSide from "../components/EMR_BedSide";
@@ -1203,7 +1204,8 @@ const EMRpage = () => {
                 <h3 className="ts-panel-title">Video</h3>
                 <span className="ts-panel-meta">{meetingJoined ? "Live" : "Ready"}</span>
               </div>
-              <VIDEOSDK setMeetingJoined={setMeetingJoined} />
+              {/* <VIDEOSDK setMeetingJoined={setMeetingJoined} /> */}
+              <VideoCall setMeetingJoined={setMeetingJoined}role="doctor"/>
             </div>
             {meetingJoined && (
               <div className="ts-panel ts-exam-charts">
