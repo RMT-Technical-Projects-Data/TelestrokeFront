@@ -235,7 +235,7 @@ code {
   flex-direction: column;
 }
 
-.ts-topbar {
+/* .ts-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -247,6 +247,45 @@ code {
   flex-shrink: 0;
   position: relative;
   z-index: 45;
+} */
+
+.ts-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  padding: 0.85rem 1.25rem;
+  background: var(--ts-surface);
+  border-bottom: 1px solid var(--ts-border);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 45;
+}
+
+@media (max-width: 1440px) {
+  .ts-topbar {
+    padding: 0.7rem 1rem;
+    gap: 0.6rem;
+  }
+
+  .ts-topbar-title {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 1100px) {
+  .ts-topbar {
+    padding: 0.6rem 0.85rem;
+  }
+
+  .ts-topbar-title {
+    font-size: 1rem;
+  }
+
+  .ts-topbar-actions {
+    gap: 0.4rem;
+  }
 }
 
 .ts-topbar-title {
@@ -1663,7 +1702,7 @@ code {
   height: 100%;
 }
 
-.ts-exam-grid {
+/* .ts-exam-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) 250px;
   gap: 0.45rem;
@@ -1671,6 +1710,53 @@ code {
   flex: 1 1 58%;
   min-height: 0;
   margin-bottom: 0;
+} */
+
+.ts-exam-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) 240px;
+  gap: 0.5rem;
+  align-items: stretch;
+  flex: 1 1 58%;
+  min-height: 0;
+  margin-bottom: 0;
+}
+
+/* 1080p and above (1920px+) */
+@media (min-width: 1801px) {
+  .ts-exam-grid {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) 280px;
+    gap: 0.6rem;
+  }
+}
+
+/* 1600p laptop (1600px - 1800px) */
+@media (min-width: 1441px) and (max-width: 1800px) {
+  .ts-exam-grid {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 250px;
+    gap: 0.5rem;
+  }
+}
+
+/* Standard laptop (1281px - 1440px) */
+@media (min-width: 1281px) and (max-width: 1440px) {
+  .ts-exam-grid {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 220px;
+    gap: 0.45rem;
+  }
+}
+
+/* Small laptop 1366x768 — video gets priority */
+@media (min-width: 1101px) and (max-width: 1280px) {
+  .ts-exam-grid {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 0.45rem;
+  }
+
+  .ts-exam-side {
+    grid-column: 1 / -1;
+    max-height: 220px;
+  }
 }
 
 .ts-exam-grid.is-prejoin {
@@ -1693,11 +1779,36 @@ code {
   display: flex;
   flex-direction: column;
 }
+/* 
+.ts-exam-player {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+} */
 
 .ts-exam-player {
   flex: 1;
   min-height: 0;
   position: relative;
+}
+
+/* Ensure video always has minimum height */
+@media (min-width: 1101px) {
+  .ts-exam-player {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .ts-exam-player {
+    min-height: 280px;
+  }
+}
+
+@media (max-width: 900px) {
+  .ts-exam-player {
+    min-height: 220px;
+  }
 }
 
 .ts-exam-participant {
@@ -1827,13 +1938,36 @@ code {
   font-weight: 700;
 }
 
-.ts-exam-forms {
+/* .ts-exam-forms {
   overflow: hidden;
   display: flex;
   flex-direction: column;
   flex: 0 1 36%;
   min-height: 168px;
   max-height: 38%;
+} */
+
+.ts-exam-forms {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 180px;
+  max-height: 42%;
+}
+
+@media (max-width: 1440px) {
+  .ts-exam-forms {
+    max-height: 38%;
+    min-height: 160px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .ts-exam-forms {
+    max-height: none;
+    min-height: 200px;
+  }
 }
 
 .ts-exam-tabs {
@@ -2079,7 +2213,7 @@ code {
   font-size: 0.75rem;
 }
 
-@media (max-width: 1280px) {
+/* @media (max-width: 1280px) {
   .ts-exam-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
@@ -2092,8 +2226,22 @@ code {
   .ts-exam-forms {
     max-height: 42%;
   }
-}
+} */
 
+@media (max-width: 1100px) and (min-width: 901px) {
+  .ts-exam-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .ts-exam-side {
+    grid-column: 1 / -1;
+    max-height: 240px;
+  }
+
+  .ts-exam-forms {
+    max-height: 42%;
+  }
+}
 @media (max-width: 900px) {
   .ts-shell.is-exam .ts-main {
     overflow-y: auto;
@@ -2107,5 +2255,107 @@ code {
   .ts-exam-forms {
     max-height: none;
     flex: none;
+  }
+}
+
+
+/* Meeting timer critical pulse */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE FIXES — Laptop + 1080p
+   ═══════════════════════════════════════════════════════ */
+
+/* Prevent horizontal scroll */
+html, body, #root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Ensure images/videos don't overflow */
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ─── Laptop 1366x768 (Most common) ─── */
+@media (max-width: 1366px) and (min-width: 1101px) {
+  .ts-shell.is-exam .ts-main {
+    padding: 0.4rem 0.5rem 0.4rem;
+  }
+
+  .ts-panel-head {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .ts-panel-title {
+    font-size: 0.82rem;
+  }
+
+  .ts-panel-meta {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.45rem;
+  }
+
+  .ts-exam-controls-bar {
+    padding: 0.3rem 0.5rem 0.4rem;
+    gap: 0.3rem;
+  }
+
+  .ts-exam-workspace {
+    gap: 0.4rem;
+  }
+}
+
+/* ─── 1080p Full HD (1920x1080) ─── */
+@media (min-width: 1801px) {
+  .ts-shell.is-exam .ts-main {
+    padding: 0.6rem 0.9rem 0.7rem;
+  }
+
+  .ts-panel-head {
+    padding: 0.65rem 0.95rem;
+  }
+
+  .ts-panel-title {
+    font-size: 0.95rem;
+  }
+
+  .ts-exam-controls-bar {
+    padding: 0.5rem 0.8rem 0.6rem;
+    gap: 0.5rem;
+  }
+
+  .ts-exam-workspace {
+    gap: 0.6rem;
+  }
+}
+
+/* ─── 2K/QHD (2560x1440) ─── */
+@media (min-width: 2200px) {
+  .ts-exam-grid {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) 320px;
+    gap: 0.75rem;
+  }
+
+  .ts-exam-workspace {
+    max-width: 2800px;
+    margin: 0 auto;
+    gap: 0.75rem;
+  }
+}
+
+/* ─── Ultra-wide & 4K ─── */
+@media (min-width: 2560px) {
+  .ts-exam-grid {
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.1fr) 360px;
+  }
+
+  .ts-panel-title {
+    font-size: 1.05rem;
   }
 }

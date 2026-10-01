@@ -16,13 +16,12 @@ body, html {
     animation: App-logo-spin infinite 20s linear;
   }
 }
-button{
+/* button{
   padding: 10px;
   background: whitesmoke;
   border: #282c34;
   margin: 4px;
-
-}
+} */
 
 
 .App-header {
@@ -93,4 +92,3 @@ button{
       padding: 10px 15px; /* Reduce padding for smaller screens */
   }
 }
-
