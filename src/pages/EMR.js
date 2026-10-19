@@ -680,7 +680,7 @@ const EMRpage = () => {
         const stimulusIndex = currentDataIndex.current;
         const newStimX = stimulusXData.current[stimulusIndex].value;
         const newStimY = stimulusYData.current[stimulusIndex].value;
-        const stimulusTime = stimulusXData.current[stimulusIndex].time;
+        const stimulusTime = parseFloat(Number(stimulusXData.current[stimulusIndex].time).toFixed(2));
 
         // Update cumulative data for plotting
         cumulativeData.current = {
@@ -879,7 +879,7 @@ const EMRpage = () => {
           const timeValue = row["Time(s)"] || row["Time (s)"] || row["Time"] || row["time"] || 0;
           const xValue = row["X"] || row["X Position (pixels)"] || row["X Position"] || row["x"] || 0;
           return {
-            time: parseFloat(timeValue) || 0,
+            time: parseFloat(parseFloat(timeValue).toFixed(2)) || 0,
             value: parseFloat(xValue) || 0,
           };
         })
@@ -890,7 +890,7 @@ const EMRpage = () => {
           const timeValue = row["Time(s)"] || row["Time (s)"] || row["Time"] || row["time"] || 0;
           const yValue = row["Y"] || row["Y Position (pixels)"] || row["Y Position"] || row["y"] || 0;
           return {
-            time: parseFloat(timeValue) || 0,
+            time: parseFloat(parseFloat(timeValue).toFixed(2)) || 0,
             value: parseFloat(yValue) || 0,
           };
         })
@@ -913,7 +913,7 @@ const EMRpage = () => {
         ...prev,
         stimX: limitedXData.map((d) => d.value),
         stimY: limitedYData.map((d) => d.value),
-        labels: limitedXData.map((d) => d.time),
+        labels: limitedXData.map((d) => parseFloat(d.time.toFixed(2))),
       }));
 
       csvDataLoaded.current = true;
@@ -1285,7 +1285,12 @@ const EMRpage = () => {
                                       font: { weight: 'bold', size: 10 }
                                     },
                                     ticks: {
-                                      font: { weight: 'bold' }
+                                      font: { weight: 'bold' },
+                                      callback: function (val) {
+                                        const raw = typeof this.getLabelForValue === "function" ? this.getLabelForValue(val) : val;
+                                        const num = parseFloat(raw);
+                                        return !isNaN(num) ? num.toFixed(2) : raw;
+                                      }
                                     }
                                   },
                                   y: {
@@ -1364,7 +1369,12 @@ const EMRpage = () => {
                                       font: { weight: 'bold', size: 10 }
                                     },
                                     ticks: {
-                                      font: { weight: 'bold' }
+                                      font: { weight: 'bold' },
+                                      callback: function (val) {
+                                        const raw = typeof this.getLabelForValue === "function" ? this.getLabelForValue(val) : val;
+                                        const num = parseFloat(raw);
+                                        return !isNaN(num) ? num.toFixed(2) : raw;
+                                      }
                                     }
                                   },
                                   y: {
