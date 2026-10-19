@@ -108,6 +108,7 @@ const EMRpage = () => {
   const lastValidEyeData = useRef({ eyeX: 0, eyeY: 0 });
   const SMOOTH_WINDOW = 5;
   const lastEyeTimestamp = useRef(null);
+  const eyeTrackingStartTime = useRef(null);
   const stimulusStartTime = useRef(null);
   const sessionStarted = useRef(false);
   const pauseStartTime = useRef(null);
@@ -161,6 +162,12 @@ const EMRpage = () => {
     }
   }, [settings.stimulus_type, settings.shape, settings.speed]);
 
+  // Reset eye tracking start time and graph when meeting is joined or changed
+  useEffect(() => {
+    eyeTrackingStartTime.current = null;
+    resetPlottingState();
+  }, [meetingJoined, meetingid]);
+
   // Initialize WebSocket for eye data
   useEffect(() => {
     if (webSocketConnected.current) {
@@ -185,6 +192,9 @@ const EMRpage = () => {
         if (data.type === "eye_data") {
           const timestamp = data?.timestamp || Date.now();
           lastEyeTimestamp.current = timestamp;
+          if (eyeTrackingStartTime.current == null) {
+            eyeTrackingStartTime.current = timestamp;
+          }
 
           const angle_x = data?.angle_x ?? lastValidEyeData.current.eyeX;
           const angle_y = data?.angle_y ?? lastValidEyeData.current.eyeY;
@@ -284,12 +294,17 @@ const EMRpage = () => {
 
         console.log("⛔ PAUSED: Eye + Stimulus plotting stopped");
       } else {
-        // RESUMING: Adjust stimulus start time to account for pause duration
-        if (pauseStartTime.current && stimulusStartTime.current) {
+        // RESUMING: Adjust start times to account for pause duration
+        if (pauseStartTime.current) {
           const pauseDuration = Date.now() - pauseStartTime.current;
-          stimulusStartTime.current += pauseDuration;
+          if (stimulusStartTime.current) {
+            stimulusStartTime.current += pauseDuration;
+          }
+          if (eyeTrackingStartTime.current) {
+            eyeTrackingStartTime.current += pauseDuration;
+          }
           pauseStartTime.current = null;
-          console.log(`Adjusted stimulus start time by ${pauseDuration}ms`);
+          console.log(`Adjusted tracking start times by ${pauseDuration}ms`);
         }
 
         // Restart stimulus plotting when resuming
@@ -311,10 +326,16 @@ const EMRpage = () => {
     let newEyeX = null;
     let newEyeY = null;
 
-    // Relative time label for continuity (if stimulus is active)
+    // Relative time label for continuity (starting from 0 seconds for each meeting)
+    const currentTs = lastEyeTimestamp.current || Date.now();
+    if (eyeTrackingStartTime.current == null) {
+      eyeTrackingStartTime.current = currentTs;
+    }
+    const elapsedSec = (currentTs - eyeTrackingStartTime.current) / 1000;
+
     let newLabel = stimulusStartTime.current
-      ? (Date.now() - stimulusStartTime.current) / 1000
-      : (lastEyeTimestamp.current || Date.now()) / 1000;
+      ? parseFloat(((Date.now() - stimulusStartTime.current) / 1000).toFixed(2))
+      : parseFloat(elapsedSec.toFixed(2));
 
     // Smooth for plotting only
     if (eyeDataBuffer.current.length >= SMOOTH_WINDOW) {
@@ -404,6 +425,7 @@ const EMRpage = () => {
     currentDataIndex.current = 0;
     csvDataLoaded.current = false;
     stimulusStartTime.current = null;
+    eyeTrackingStartTime.current = null;
     stimulusDataComplete.current = false;
     sessionSavedDueToCSVComplete.current = false;
   };

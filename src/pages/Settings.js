@@ -1,21 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { Bell, Calendar, FileText, LayoutDashboard, Lock, Moon, Shield, Sun, Users, Video } from "lucide-react";
+import { Bell, Lock, Moon, Shield, Sun } from "lucide-react";
 import { toast } from "react-toastify";
 import AppShell from "../components/AppShell";
 import { getApiBaseUrl } from "../api/client";
 import { applyTheme, getStoredTheme } from "../components/ThemeToggle";
-
-const CLINICIAN_SHORTCUTS = [
-  { to: "/appointment", icon: Calendar, title: "Appointments", sub: "Schedule and join sessions" },
-  { to: "/meeting", icon: Video, title: "Meeting", sub: "Start an instant exam" },
-  { to: "/emr", icon: FileText, title: "EMR reports", sub: "Review examination records" },
-];
-
-const ADMIN_SHORTCUTS = [
-  { to: "/dashboard", icon: LayoutDashboard, title: "Overview", sub: "Caseload and appointment mix" },
-  { to: "/userManagement", icon: Users, title: "Users", sub: "Create and manage clinicians" },
-];
 
 const Settings = () => {
   const displayName = localStorage.getItem("Doctor") || "User";
@@ -42,7 +30,6 @@ const Settings = () => {
   const [saving, setSaving] = useState(false);
 
   const token = useMemo(() => localStorage.getItem("token"), []);
-  const shortcuts = role === "admin" ? ADMIN_SHORTCUTS : CLINICIAN_SHORTCUTS;
 
   const toggleAlerts = () => {
     const next = !overdueAlerts;
@@ -172,29 +159,6 @@ const Settings = () => {
                   <Lock size={15} /> {saving ? "Saving..." : "Update password"}
                 </button>
               </form>
-            </div>
-          </div>
-        </div>
-
-        <div className="ts-panel">
-          <div className="ts-panel-head">
-            <h3 className="ts-panel-title">Workspace</h3>
-            <span className="ts-panel-meta">Quick links</span>
-          </div>
-          <div className="ts-settings-body">
-            <div className="ts-settings-shortcuts">
-              {shortcuts.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link key={item.to} to={item.to} className="ts-settings-shortcut">
-                    <Icon size={18} />
-                    <span>
-                      <strong>{item.title}</strong>
-                      <em>{item.sub}</em>
-                    </span>
-                  </Link>
-                );
-              })}
             </div>
           </div>
         </div>
