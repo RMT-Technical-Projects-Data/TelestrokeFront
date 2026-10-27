@@ -960,6 +960,20 @@ const EMRpage = () => {
     }
   };
 
+  // Lock eye switching once calibration has started for the selected eye
+  const isEyeLocked =
+    !!selectedEye && calibrateCounts[selectedEye] > 0;
+
+  const handleEyeSelect = (eye) => {
+    if (isEyeLocked && selectedEye !== eye) {
+      toast.info("Reset calibration first before switching eyes.");
+      return false;
+    }
+    setSelectedEye(eye);
+    updateSetting("eye_camera_control", eye);
+    return true;
+  };
+
   const handleSave = async () => {
     try {
       // Save any active session first
@@ -1416,31 +1430,51 @@ const EMRpage = () => {
                         <div className="ts-exam-inline-field ts-exam-inline-field-stack">
                           <label>Eye camera</label>
                           <div className="ts-exam-field-box ts-exam-radio-row">
-                            <label className="ts-exam-radio">
+                            <label
+                              className="ts-exam-radio"
+                              style={
+                                isEyeLocked && selectedEye !== "left"
+                                  ? { opacity: 0.5, cursor: "not-allowed" }
+                                  : undefined
+                              }
+                              onClick={(e) => {
+                                if (isEyeLocked && selectedEye !== "left") {
+                                  e.preventDefault();
+                                  handleEyeSelect("left");
+                                }
+                              }}
+                            >
                               <input
                                 type="radio"
                                 id="left"
                                 name="eye"
                                 value="left"
                                 checked={selectedEye === "left"}
-                                onChange={() => {
-                                  setSelectedEye("left");
-                                  updateSetting("eye_camera_control", "left");
-                                }}
+                                onChange={() => handleEyeSelect("left")}
                               />
                               Left
                             </label>
-                            <label className="ts-exam-radio">
+                            <label
+                              className="ts-exam-radio"
+                              style={
+                                isEyeLocked && selectedEye !== "right"
+                                  ? { opacity: 0.5, cursor: "not-allowed" }
+                                  : undefined
+                              }
+                              onClick={(e) => {
+                                if (isEyeLocked && selectedEye !== "right") {
+                                  e.preventDefault();
+                                  handleEyeSelect("right");
+                                }
+                              }}
+                            >
                               <input
                                 type="radio"
                                 id="right"
                                 name="eye"
                                 value="right"
                                 checked={selectedEye === "right"}
-                                onChange={() => {
-                                  setSelectedEye("right");
-                                  updateSetting("eye_camera_control", "right");
-                                }}
+                                onChange={() => handleEyeSelect("right")}
                               />
                               Right
                             </label>
@@ -1461,7 +1495,7 @@ const EMRpage = () => {
                               : "0/2"}
                             )
                           </button>
-                          {selectedEye && calibrateCounts[selectedEye] >= 2 && (
+                          {isEyeLocked && (
                             <button
                               type="button"
                               className="ts-btn ts-btn-danger"
