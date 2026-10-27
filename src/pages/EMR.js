@@ -937,6 +937,10 @@ const EMRpage = () => {
     }
   };
 
+  // Lock eye switching once calibration has started for the selected eye
+  const isEyeLocked =
+    !!selectedEye && calibrateCounts[selectedEye] > 0;
+
   const handleSave = async () => {
     try {
       // Save any active session first
@@ -1389,7 +1393,9 @@ const EMRpage = () => {
                                 name="eye"
                                 value="left"
                                 checked={selectedEye === "left"}
+                                disabled={isEyeLocked && selectedEye !== "left"}
                                 onChange={() => {
+                                  if (isEyeLocked) return;
                                   setSelectedEye("left");
                                   updateSetting("eye_camera_control", "left");
                                 }}
@@ -1403,7 +1409,9 @@ const EMRpage = () => {
                                 name="eye"
                                 value="right"
                                 checked={selectedEye === "right"}
+                                disabled={isEyeLocked && selectedEye !== "right"}
                                 onChange={() => {
+                                  if (isEyeLocked) return;
                                   setSelectedEye("right");
                                   updateSetting("eye_camera_control", "right");
                                 }}
@@ -1427,7 +1435,7 @@ const EMRpage = () => {
                               : "0/2"}
                             )
                           </button>
-                          {selectedEye && calibrateCounts[selectedEye] >= 2 && (
+                          {isEyeLocked && (
                             <button
                               type="button"
                               className="ts-btn ts-btn-danger"
