@@ -47,7 +47,7 @@ const EMRpage = () => {
     labels: [],
     datasets: [
       {
-        label: "Eye Angle X",
+        label: "Eye Coordinate X",
         borderColor: "#1e40af",
         backgroundColor: "#1e40af",
         fill: false,
@@ -67,7 +67,7 @@ const EMRpage = () => {
         spanGaps: true,
       },
       {
-        label: "Eye Angle Y",
+        label: "Eye Coordinate Y",
         borderColor: "#9d174d",
         backgroundColor: "#9d174d",
         fill: false,
@@ -1253,7 +1253,7 @@ const EMRpage = () => {
                         {!isPaused ? (
                           <div className="ts-exam-chart">
                             <h4 className="ts-exam-chart-title">
-                              Horizontal Eye Angle and Stimulus (X)
+                              Horizontal Eye Coordinates and Stimulus (X)
                             </h4>
                             <Line
                               ref={chartRef}
@@ -1316,7 +1316,7 @@ const EMRpage = () => {
                                     max: 70,
                                     title: {
                                       display: true,
-                                      text: "Angle/Position (X)",
+                                      text: "Position (X)",
                                       font: { weight: 'bold', size: 10 }
                                     },
                                     ticks: {
@@ -1337,7 +1337,7 @@ const EMRpage = () => {
                         {!isPaused ? (
                           <div className="ts-exam-chart">
                             <h4 className="ts-exam-chart-title">
-                              Vertical Eye Angle and Stimulus (Y)
+                              Vertical Eye Coordinates and Stimulus (Y)
                             </h4>
                             <Line
                               ref={chartRef}
@@ -1400,7 +1400,7 @@ const EMRpage = () => {
                                     max: 40,
                                     title: {
                                       display: true,
-                                      text: "Angle/Position (Y)",
+                                      text: "Position (Y)",
                                       font: { weight: 'bold', size: 10 }
                                     },
                                     ticks: {
