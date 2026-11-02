@@ -117,6 +117,26 @@ const EMRpage = () => {
   // Pause state
   const [isPaused, setIsPaused] = useState(false);
 
+  const centerFocusRef = useRef(centerFocus);
+  useEffect(() => {
+    centerFocusRef.current = centerFocus;
+  }, [centerFocus]);
+
+  const isPausedRef = useRef(isPaused);
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+
+  const plottingEnabledRef = useRef(plottingEnabled);
+  useEffect(() => {
+    plottingEnabledRef.current = plottingEnabled;
+  }, [plottingEnabled]);
+
+  const currentSessionRef = useRef(currentSession);
+  useEffect(() => {
+    currentSessionRef.current = currentSession;
+  }, [currentSession]);
+
   // Check if stimulus is active (both type and shape are selected)
   const isStimulusActive = useRef(false);
 
@@ -153,6 +173,7 @@ const EMRpage = () => {
 
     // START SESSION WHEN STIMULUS BECOMES ACTIVE
     if (
+      centerFocus &&
       isStimulusActive.current &&
       !currentSession &&
       !sessionStarted.current
@@ -160,7 +181,7 @@ const EMRpage = () => {
       console.log("Stimulus is ON - starting new session");
       startNewStimulusSession();
     }
-  }, [settings.stimulus_type, settings.shape, settings.speed]);
+  }, [settings.stimulus_type, settings.shape, settings.speed, centerFocus]);
 
   // Reset eye tracking start time and graph when meeting is joined or changed
   useEffect(() => {
@@ -210,38 +231,38 @@ const EMRpage = () => {
             };
           }
 
-          // STOP processing when PAUSED
-          if (isPaused) return;
+          // STOP processing when PAUSED or when NOT in Center Focus (e.g., in Quadrant mode)
+          if (isPausedRef.current || !centerFocusRef.current) return;
 
-          // Only continue if NOT paused
+          // Only continue if NOT paused and in Center Focus
           eyeDataBuffer.current.push({ angle_x, angle_y, timestamp });
 
           if (eyeDataBuffer.current.length > MAX_POINTS) {
             eyeDataBuffer.current.shift();
           }
 
-          // ONLY plot eye data directly if stimulus plotting IS NOT driving the graph
-          if (!plottingEnabled || isPaused) {
+          // ONLY plot eye data directly if in Center Focus and stimulus plotting IS NOT driving the graph
+          if (centerFocusRef.current && (!plottingEnabledRef.current || isPausedRef.current)) {
             processAndPlotEyeData();
           }
 
           // Store eye-only data points when stimulus is active
           if (
             isStimulusActive.current &&
-            currentSession &&
+            currentSessionRef.current &&
             !stimulusDataComplete.current &&
-            !isPaused
+            !isPausedRef.current
           ) {
             // Store eye-only data point (stimulus will be paired later)
             const dataPoint = {
               timestamp: new Date(timestamp),
               relativeTime:
-                (timestamp - currentSession.sessionStart.getTime()) / 1000,
+                (timestamp - currentSessionRef.current.sessionStart.getTime()) / 1000,
               eyeX: angle_x,
               eyeY: angle_y,
               stimX: null, // Will be paired with stimulus data
               stimY: null, // Will be paired with stimulus data
-              stimulusType: currentSession.stimulusType,
+              stimulusType: currentSessionRef.current.stimulusType,
               isPaired: false, // Not yet paired with stimulus
             };
             sessionDataPoints.current = [
@@ -321,7 +342,7 @@ const EMRpage = () => {
 
   // Process and plot eye data
   const processAndPlotEyeData = () => {
-    if (eyeDataBuffer.current.length === 0 || isPaused) return;
+    if (eyeDataBuffer.current.length === 0 || isPausedRef.current || !centerFocusRef.current) return;
 
     let newEyeX = null;
     let newEyeY = null;
@@ -422,6 +443,9 @@ const EMRpage = () => {
       stimY: [],
     }));
 
+    eyeDataBuffer.current = [];
+    stimulusXData.current = [];
+    stimulusYData.current = [];
     currentDataIndex.current = 0;
     csvDataLoaded.current = false;
     stimulusStartTime.current = null;
@@ -505,6 +529,7 @@ const EMRpage = () => {
       if (!keepOpen) {
         // Reset session state
         setCurrentSession(null);
+        currentSessionRef.current = null;
         sessionDataPoints.current = [];
         sessionStarted.current = false;
 
@@ -541,10 +566,10 @@ const EMRpage = () => {
   // Start new session for stimulus
   const startNewStimulusSession = (resetGraph = true) => {
     if (
+      settings.exam_mode === "CenterFocus" &&
       settings.shape &&
       settings.stimulus_type &&
       selectedEye &&
-      settings.exam_mode &&
       settings.speed
     ) {
       const newSession = {
@@ -566,6 +591,7 @@ const EMRpage = () => {
         dataPoints: [],
       };
       setCurrentSession(newSession);
+      currentSessionRef.current = newSession;
       sessionDataPoints.current = [];
       sessionStarted.current = true;
       stimulusDataComplete.current = false;
@@ -590,10 +616,11 @@ const EMRpage = () => {
   // Handle settings changes
   useEffect(() => {
     if (
+      centerFocus &&
       settings.shape &&
       settings.stimulus_type &&
       selectedEye &&
-      settings.exam_mode
+      settings.exam_mode === "CenterFocus"
     ) {
       if (
         !currentSession ||
@@ -622,7 +649,7 @@ const EMRpage = () => {
         }
       }
     } else {
-      // If stimulus settings are cleared, save any active session ONLY if complete
+      // If stimulus settings are cleared or not in Center Focus, save any active session ONLY if complete
       if (
         currentSession &&
         sessionDataPoints.current.length > 0 &&
@@ -634,10 +661,12 @@ const EMRpage = () => {
         console.log("Discarding incomplete stimulus session on settings clear");
       }
       setCurrentSession(null);
+      currentSessionRef.current = null;
       sessionStarted.current = false;
+      sessionDataPoints.current = [];
       stimulusDataComplete.current = false;
     }
-  }, [settings.shape, settings.stimulus_type, selectedEye, settings.exam_mode, settings.speed]);
+  }, [centerFocus, settings.shape, settings.stimulus_type, selectedEye, settings.exam_mode, settings.speed]);
 
   // Process stimulus data - PAIR WITH EYE DATA
   const startStimulusPlotting = () => {
@@ -663,7 +692,7 @@ const EMRpage = () => {
     );
 
     stimulusIntervalRef.current = setInterval(() => {
-      if (isPaused || !plottingEnabled || !currentSession || stimulusDataComplete.current) return;
+      if (isPausedRef.current || !plottingEnabledRef.current || !currentSessionRef.current || stimulusDataComplete.current || !centerFocusRef.current) return;
 
       if (!stimulusStartTime.current) {
         stimulusStartTime.current = Date.now();
@@ -872,6 +901,11 @@ const EMRpage = () => {
       }
 
       const csvText = await response.text();
+
+      if (!centerFocusRef.current) {
+        console.log("Navigated away from Center Focus during CSV load, ignoring data");
+        return;
+      }
       const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
 
       const xData = parsed.data
@@ -935,8 +969,75 @@ const EMRpage = () => {
     }
   };
 
+  const handleExamModeChange = (mode) => {
+    if (mode === "Quadrant") {
+      stopStimulusPlotting();
+      setPlottingEnabled(false);
+      plottingEnabledRef.current = false;
+      isStimulusActive.current = false;
+      sessionStarted.current = false;
+      sessionDataPoints.current = [];
+      setCurrentSession(null);
+      currentSessionRef.current = null;
+      stimulusDataComplete.current = false;
+
+      // Clear the graph completely when in Quadrant
+      resetPlottingState();
+
+      centerFocusRef.current = false;
+      setCenterFocus(false);
+      setSettings((prev) => ({
+        ...prev,
+        exam_mode: "Quadrant",
+        stimulus_type: "",
+        shape: "",
+        coordinates: null,
+      }));
+    } else if (mode === "CenterFocus") {
+      stopStimulusPlotting();
+      setPlottingEnabled(false);
+      plottingEnabledRef.current = false;
+      isStimulusActive.current = false;
+      sessionStarted.current = false;
+      sessionDataPoints.current = [];
+      setCurrentSession(null);
+      currentSessionRef.current = null;
+      stimulusDataComplete.current = false;
+
+      // Reset the graph when switching to Center Focus
+      resetPlottingState();
+
+      centerFocusRef.current = true;
+      setCenterFocus(true);
+      setSettings((prev) => ({
+        ...prev,
+        exam_mode: "CenterFocus",
+        stimulus_type: "",
+        shape: "",
+        coordinates: null,
+      }));
+    }
+  };
+
+  // Ensure graph is cleared when centerFocus is false
+  useEffect(() => {
+    if (centerFocus === false) {
+      stopStimulusPlotting();
+      resetPlottingState();
+    }
+  }, [centerFocus]);
+
   const updateSetting = (key, value) => {
     console.log(`Updating setting: ${key} = ${value}`);
+    if (key === "exam_mode") {
+      if (value === "Quadrant") {
+        handleExamModeChange("Quadrant");
+        return;
+      } else if (value === "CenterFocus") {
+        handleExamModeChange("CenterFocus");
+        return;
+      }
+    }
     setSettings((prevSettings) => ({ ...prevSettings, [key]: value }));
   };
 
@@ -1512,10 +1613,7 @@ const EMRpage = () => {
                               <div className="ts-exam-field-box ts-exam-radio-row">
                                 <label className="ts-exam-radio">
                                   <input
-                                    onChange={() => {
-                                      updateSetting("exam_mode", "CenterFocus");
-                                      setCenterFocus(true);
-                                    }}
+                                    onChange={() => handleExamModeChange("CenterFocus")}
                                     type="radio"
                                     id="centerFocus"
                                     name="examMode"
@@ -1526,10 +1624,7 @@ const EMRpage = () => {
                                 </label>
                                 <label className="ts-exam-radio">
                                   <input
-                                    onChange={() => {
-                                      updateSetting("exam_mode", "Quadrant");
-                                      setCenterFocus(false);
-                                    }}
+                                    onChange={() => handleExamModeChange("Quadrant")}
                                     type="radio"
                                     id="quadrant"
                                     name="examMode"
