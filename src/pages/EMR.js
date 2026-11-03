@@ -155,6 +155,9 @@ const EMRpage = () => {
   // Track if session was saved due to CSV completion
   const sessionSavedDueToCSVComplete = useRef(false);
 
+  // Skip sending videoController-webhook when settings are reset automatically on completion
+  const skipNextWebhookRef = useRef(false);
+
   // Track latest eye data for pairing with stimulus
   const latestEyeDataForStimulus = useRef({
     eyeX: null,
@@ -786,9 +789,13 @@ const EMRpage = () => {
           saveCurrentSession(false);
         }
 
-        // Reset settings to restart UI selection
-        updateSetting("stimulus_type", "");
-        updateSetting("shape", "");
+        // Reset settings to restart UI selection without sending extra webhook to server
+        skipNextWebhookRef.current = true;
+        setSettings((prev) => ({
+          ...prev,
+          stimulus_type: "",
+          shape: "",
+        }));
       }
     }, TICK_INTERVAL);
   };
@@ -1301,6 +1308,12 @@ const EMRpage = () => {
   };
 
   useEffect(() => {
+    if (skipNextWebhookRef.current) {
+      console.log("Skipping videoController-webhook on stimulus completion reset");
+      skipNextWebhookRef.current = false;
+      return;
+    }
+
     console.log("Sending settings to server:", settings);
     axios
       .post(
