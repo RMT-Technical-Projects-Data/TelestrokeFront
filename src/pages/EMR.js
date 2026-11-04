@@ -1045,7 +1045,12 @@ const EMRpage = () => {
         return;
       }
     }
-    setSettings((prevSettings) => ({ ...prevSettings, [key]: value }));
+    // Every settings change is POSTed to the device (see the [settings] effect), so a "change" to
+    // the value it already has must not create a new settings object and send a duplicate command.
+    // Object values (calibrate, coordinates) are always new objects and still go through.
+    setSettings((prevSettings) =>
+      prevSettings[key] === value ? prevSettings : { ...prevSettings, [key]: value }
+    );
   };
 
   const handleCalibrate = () => {

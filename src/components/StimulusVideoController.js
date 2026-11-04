@@ -1,24 +1,34 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Button from "./Button";
 import { Play, Pause } from "lucide-react";
+import { SPEED_COMMIT_DELAY_MS, speedLabelFor } from "../utils/stimulusSpeed";
 
 const StimulusVideoController = ({ settings, updateSetting, isPaused, setIsPaused, togglePause }) => {
   const [videoSpeed, setVideoSpeed] = useState(2);
+  const commitTimer = useRef(null);
+
+  // A range input fires onChange for every 1% step of a drag. Each speed setting is sent to the
+  // device as a command (and makes it restart the stimulus), so a drag used to send dozens of
+  // commands and the device ended up restarting long after the graph had. Move the thumb live,
+  // but send the speed once: when the thumb is released, or after it rests for a moment.
+  const commitSpeed = (value) => {
+    clearTimeout(commitTimer.current);
+    commitTimer.current = null;
+    updateSetting("speed", speedLabelFor(value));
+  };
 
   const handleSpeedChange = (event) => {
-    const value = event.target.value;
+    const value = Number(event.target.value);
     setVideoSpeed(value);
-    let speedLabel = "slow";
-    if (value > 70) speedLabel = "fast";
-    else if (value > 40) speedLabel = "medium";
-    updateSetting("speed", speedLabel);
+    clearTimeout(commitTimer.current);
+    commitTimer.current = setTimeout(() => commitSpeed(value), SPEED_COMMIT_DELAY_MS);
   };
 
-  const getSpeedLabel = (value) => {
-    if (value > 70) return "fast";
-    else if (value > 40) return "medium";
-    return "slow";
-  };
+  const handleSpeedRelease = (event) => commitSpeed(Number(event.currentTarget.value));
+
+  useEffect(() => () => clearTimeout(commitTimer.current), []);
+
+  const getSpeedLabel = speedLabelFor;
 
   const handlePlayPause = () => {
     togglePause();
@@ -74,6 +84,8 @@ const StimulusVideoController = ({ settings, updateSetting, isPaused, setIsPause
             value={videoSpeed}
             className="slider"
             onChange={handleSpeedChange}
+            onPointerUp={handleSpeedRelease}
+            onKeyUp={handleSpeedRelease}
           />
           <span>{getSpeedLabel(videoSpeed)}</span>
         </div>
