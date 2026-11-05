@@ -14,6 +14,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { Line } from "react-chartjs-2";
 import { submitExamData, submitTrackingSession } from "../utils/auth";
 import Papa from "papaparse";
+import { legacyCsvPath, speedFactorFor, stimulusCsvPath } from "../utils/stimulusTiming";
 import AppShell from "../components/AppShell";
 
 const EMRpage = () => {
@@ -887,22 +888,24 @@ const EMRpage = () => {
       // Reset stimulus state when loading new CSV data
       resetPlottingState();
 
-      let csvPath = "";
-      if (stimulusType === "1") {
-        // H-Shape
-        csvPath = `/ShapesGraph/H-Shape/H_shape_${speed}.csv`;
-      } else if (stimulusType === "3") {
-        // Horizontal
-        csvPath = `/ShapesGraph/Horizontal-Shape/Horizontal_${speed}.csv`;
-      } else if (stimulusType === "2") {
-        // Vertical
-        csvPath = `/ShapesGraph/Vertical-Shape/Vertical_${speed}.csv`;
-      } else {
+      // One curve per device video (type x shape x screen), on that video's own 1x timeline and as
+      // long as the video. The device plays it at the speed factor, so divide the CSV time by it.
+      let csvPath = stimulusCsvPath(stimulusType, shape, selectedEye || "right");
+      let timeDivisor = speedFactorFor(speed);
+      if (!csvPath) {
         console.warn(`No CSV path defined for stimulus type: ${stimulusType}`);
         return;
       }
 
-      const response = await fetch(csvPath);
+      let response = await fetch(csvPath);
+      if (!response.ok) {
+        // Fall back to the old per-type, per-speed curve (already timed for that speed).
+        const legacyPath = legacyCsvPath(stimulusType, speed);
+        console.warn(`CSV ${csvPath} unavailable (${response.status}), falling back to ${legacyPath}`);
+        csvPath = legacyPath;
+        timeDivisor = 1;
+        response = csvPath ? await fetch(csvPath) : response;
+      }
       if (!response.ok) {
         throw new Error(`Failed to fetch CSV file: ${csvPath} (${response.status})`);
       }
@@ -920,7 +923,7 @@ const EMRpage = () => {
           const timeValue = row["Time(s)"] || row["Time (s)"] || row["Time"] || row["time"] || 0;
           const xValue = row["X"] || row["X Position (pixels)"] || row["X Position"] || row["x"] || 0;
           return {
-            time: parseFloat(parseFloat(timeValue).toFixed(2)) || 0,
+            time: parseFloat((parseFloat(timeValue) / timeDivisor).toFixed(2)) || 0,
             value: parseFloat(xValue) || 0,
           };
         })
@@ -931,7 +934,7 @@ const EMRpage = () => {
           const timeValue = row["Time(s)"] || row["Time (s)"] || row["Time"] || row["time"] || 0;
           const yValue = row["Y"] || row["Y Position (pixels)"] || row["Y Position"] || row["y"] || 0;
           return {
-            time: parseFloat(parseFloat(timeValue).toFixed(2)) || 0,
+            time: parseFloat((parseFloat(timeValue) / timeDivisor).toFixed(2)) || 0,
             value: parseFloat(yValue) || 0,
           };
         })
