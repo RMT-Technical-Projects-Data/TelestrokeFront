@@ -14,7 +14,16 @@ import "react-toastify/dist/ReactToastify.css";
 import { Line } from "react-chartjs-2";
 import { submitExamData, submitTrackingSession } from "../utils/auth";
 import Papa from "papaparse";
-import { legacyCsvPath, speedFactorFor, stimulusCsvPath } from "../utils/stimulusTiming";
+import {
+  MATCH_WAIT_MS,
+  deviceIsReporting,
+  deviceVideoTime,
+  expectedVideoNumber,
+  legacyCsvPath,
+  speedFactorFor,
+  statusMatches,
+  stimulusCsvPath,
+} from "../utils/stimulusTiming";
 import AppShell from "../components/AppShell";
 
 const EMRpage = () => {
@@ -111,6 +120,13 @@ const EMRpage = () => {
   const lastEyeTimestamp = useRef(null);
   const eyeTrackingStartTime = useRef(null);
   const stimulusStartTime = useRef(null);
+  // Following the device's stimulus video (see utils/stimulusTiming)
+  const deviceStatusRef = useRef(null); // last stimulus_status report, with receivedAt
+  const expectedVideoRef = useRef(null); // device video number of the stimulus on the graph
+  const csvTimeFactorRef = useRef(1); // speed factor the loaded curve is plotted at
+  const deviceSeqRef = useRef(null); // device (re)start counter the graph is following
+  const followingDeviceRef = useRef(false);
+  const matchWaitStartRef = useRef(null);
   const sessionStarted = useRef(false);
   const pauseStartTime = useRef(null);
   const [calibrateCounts, setCalibrateCounts] = useState({ left: 0, right: 0 });
@@ -213,6 +229,10 @@ const EMRpage = () => {
     webSocketRef.current.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        if (data.type === "stimulus_status") {
+          deviceStatusRef.current = { ...data, receivedAt: Date.now() };
+          return;
+        }
         console.log("eye data ", data);
         if (data.type === "eye_data") {
           const timestamp = data?.timestamp || Date.now();
@@ -456,6 +476,17 @@ const EMRpage = () => {
     eyeTrackingStartTime.current = null;
     stimulusDataComplete.current = false;
     sessionSavedDueToCSVComplete.current = false;
+    deviceSeqRef.current = null;
+    followingDeviceRef.current = false;
+    matchWaitStartRef.current = null;
+  };
+
+  // The device restarted the stimulus video: start the curve (and this run's data) over with it.
+  const restartStimulusPlot = () => {
+    console.log("Device restarted the stimulus video - restarting the graph with it");
+    currentDataIndex.current = 0;
+    cumulativeData.current = { labels: [], eyeX: [], eyeY: [], stimX: [], stimY: [] };
+    sessionDataPoints.current = [];
   };
 
   // Save current session
@@ -698,11 +729,32 @@ const EMRpage = () => {
     stimulusIntervalRef.current = setInterval(() => {
       if (isPausedRef.current || !plottingEnabledRef.current || !currentSessionRef.current || stimulusDataComplete.current || !centerFocusRef.current) return;
 
+      const now = Date.now();
       if (!stimulusStartTime.current) {
-        stimulusStartTime.current = Date.now();
+        stimulusStartTime.current = now;
       }
+      let elapsedTime = (now - stimulusStartTime.current) / 1000;
 
-      const elapsedTime = (Date.now() - stimulusStartTime.current) / 1000;
+      // Follow the device's video when it reports this stimulus: the curve is then plotted at the
+      // video's real position, whatever the network delay or the player's actual speed.
+      const status = deviceStatusRef.current;
+      if (statusMatches(status, expectedVideoRef.current, now)) {
+        if (deviceSeqRef.current !== null && status.seq !== deviceSeqRef.current && currentDataIndex.current > 0) {
+          restartStimulusPlot();
+        }
+        deviceSeqRef.current = status.seq;
+        followingDeviceRef.current = true;
+        elapsedTime = deviceVideoTime(status, now) / csvTimeFactorRef.current;
+        stimulusStartTime.current = now - elapsedTime * 1000; // the wall clock continues from here if reports stop
+      } else if (!followingDeviceRef.current && deviceIsReporting(status, now)) {
+        // The device reports, but has not started this video yet: hold the curve at its start
+        // instead of running ahead of the stimulus (give up after MATCH_WAIT_MS and use the clock).
+        if (matchWaitStartRef.current === null) matchWaitStartRef.current = now;
+        if (now - matchWaitStartRef.current < MATCH_WAIT_MS) {
+          stimulusStartTime.current = now;
+          elapsedTime = 0;
+        }
+      }
       let pointsProcessed = 0;
 
       // Process all points that should have occurred by now according to CSV time
@@ -892,6 +944,8 @@ const EMRpage = () => {
       // long as the video. The device plays it at the speed factor, so divide the CSV time by it.
       let csvPath = stimulusCsvPath(stimulusType, shape, selectedEye || "right");
       let timeDivisor = speedFactorFor(speed);
+      expectedVideoRef.current = expectedVideoNumber(stimulusType, shape, selectedEye || "right");
+      csvTimeFactorRef.current = speedFactorFor(speed);
       if (!csvPath) {
         console.warn(`No CSV path defined for stimulus type: ${stimulusType}`);
         return;

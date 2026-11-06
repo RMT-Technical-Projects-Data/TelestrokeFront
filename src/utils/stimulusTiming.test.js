@@ -1,4 +1,14 @@
-import { legacyCsvPath, speedFactorFor, stimulusCsvPath } from "./stimulusTiming";
+import {
+  REPORTING_MS,
+  STATUS_FRESH_MS,
+  deviceIsReporting,
+  deviceVideoTime,
+  expectedVideoNumber,
+  legacyCsvPath,
+  speedFactorFor,
+  statusMatches,
+  stimulusCsvPath,
+} from "./stimulusTiming";
 
 describe("speedFactorFor", () => {
   it("matches the speeds the device plays", () => {
@@ -37,5 +47,54 @@ describe("legacyCsvPath", () => {
     expect(legacyCsvPath("3", "medium")).toBe("/ShapesGraph/Horizontal-Shape/Horizontal_medium.csv");
     expect(legacyCsvPath("2", undefined)).toBe("/ShapesGraph/Vertical-Shape/Vertical_slow.csv");
     expect(legacyCsvPath("7", "slow")).toBeNull();
+  });
+});
+
+describe("expectedVideoNumber", () => {
+  it("matches the device's video map", () => {
+    expect(expectedVideoNumber("1", "Circle", "right")).toBe("1");
+    expect(expectedVideoNumber("1", "Star", "right")).toBe("3");
+    expect(expectedVideoNumber("2", "Circle", "right")).toBe("4");
+    expect(expectedVideoNumber("3", "Star", "right")).toBe("9");
+    expect(expectedVideoNumber("1", "Circle", "left")).toBe("10");
+    expect(expectedVideoNumber("3", "Star", "Left")).toBe("18");
+  });
+
+  it("returns null for an unknown type or shape", () => {
+    expect(expectedVideoNumber("", "Circle", "right")).toBeNull();
+    expect(expectedVideoNumber("4", "Circle", "right")).toBeNull();
+    expect(expectedVideoNumber("1", "", "right")).toBeNull();
+  });
+});
+
+describe("following the device", () => {
+  const status = (over = {}) => ({
+    type: "stimulus_status", video: "1", seq: 1, time_pos: 4, speed: 1, paused: false,
+    playing: true, duration: 23.46, receivedAt: 1000, ...over,
+  });
+
+  it("uses only fresh reports about the stimulus on the graph", () => {
+    expect(statusMatches(status(), "1", 1000 + STATUS_FRESH_MS)).toBe(true);
+    expect(statusMatches(status(), "1", 1001 + STATUS_FRESH_MS)).toBe(false);
+    expect(statusMatches(status({ video: "10" }), "1", 1000)).toBe(false);
+    expect(statusMatches(status({ playing: false }), "1", 1000)).toBe(false);
+    expect(statusMatches(status({ time_pos: null }), "1", 1000)).toBe(false);
+    expect(statusMatches(null, "1", 1000)).toBe(false);
+  });
+
+  it("extrapolates the position at the device's real speed", () => {
+    expect(deviceVideoTime(status({ speed: 2 }), 1500)).toBeCloseTo(5);
+    expect(deviceVideoTime(status({ speed: 0.5 }), 3000)).toBeCloseTo(5);
+  });
+
+  it("does not move while paused and never passes the end", () => {
+    expect(deviceVideoTime(status({ paused: true }), 9000)).toBe(4);
+    expect(deviceVideoTime(status({ time_pos: 23 }), 9000)).toBe(23.46);
+  });
+
+  it("knows when the device is reporting at all", () => {
+    expect(deviceIsReporting(status(), 1000 + REPORTING_MS)).toBe(true);
+    expect(deviceIsReporting(status(), 1001 + REPORTING_MS)).toBe(false);
+    expect(deviceIsReporting(null, 0)).toBe(false);
   });
 });
