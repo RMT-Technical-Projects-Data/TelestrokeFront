@@ -58,14 +58,26 @@ const MetricSkeleton = ({ count = 6 }) => (
   </div>
 );
 
-const ChartCard = ({ title, meta, children, wide = false }) => (
-  <div className={`ts-panel ${wide ? "ts-chart-wide" : ""}`}>
+const ChartCard = ({ title, meta, children }) => (
+  <div className="ts-panel ts-overview-card">
     <div className="ts-panel-head">
       <h3 className="ts-panel-title">{title}</h3>
       {meta ? <span className="ts-panel-meta">{meta}</span> : null}
     </div>
     <div className="ts-chart-body ts-chart-canvas-wrap">{children}</div>
   </div>
+);
+
+const OverviewSection = ({ title, subtitle, children }) => (
+  <section className="ts-overview-section">
+    <div className="ts-overview-section-head">
+      <div>
+        <h2 className="ts-overview-section-title">{title}</h2>
+        {subtitle ? <p className="ts-overview-section-sub">{subtitle}</p> : null}
+      </div>
+    </div>
+    <div className="ts-chart-grid">{children}</div>
+  </section>
 );
 
 const chartDefaults = {
@@ -319,8 +331,11 @@ function Dashboard() {
           </div>
         )}
 
-        <div className="ts-chart-grid">
-          <ChartCard title="Appointment trend" meta="14-day line" wide>
+        <OverviewSection
+          title="Volume trends"
+          subtitle="Appointment activity over the last two weeks."
+        >
+          <ChartCard title="Appointment trend" meta="Line · 14 days">
             {loading ? (
               <div className="ts-chart-empty">Loading chart…</div>
             ) : (
@@ -337,7 +352,7 @@ function Dashboard() {
             )}
           </ChartCard>
 
-          <ChartCard title="Daily volume" meta="Bar chart">
+          <ChartCard title="Daily volume" meta="Bar · 14 days">
             {loading ? (
               <div className="ts-chart-empty">Loading chart…</div>
             ) : (
@@ -354,7 +369,12 @@ function Dashboard() {
               />
             )}
           </ChartCard>
+        </OverviewSection>
 
+        <OverviewSection
+          title="Caseload composition"
+          subtitle="How appointments break down by status and device."
+        >
           <ChartCard title="Status mix" meta="Doughnut">
             {loading ? (
               <div className="ts-chart-empty">Loading chart…</div>
@@ -391,7 +411,12 @@ function Dashboard() {
               />
             )}
           </ChartCard>
+        </OverviewSection>
 
+        <OverviewSection
+          title="Scheduling patterns"
+          subtitle="Weekday load and recent versus prior week comparison."
+        >
           <ChartCard title="Weekday distribution" meta="Polar area">
             {loading ? (
               <div className="ts-chart-empty">Loading chart…</div>
@@ -414,7 +439,7 @@ function Dashboard() {
             )}
           </ChartCard>
 
-          <ChartCard title="Trend comparison" meta="Recent vs prior week" wide>
+          <ChartCard title="Trend comparison" meta="Line · recent vs prior">
             {loading ? (
               <div className="ts-chart-empty">Loading chart…</div>
             ) : (
@@ -430,7 +455,7 @@ function Dashboard() {
               />
             )}
           </ChartCard>
-        </div>
+        </OverviewSection>
       </div>
     </AppShell>
   );

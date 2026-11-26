@@ -407,9 +407,42 @@ code {
   gap: 0.5rem;
 }
 
+.ts-overview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ts-overview-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 0.15rem;
+}
+
+.ts-overview-section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ts-text);
+}
+
+.ts-overview-section-sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--ts-text-muted);
+}
+
+.ts-overview-card {
+  min-width: 0;
+  height: 100%;
+}
+
 .ts-chart-canvas-wrap {
-  min-height: 280px;
-  height: 300px;
+  min-height: 260px;
+  height: 280px;
 }
 
 .ts-chart-wide {
@@ -417,13 +450,14 @@ code {
 }
 
 .ts-chart-wide .ts-chart-canvas-wrap {
-  height: 320px;
+  height: 300px;
 }
 
 .ts-chart-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
+  align-items: stretch;
 }
 
 .ts-panel-span-2 {
@@ -1616,6 +1650,10 @@ code {
   .ts-panel-span-2,
   .ts-chart-wide {
     grid-column: auto;
+  }
+
+  .ts-overview-section-head {
+    align-items: flex-start;
   }
 }
 
