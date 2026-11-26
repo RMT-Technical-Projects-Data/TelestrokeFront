@@ -19,12 +19,14 @@ const AppointmentTable = ({ addAppointment, hideHeader = false, reloadKey = 0 })
   const [updatedTime, setUpdatedTime] = useState('');
   const [updatedCheckupStatus] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
   
   const [currentPage, setCurrentPage] = useState(1);
   const [pageInputValue, setPageInputValue] = useState('1');
-  const itemsPerPage = 8;    
+  const itemsPerPage = 8;
+  const statusFilterOptions = ['All', 'Pending', 'Overdue', 'Complete'];    
 
   const [sortConfig, setSortConfig] = useState({ key: 'AppointmentDate', direction: 'desc' });
 
@@ -169,11 +171,23 @@ const AppointmentTable = ({ addAppointment, hideHeader = false, reloadKey = 0 })
     setCurrentPage(1); // Reset to first page when searching
   };
 
+  const handleStatusFilterChange = (event) => {
+    setStatusFilter(event.target.value);
+    setCurrentPage(1);
+  };
+
   const safeData = Array.isArray(appointments_data) ? appointments_data : [];
-  const filteredAppointmentsData = safeData.filter((appointment) =>
-    appointment?.ID?.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
-    appointment?.Name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredAppointmentsData = safeData.filter((appointment) => {
+    const query = searchQuery.toLowerCase();
+    const matchesSearch =
+      appointment?.ID?.toString().toLowerCase().includes(query) ||
+      appointment?.Name?.toLowerCase().includes(query) ||
+      appointment?.DeviceID?.toString().toLowerCase().includes(query);
+
+    if (!matchesSearch) return false;
+    if (statusFilter === 'All') return true;
+    return getAppointmentStatusLabel(appointment) === statusFilter;
+  });
 
   const sortedData = useMemo(() => {
     let sortableItems = [...filteredAppointmentsData];
@@ -198,6 +212,12 @@ const AppointmentTable = ({ addAppointment, hideHeader = false, reloadKey = 0 })
         if (sortConfig.key === 'AppointmentTime') {
           aValue = aValue || "";
           bValue = bValue || "";
+        }
+
+        // Display status (Pending / Overdue / Complete)
+        if (sortConfig.key === 'Checkup_Status') {
+          aValue = getAppointmentStatusLabel(a);
+          bValue = getAppointmentStatusLabel(b);
         }
 
         if (aValue < bValue) {
@@ -277,6 +297,19 @@ const AppointmentTable = ({ addAppointment, hideHeader = false, reloadKey = 0 })
             placeholder="Search by Meeting ID"
             className="ts-search"
           />
+        </div>
+        <div className="ts-status-filter">
+          <label htmlFor="appointment-status-filter">Status</label>
+          <select
+            id="appointment-status-filter"
+            className="ts-input ts-status-filter-select"
+            value={statusFilter}
+            onChange={handleStatusFilterChange}
+          >
+            {statusFilterOptions.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
         </div>
         <span className="ts-panel-meta">{filteredAppointmentsData.length} shown</span>
       </div>

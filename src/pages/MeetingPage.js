@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getAllAppointments, parseAppointmentList, AppointmentFormSubmit } from "../utils/auth";
 import { getToken, createMeeting } from "../API";
-import { Copy, Phone } from "lucide-react";
+import { Phone } from "lucide-react";
 import AppShell from "../components/AppShell";
 
 const MeetingPage = () => {
@@ -15,9 +15,8 @@ const MeetingPage = () => {
   const [, setToken] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isMeetingCreated, setIsMeetingCreated] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [doctor, setDoctor] = useState("");
-  const [appointments, setAppointments] = useState([]);
+  const [, setAppointments] = useState([]);
 
   useEffect(() => {
     const storedDoctor = localStorage.getItem("Doctor") || "Unknown Doctor";
@@ -110,18 +109,6 @@ const MeetingPage = () => {
     if (meetingId) navigate(`/emr/${patientID}/${meetingId}`);
   };
 
-  const handleCopyClick = async () => {
-    const value = meetingId || patientID;
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      toast.info("Copied to clipboard.");
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      toast.error("Could not copy.");
-    }
-  };
-
   useEffect(() => {
     const handleBeforeUnload = (event) => {
       if (isMeetingCreated) {
@@ -174,9 +161,6 @@ const MeetingPage = () => {
                   <span className="ts-meeting-result-label">Live meeting ID</span>
                   <strong>{meetingId}</strong>
                 </div>
-                <button type="button" className="ts-btn ts-btn-ghost" onClick={handleCopyClick}>
-                  <Copy size={14} /> {copied ? "Copied" : "Copy"}
-                </button>
               </div>
             ) : null}
           </div>
