@@ -1,28 +1,47 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Calendar, CalendarCheck, Clock, AlertTriangle, Plus, Video, Percent, CalendarDays } from "lucide-react";
+import {
+  Calendar,
+  CalendarCheck,
+  Clock,
+  AlertTriangle,
+  Plus,
+  Video,
+  Percent,
+  CalendarDays,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Filler,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Line, Bar, Doughnut, PolarArea } from "react-chartjs-2";
 import AppShell from "../components/AppShell";
 import { getAllAppointments, parseAppointmentList } from "../utils/auth";
 import { buildAppointmentInsights } from "../utils/overviewInsights";
-import {
-  getAppointmentStatusBadgeClass,
-  getAppointmentStatusLabel,
-  isAppointmentOverdue,
-} from "../utils/appointmentStatus";
+import { isAppointmentOverdue } from "../utils/appointmentStatus";
 
-const EmptyState = ({ icon: Icon, title, text, to, action }) => (
-  <div className="ts-empty-state">
-    <div className="ts-empty-icon"><Icon size={20} /></div>
-    <strong>{title}</strong>
-    <p>{text}</p>
-    {to ? (
-      <Link to={to} className="ts-btn ts-btn-primary">
-        {action}
-      </Link>
-    ) : null}
-  </div>
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Filler,
+  Tooltip,
+  Legend
 );
 
 const MetricSkeleton = ({ count = 6 }) => (
@@ -39,21 +58,25 @@ const MetricSkeleton = ({ count = 6 }) => (
   </div>
 );
 
-const formatTime = (time) => {
-  if (!time) return "N/A";
-  const [hour, minute] = time.split(":") || [];
-  const hourNum = parseInt(hour, 10);
-  if (Number.isNaN(hourNum)) return time;
-  const isPM = hourNum >= 12;
-  const formattedHour = hourNum % 12 || 12;
-  return `${formattedHour}:${minute} ${isPM ? "PM" : "AM"}`;
-};
+const ChartCard = ({ title, meta, children, wide = false }) => (
+  <div className={`ts-panel ${wide ? "ts-chart-wide" : ""}`}>
+    <div className="ts-panel-head">
+      <h3 className="ts-panel-title">{title}</h3>
+      {meta ? <span className="ts-panel-meta">{meta}</span> : null}
+    </div>
+    <div className="ts-chart-body ts-chart-canvas-wrap">{children}</div>
+  </div>
+);
 
-const formatDate = (dateString) => {
-  if (!dateString) return "N/A";
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return "N/A";
-  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+const chartDefaults = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: "bottom",
+      labels: { boxWidth: 12, usePointStyle: true, padding: 16 },
+    },
+  },
 };
 
 function Dashboard() {
@@ -97,12 +120,144 @@ function Dashboard() {
     fetchAppointments();
   }, []);
 
+  const volumeLine = useMemo(
+    () => ({
+      labels: insights.volume.map((d) => d.label),
+      datasets: [
+        {
+          label: "Appointments",
+          data: insights.volume.map((d) => d.value),
+          borderColor: "#3b4fdf",
+          backgroundColor: "rgba(59, 79, 223, 0.18)",
+          fill: true,
+          tension: 0.35,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          borderWidth: 2.5,
+        },
+      ],
+    }),
+    [insights.volume]
+  );
+
+  const volumeBars = useMemo(
+    () => ({
+      labels: insights.volume.map((d) => d.key.slice(8)),
+      datasets: [
+        {
+          label: "Daily volume",
+          data: insights.volume.map((d) => d.value),
+          backgroundColor: "rgba(59, 79, 223, 0.75)",
+          borderRadius: 6,
+          maxBarThickness: 28,
+        },
+      ],
+    }),
+    [insights.volume]
+  );
+
+  const statusDoughnut = useMemo(
+    () => ({
+      labels: ["Attended", "Scheduled", "Overdue"],
+      datasets: [
+        {
+          data: [insights.complete, insights.pending, insights.overdue],
+          backgroundColor: ["#16a34a", "#3b4fdf", "#dc2626"],
+          borderWidth: 0,
+          hoverOffset: 6,
+        },
+      ],
+    }),
+    [insights.complete, insights.pending, insights.overdue]
+  );
+
+  const deviceBars = useMemo(
+    () => ({
+      labels: insights.deviceBars.map((d) => d.label),
+      datasets: [
+        {
+          label: "Appointments by device",
+          data: insights.deviceBars.map((d) => d.value),
+          backgroundColor: [
+            "#3b4fdf",
+            "#0ea5e9",
+            "#14b8a6",
+            "#f59e0b",
+            "#8b5cf6",
+            "#ef4444",
+          ],
+          borderRadius: 8,
+          maxBarThickness: 36,
+        },
+      ],
+    }),
+    [insights.deviceBars]
+  );
+
+  const weeklyPolar = useMemo(() => {
+    const buckets = [0, 0, 0, 0, 0, 0, 0];
+    const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    appointments.forEach((a) => {
+      const dt = a.AppointmentDate ? new Date(a.AppointmentDate) : null;
+      if (!dt || Number.isNaN(dt.getTime())) return;
+      buckets[dt.getDay()] += 1;
+    });
+    return {
+      labels,
+      datasets: [
+        {
+          label: "By weekday",
+          data: buckets,
+          backgroundColor: [
+            "rgba(59, 79, 223, 0.55)",
+            "rgba(14, 165, 233, 0.55)",
+            "rgba(20, 184, 166, 0.55)",
+            "rgba(245, 158, 11, 0.55)",
+            "rgba(139, 92, 246, 0.55)",
+            "rgba(239, 68, 68, 0.55)",
+            "rgba(100, 116, 139, 0.55)",
+          ],
+        },
+      ],
+    };
+  }, [appointments]);
+
+  const trendCompare = useMemo(() => {
+    const half = Math.floor(insights.volume.length / 2);
+    const recent = insights.volume.slice(half);
+    const earlier = insights.volume.slice(0, half);
+    return {
+      labels: recent.map((d) => d.label),
+      datasets: [
+        {
+          label: "Recent 7 days",
+          data: recent.map((d) => d.value),
+          borderColor: "#3b4fdf",
+          backgroundColor: "rgba(59, 79, 223, 0.12)",
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2.5,
+        },
+        {
+          label: "Prior 7 days",
+          data: earlier.map((d) => d.value),
+          borderColor: "#94a3b8",
+          backgroundColor: "rgba(148, 163, 184, 0.12)",
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2,
+          borderDash: [5, 4],
+        },
+      ],
+    };
+  }, [insights.volume]);
+
   return (
     <AppShell
       variant={variant}
       page="DASHBOARD"
       title="Overview"
-      subtitle="Caseload, appointment volume, and upcoming sessions."
+      subtitle="Caseload analytics and appointment trends."
       actions={
         <>
           <Link to="/meeting" className="ts-btn ts-btn-ghost">
@@ -164,212 +319,117 @@ function Dashboard() {
           </div>
         )}
 
-        <div className="ts-panel">
-          <div className="ts-panel-head">
-            <h3 className="ts-panel-title">Appointments · 14 days</h3>
-            <span className="ts-panel-meta">{insights.thisWeek} this week</span>
-          </div>
-          <div className="ts-chart-body">
+        <div className="ts-chart-grid">
+          <ChartCard title="Appointment trend" meta="14-day line" wide>
+            {loading ? (
+              <div className="ts-chart-empty">Loading chart…</div>
+            ) : (
+              <Line
+                data={volumeLine}
+                options={{
+                  ...chartDefaults,
+                  scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "rgba(148,163,184,0.2)" } },
+                    x: { grid: { display: false } },
+                  },
+                }}
+              />
+            )}
+          </ChartCard>
+
+          <ChartCard title="Daily volume" meta="Bar chart">
+            {loading ? (
+              <div className="ts-chart-empty">Loading chart…</div>
+            ) : (
+              <Bar
+                data={volumeBars}
+                options={{
+                  ...chartDefaults,
+                  plugins: { ...chartDefaults.plugins, legend: { display: false } },
+                  scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "rgba(148,163,184,0.2)" } },
+                    x: { grid: { display: false } },
+                  },
+                }}
+              />
+            )}
+          </ChartCard>
+
+          <ChartCard title="Status mix" meta="Doughnut">
             {loading ? (
               <div className="ts-chart-empty">Loading chart…</div>
             ) : insights.total === 0 ? (
-              <EmptyState
-                icon={Calendar}
-                title="No appointments yet"
-                text="Schedule a session or start an instant meeting to see 14-day volume here."
-                to="/appointment"
-                action="Schedule appointment"
-              />
+              <div className="ts-chart-empty">No status data yet</div>
             ) : (
-              <div className="ts-bar-chart" role="img" aria-label="Appointments over the last 14 days">
-                {insights.volume.map((day) => (
-                  <div key={day.key} className="ts-bar-col" title={`${day.label}: ${day.value}`}>
-                    <div className="ts-bar-track">
-                      <div
-                        className="ts-bar-fill"
-                        style={{ height: `${Math.max(day.value ? 8 : 0, (day.value / insights.volMax) * 100)}%` }}
-                      />
-                    </div>
-                    <span className="ts-bar-label">{day.key.slice(8)}</span>
-                  </div>
-                ))}
-              </div>
+              <Doughnut
+                data={statusDoughnut}
+                options={{
+                  ...chartDefaults,
+                  cutout: "62%",
+                }}
+              />
             )}
-          </div>
-        </div>
+          </ChartCard>
 
-        <div className="ts-panel">
-          <div className="ts-panel-head">
-            <h3 className="ts-panel-title">Today’s schedule</h3>
-            <span className="ts-panel-meta">{loading ? "Loading…" : `${insights.todayCount} sessions`}</span>
-          </div>
-          {loading || insights.today.length > 0 ? (
-          <div className="ts-table-wrap">
-            <table className="ts-table">
-              <thead>
-                <tr>
-                  <th>Meeting</th>
-                  <th>Time</th>
-                  <th>Device</th>
-                  <th className="ts-col-center">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan="4" className="ts-empty">Loading today’s sessions…</td>
-                  </tr>
-                ) : (
-                    insights.today.map((a) => (
-                      <tr key={`today-${a.ID || a._id}`}>
-                        <td>
-                          <strong>{String(a.ID ?? "—").padStart(5, "0")}</strong>
-                        </td>
-                        <td>{formatTime(a.AppointmentTime)}</td>
-                        <td className="ts-muted">{a.DeviceID || "—"}</td>
-                        <td className="ts-col-center">
-                          <span className={`ts-badge ${getAppointmentStatusBadgeClass(a)}`}>
-                            {getAppointmentStatusLabel(a)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          ) : (
-            <EmptyState
-              icon={CalendarDays}
-              title="Nothing on today’s list"
-              text="Create an instant meeting or schedule an appointment to fill this board."
-              to="/meeting"
-              action="Start instant meeting"
-            />
-          )}
-        </div>
+          <ChartCard title="Device usage" meta="Horizontal bars">
+            {loading ? (
+              <div className="ts-chart-empty">Loading chart…</div>
+            ) : insights.deviceBars.length === 0 ? (
+              <div className="ts-chart-empty">No device data yet</div>
+            ) : (
+              <Bar
+                data={deviceBars}
+                options={{
+                  ...chartDefaults,
+                  indexAxis: "y",
+                  plugins: { ...chartDefaults.plugins, legend: { display: false } },
+                  scales: {
+                    x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "rgba(148,163,184,0.2)" } },
+                    y: { grid: { display: false } },
+                  },
+                }}
+              />
+            )}
+          </ChartCard>
 
-        <div className="ts-panel">
-          <div className="ts-panel-head">
-            <h3 className="ts-panel-title">Upcoming appointments</h3>
-            <span className="ts-panel-meta">
-              {loading ? "Loading…" : `next ${insights.upcoming.length}`}
-            </span>
-          </div>
-          {loading || insights.upcoming.length > 0 ? (
-            <div className="ts-table-wrap">
-              <table className="ts-table">
-                <thead>
-                  <tr>
-                    <th>Meeting</th>
-                    <th>Device</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th className="ts-col-center">Status</th>
-                    <th className="ts-col-center">Join</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan="6" className="ts-empty">Loading appointments…</td>
-                    </tr>
-                  ) : (
-                    insights.upcoming.map((a) => (
-                        <tr key={a.ID || a._id}>
-                          <td>
-                            <div className="ts-user-cell">
-                              <div className="ts-avatar">{String(a.ID || "?").slice(-2)}</div>
-                              <div>
-                                <strong>{String(a.ID ?? "—").padStart(5, "0")}</strong>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="ts-muted">{a.DeviceID || "—"}</td>
-                          <td>{formatDate(a.AppointmentDate)}</td>
-                          <td>{formatTime(a.AppointmentTime)}</td>
-                          <td className="ts-col-center">
-                            <span className={`ts-badge ${getAppointmentStatusBadgeClass(a)}`}>
-                              {getAppointmentStatusLabel(a)}
-                            </span>
-                          </td>
-                          <td className="ts-col-center">
-                            {a.meetingId ? (
-                              <Link to={`/emr/${a.ID}/${a.meetingId}`} className="ts-btn ts-btn-primary">
-                                Join
-                              </Link>
-                            ) : (
-                              <span className="ts-muted">N/A</span>
-                            )}
-                          </td>
-                        </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <EmptyState
-              icon={Calendar}
-              title="No upcoming appointments"
-              text="Schedule a remote exam to populate this list, or start an instant meeting now."
-              to="/appointment"
-              action="Schedule appointment"
-            />
-          )}
-        </div>
+          <ChartCard title="Weekday distribution" meta="Polar area">
+            {loading ? (
+              <div className="ts-chart-empty">Loading chart…</div>
+            ) : insights.total === 0 ? (
+              <div className="ts-chart-empty">No weekday data yet</div>
+            ) : (
+              <PolarArea
+                data={weeklyPolar}
+                options={{
+                  ...chartDefaults,
+                  scales: {
+                    r: {
+                      beginAtZero: true,
+                      ticks: { precision: 0, backdrop: false },
+                      grid: { color: "rgba(148,163,184,0.25)" },
+                    },
+                  },
+                }}
+              />
+            )}
+          </ChartCard>
 
-        <div className="ts-panel">
-          <div className="ts-panel-head">
-            <h3 className="ts-panel-title">Recently completed</h3>
-            <span className="ts-panel-meta">
-              {loading ? "Loading…" : `${insights.completedRecent.length} latest`}
-            </span>
-          </div>
-          {loading || insights.completedRecent.length > 0 ? (
-            <div className="ts-table-wrap">
-              <table className="ts-table">
-                <thead>
-                  <tr>
-                    <th>Meeting</th>
-                    <th>Device</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th className="ts-col-center">Report</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan="5" className="ts-empty">Loading completed exams…</td>
-                    </tr>
-                  ) : (
-                    insights.completedRecent.map((a) => (
-                      <tr key={`done-${a.ID || a._id}`}>
-                        <td>
-                          <strong>{String(a.ID ?? "—").padStart(5, "0")}</strong>
-                        </td>
-                        <td className="ts-muted">{a.DeviceID || "—"}</td>
-                        <td>{formatDate(a.AppointmentDate)}</td>
-                        <td>{formatTime(a.AppointmentTime)}</td>
-                        <td className="ts-col-center">
-                          <Link to="/emr" className="ts-btn ts-btn-ghost">EMR</Link>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <EmptyState
-              icon={CalendarCheck}
-              title="No completed exams yet"
-              text="Finished sessions will show here with a shortcut to the EMR report."
-              to="/emr"
-              action="Open EMR reports"
-            />
-          )}
+          <ChartCard title="Trend comparison" meta="Recent vs prior week" wide>
+            {loading ? (
+              <div className="ts-chart-empty">Loading chart…</div>
+            ) : (
+              <Line
+                data={trendCompare}
+                options={{
+                  ...chartDefaults,
+                  scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "rgba(148,163,184,0.2)" } },
+                    x: { grid: { display: false } },
+                  },
+                }}
+              />
+            )}
+          </ChartCard>
         </div>
       </div>
     </AppShell>

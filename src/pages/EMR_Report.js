@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { Search } from "lucide-react";
 import client from "../api/client";
@@ -6,11 +7,9 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faDownload, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import { Line } from 'react-chartjs-2';
 import Chart from "chart.js/auto";
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Papa from 'papaparse';
 
 const downsamplePoints = (points, maxPoints) => {
   if (!maxPoints || points.length <= maxPoints) return points;
@@ -22,7 +21,6 @@ const EMRReportpage = () => {
   const [examData, setExamData] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [stimulusTemplates, setStimulusTemplates] = useState({});
   const [loading, setLoading] = useState(true);
   const [generatingPDFs, setGeneratingPDFs] = useState({}); // Track generating state per row
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -52,86 +50,8 @@ const EMRReportpage = () => {
       }
     };
 
-    const loadStimulusTemplates = async () => {
-      try {
-        console.log("Loading stimulus templates for reports...");
-        const templates = {
-          '1': await loadCSVData('1'),
-          '2': await loadCSVData('2'),
-          '3': await loadCSVData('3')
-        };
-        setStimulusTemplates(templates);
-        console.log("Stimulus templates loaded for reports");
-      } catch (error) {
-        console.error("Error loading stimulus templates:", error);
-      }
-    };
-
     fetchExamData();
-    loadStimulusTemplates();
   }, []);
-
-  // Load CSV data for stimulus templates
-  const loadCSVData = async (stimulusType) => {
-    try {
-      let csvPaths;
-      if (stimulusType === '2') {
-        csvPaths = {
-          x: '/ShapesGraph/Vx.csv',
-          y: '/ShapesGraph/Vy.csv',
-        };
-      } else if (stimulusType === '3') {
-        csvPaths = {
-          x: '/ShapesGraph/HorizX.csv',
-          y: '/ShapesGraph/HorizY.csv',
-        };
-      } else if (stimulusType === '1') {
-        csvPaths = {
-          x: '/ShapesGraph/Hx.csv',
-          y: '/ShapesGraph/Hy.csv',
-        };
-      } else {
-        return { x: [], y: [], labels: [] };
-      }
-
-      const [xResponse, yResponse] = await Promise.all([
-        fetch(csvPaths.x),
-        fetch(csvPaths.y)
-      ]);
-
-      if (!xResponse.ok || !yResponse.ok) {
-        throw new Error(`Failed to fetch CSV files`);
-      }
-
-      const xText = await xResponse.text();
-      const yText = await yResponse.text();
-
-      const xParsed = Papa.parse(xText, { header: true, skipEmptyLines: true });
-      const yParsed = Papa.parse(yText, { header: true, skipEmptyLines: true });
-
-      const xData = xParsed.data.map(row => {
-        const xValue = row['X Position (pixels)'] || row['X Position'] || row['X'] || row['x'] || 0;
-        return parseFloat(xValue) || 0;
-      }).filter(value => !isNaN(value));
-
-      const yData = yParsed.data.map(row => {
-        const yValue = row['Y Position (pixels)'] || row['Y Position'] || row['Y'] || row['y'] || 0;
-        return parseFloat(yValue) || 0;
-      }).filter(value => !isNaN(value));
-
-      // Create time labels based on the actual data points
-      const labels = Array.from({ length: Math.max(xData.length, yData.length) }, (_, i) => i * 0.1);
-
-      return {
-        x: xData,
-        y: yData,
-        labels: labels
-      };
-    } catch (error) {
-      console.error("Error loading CSV template:", error);
-      return { x: [], y: [], labels: [] };
-    }
-  };
 
   const fetchFullExam = async (exam) => {
     const hasPoints = exam?.trackingSessions?.some(
@@ -162,13 +82,7 @@ const EMRReportpage = () => {
       return null;
     }
 
-    // Get stimulus template for this session
-    const stimulusTemplate = stimulusTemplates[session.stimulusType] || { x: [], y: [], labels: [] };
-
     console.log(`Generating chart data for session ${session.stimulusType}, points: ${dataPoints.length}`);
-
-    // For charts, we need to align the stimulus data with the eye data time points
-    const alignedStimulusData = alignStimulusWithEyeData(dataPoints, stimulusTemplate);
 
     return {
       labels: dataPoints.map(dp => dp.relativeTime),
@@ -244,27 +158,6 @@ const EMRReportpage = () => {
         },
       ],
     };
-  };
-
-  // Align stimulus data with eye data time points
-  const alignStimulusWithEyeData = (eyeDataPoints, stimulusTemplate) => {
-    if (!stimulusTemplate.x.length || !stimulusTemplate.y.length) {
-      return { x: [], y: [] };
-    }
-
-    const alignedX = [];
-    const alignedY = [];
-
-    // For each eye data point, find the corresponding stimulus point
-    eyeDataPoints.forEach((eyePoint, index) => {
-      // Use modulo to loop through stimulus data if eye data is longer
-      const stimulusIndex = index % Math.min(stimulusTemplate.x.length, stimulusTemplate.y.length);
-
-      alignedX.push(stimulusTemplate.x[stimulusIndex] || 0);
-      alignedY.push(stimulusTemplate.y[stimulusIndex] || 0);
-    });
-
-    return { x: alignedX, y: alignedY };
   };
 
   // Helper function to format field names for display
@@ -690,19 +583,6 @@ const EMRReportpage = () => {
     }
   };
 
-  const handleShowReport = (examSummary) => {
-    const reportId = examSummary?._id;
-    if (!reportId) {
-      toast.error("Report id not found");
-      return;
-    }
-    const reportUrl = `${window.location.origin}/emr-report/${reportId}`;
-    const opened = window.open(reportUrl, "_blank", "noopener,noreferrer");
-    if (!opened) {
-      toast.error("Please allow popups to view the report");
-    }
-  };
-
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
     setCurrentPage(1);
@@ -822,14 +702,22 @@ const EMRReportpage = () => {
                       <td>{formatExamDate(exam.patientData?.examDate)}</td>
                       <td className="ts-col-center">
                         <div className="ts-actions">
-                          <button
-                            type="button"
-                            onClick={() => handleShowReport(exam)}
-                            className="ts-btn ts-btn-ghost"
-                          >
-                            <FontAwesomeIcon icon={faEye} className="mr-1" />
-                            View
-                          </button>
+                          {exam._id ? (
+                            <Link
+                              to={`/emr-report/${exam._id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="ts-btn ts-btn-ghost"
+                            >
+                              <FontAwesomeIcon icon={faEye} className="mr-1" />
+                              View
+                            </Link>
+                          ) : (
+                            <button type="button" className="ts-btn ts-btn-ghost" disabled>
+                              <FontAwesomeIcon icon={faEye} className="mr-1" />
+                              View
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => generatePDF(exam, patientId, index)}

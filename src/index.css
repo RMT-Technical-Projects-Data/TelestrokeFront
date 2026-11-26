@@ -407,6 +407,19 @@ code {
   gap: 0.5rem;
 }
 
+.ts-chart-canvas-wrap {
+  min-height: 280px;
+  height: 300px;
+}
+
+.ts-chart-wide {
+  grid-column: 1 / -1;
+}
+
+.ts-chart-wide .ts-chart-canvas-wrap {
+  height: 320px;
+}
+
 .ts-chart-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1600,7 +1613,8 @@ code {
     grid-template-columns: 1fr;
   }
 
-  .ts-panel-span-2 {
+  .ts-panel-span-2,
+  .ts-chart-wide {
     grid-column: auto;
   }
 }
@@ -2193,12 +2207,14 @@ code {
 /* ── EMR Report View page ───────────────────────────── */
 .ts-report-page {
   min-height: 100vh;
-  background: var(--ts-bg-atmosphere);
-  padding: 1.25rem;
+  background:
+    radial-gradient(circle at top left, rgba(59, 79, 223, 0.12), transparent 34%),
+    var(--ts-bg);
+  padding: 1.25rem 1rem 2rem;
 }
 
 .ts-report-toolbar {
-  max-width: 980px;
+  max-width: 920px;
   margin: 0 auto 1rem;
   display: flex;
   align-items: center;
@@ -2207,130 +2223,190 @@ code {
 }
 
 .ts-report-sheet {
-  max-width: 980px;
+  max-width: 920px;
   margin: 0 auto;
   background: var(--ts-surface);
   border: 1px solid var(--ts-border);
-  border-radius: 12px;
-  padding: 1.75rem;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  border-radius: 14px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
 }
 
-.ts-report-header {
+.ts-report-banner {
   display: flex;
   justify-content: space-between;
   gap: 1.25rem;
-  padding-bottom: 1.1rem;
-  margin-bottom: 1.4rem;
-  border-bottom: 1px solid var(--ts-border);
+  padding: 1.5rem 1.6rem;
+  background: linear-gradient(135deg, #1c2534 0%, #243356 100%);
+  color: #e2e8f0;
 }
 
-.ts-report-header h1 {
-  margin: 0.15rem 0 0;
-  font-size: 1.55rem;
-  line-height: 1.25;
+.ts-report-banner h1 {
+  margin: 0.2rem 0 0.75rem;
+  font-size: 1.65rem;
+  line-height: 1.2;
+  color: #fff;
 }
 
 .ts-report-kicker {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ts-accent);
+  color: #93c5fd;
 }
 
-.ts-report-meta {
-  text-align: right;
-  font-size: 0.875rem;
-  color: var(--ts-text-muted);
-  line-height: 1.55;
+.ts-report-id-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  font-size: 0.82rem;
+  color: #cbd5e1;
+}
+
+.ts-report-id-row em {
+  font-style: normal;
+  color: #94a3b8;
+  margin-right: 0.3rem;
+  font-weight: 600;
+}
+
+.ts-report-banner-meta {
+  min-width: 180px;
+  display: grid;
+  gap: 0.65rem;
+  align-content: start;
+}
+
+.ts-report-banner-meta > div {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ts-report-banner-meta span {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.ts-report-banner-meta strong {
+  color: #fff;
+  font-size: 0.9rem;
 }
 
 .ts-report-section {
-  margin-bottom: 1.6rem;
+  padding: 1.25rem 1.6rem 0.35rem;
 }
 
-.ts-report-section h2 {
-  margin: 0 0 0.85rem;
-  font-size: 1.05rem;
+.ts-report-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 2px solid var(--ts-border);
+}
+
+.ts-report-section-head h2 {
+  margin: 0;
+  font-size: 1rem;
   color: var(--ts-text);
 }
 
-.ts-report-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+.ts-report-table-wrap {
+  border: 1px solid var(--ts-border);
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.ts-report-field {
-  padding: 0.75rem 0.85rem;
-  border: 1px solid var(--ts-border);
-  border-radius: 8px;
+.ts-report-table th {
   background: var(--ts-surface-muted);
 }
 
-.ts-report-field-label {
-  display: block;
-  margin-bottom: 0.25rem;
-  font-size: 0.7rem;
+.ts-report-table-key {
+  width: 42%;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ts-text-muted);
+  color: var(--ts-text);
+  background: rgba(241, 245, 249, 0.55);
 }
 
-.ts-report-field-value {
-  font-size: 0.92rem;
-  color: var(--ts-text);
-  font-weight: 600;
+[data-theme="dark"] .ts-report-table-key {
+  background: rgba(16, 24, 38, 0.7);
 }
 
 .ts-report-session {
   border: 1px solid var(--ts-border);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 1rem;
   margin-bottom: 1rem;
-  background: var(--ts-surface);
+  background: var(--ts-surface-muted);
 }
 
 .ts-report-session-head {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 0.75rem;
   margin-bottom: 0.85rem;
 }
 
 .ts-report-charts {
   display: grid;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 0.9rem;
+  margin-top: 0.95rem;
 }
 
 .ts-report-chart {
-  height: 280px;
+  height: 290px;
   border: 1px solid var(--ts-border);
-  border-radius: 8px;
-  padding: 0.75rem;
+  border-radius: 10px;
+  padding: 0.85rem;
   background: #fff;
 }
 
 [data-theme="dark"] .ts-report-chart {
-  background: var(--ts-surface-muted);
+  background: var(--ts-surface);
+}
+
+.ts-report-empty-note {
+  margin: 0.35rem 0 1rem;
+  font-size: 0.9rem;
+}
+
+.ts-report-footer {
+  margin-top: 0.5rem;
+  padding: 1rem 1.6rem 1.35rem;
+  border-top: 1px solid var(--ts-border);
+  color: var(--ts-text-muted);
+  font-size: 0.78rem;
 }
 
 @media (max-width: 760px) {
-  .ts-report-header,
-  .ts-report-meta {
-    text-align: left;
-  }
-
-  .ts-report-header {
+  .ts-report-banner {
     flex-direction: column;
   }
 
-  .ts-report-grid {
+  .ts-report-banner-meta {
+    width: 100%;
     grid-template-columns: 1fr;
+  }
+
+  .ts-report-section {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .ts-report-table-key {
+    width: auto;
   }
 }
 
@@ -2348,6 +2424,12 @@ code {
     border: none;
     box-shadow: none;
     max-width: none;
-    padding: 0;
+    border-radius: 0;
+  }
+
+  .ts-report-banner {
+    background: #1c2534 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

@@ -64,7 +64,6 @@ const buildSessionChart = (session) => {
   const isEyeOnly = session.stimulusType === "none";
 
   return {
-    labels,
     horizontal: {
       labels,
       datasets: [
@@ -83,7 +82,6 @@ const buildSessionChart = (session) => {
                 label: "Stimulus X",
                 data: points.map((dp) => dp.stimX),
                 borderColor: "#10b981",
-                backgroundColor: "rgba(16, 185, 129, 0.1)",
                 pointRadius: 0,
                 borderWidth: 2,
                 borderDash: [5, 5],
@@ -111,7 +109,6 @@ const buildSessionChart = (session) => {
                 label: "Stimulus Y",
                 data: points.map((dp) => dp.stimY),
                 borderColor: "#f97316",
-                backgroundColor: "rgba(249, 115, 22, 0.1)",
                 pointRadius: 0,
                 borderWidth: 2,
                 borderDash: [5, 5],
@@ -129,28 +126,71 @@ const chartOptions = (title, yLabel) => ({
   maintainAspectRatio: false,
   animation: false,
   plugins: {
-    legend: { display: true, position: "top" },
-    title: { display: true, text: title, font: { size: 13, weight: "bold" } },
+    legend: {
+      display: true,
+      position: "top",
+      labels: { boxWidth: 12, font: { size: 11 } },
+    },
+    title: {
+      display: true,
+      text: title,
+      font: { size: 13, weight: "600" },
+      color: "#0f172a",
+      padding: { bottom: 10 },
+    },
   },
   scales: {
     x: {
       type: "linear",
-      title: { display: true, text: "Time (seconds)" },
+      title: { display: true, text: "Time (seconds)", font: { size: 11 } },
+      grid: { color: "rgba(148, 163, 184, 0.25)" },
     },
     y: {
-      title: { display: true, text: yLabel },
+      title: { display: true, text: yLabel, font: { size: 11 } },
+      grid: { color: "rgba(148, 163, 184, 0.25)" },
     },
   },
 });
 
-const FieldGrid = ({ rows }) => (
-  <div className="ts-report-grid">
-    {rows.map(([label, value]) => (
-      <div key={label} className="ts-report-field">
-        <span className="ts-report-field-label">{label}</span>
-        <strong className="ts-report-field-value">{value}</strong>
-      </div>
-    ))}
+const InfoTable = ({ rows }) => (
+  <div className="ts-table-wrap ts-report-table-wrap">
+    <table className="ts-table ts-report-table">
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(([label, value]) => (
+          <tr key={label}>
+            <td className="ts-report-table-key">{label}</td>
+            <td>{value}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const ExamTable = ({ rows }) => (
+  <div className="ts-table-wrap ts-report-table-wrap">
+    <table className="ts-table ts-report-table">
+      <thead>
+        <tr>
+          <th>Examination Parameter</th>
+          <th>Findings</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(([label, value]) => (
+          <tr key={label}>
+            <td className="ts-report-table-key">{label}</td>
+            <td>{value}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   </div>
 );
 
@@ -204,40 +244,47 @@ const EMRReportView = () => {
         <Link to="/emr" className="ts-btn ts-btn-ghost">
           <ArrowLeft size={15} /> Back to reports
         </Link>
-        <button type="button" className="ts-btn ts-btn-primary" onClick={() => window.print()}>
-          <Printer size={15} /> Print
+        <button
+          type="button"
+          className="ts-btn ts-btn-primary"
+          onClick={() => window.print()}
+          disabled={loading || Boolean(error)}
+        >
+          <Printer size={15} /> Print report
         </button>
       </div>
 
-      <div className="ts-report-sheet">
+      <article className="ts-report-sheet">
         {loading ? (
-          <div className="ts-loading" style={{ padding: "3rem 1rem" }}>
+          <div className="ts-loading" style={{ padding: "3.5rem 1rem" }}>
             <span className="ts-spinner" /> Loading report...
           </div>
         ) : error ? (
           <div className="ts-empty">{error}</div>
         ) : (
           <>
-            <header className="ts-report-header">
+            <header className="ts-report-banner">
               <div>
-                <p className="ts-report-kicker">Oculomotor Examination Report</p>
+                <p className="ts-report-kicker">TeleStroke Clinical Report</p>
                 <h1>{patient.Name || "Examination Report"}</h1>
-                <p className="ts-muted" style={{ margin: "0.35rem 0 0" }}>
-                  Report ID: <strong>{exam.reportId || "N/A"}</strong>
-                  {" · "}
-                  Meeting ID: <strong>{patient.patientid || "N/A"}</strong>
-                </p>
+                <div className="ts-report-id-row">
+                  <span><em>Report ID</em> {exam.reportId || "N/A"}</span>
+                  <span><em>Meeting ID</em> {patient.patientid || "N/A"}</span>
+                  <span><em>Exam Date</em> {formatDate(patient.examDate)}</span>
+                </div>
               </div>
-              <div className="ts-report-meta">
-                <div>Doctor: <strong>{patient.Doctor || "N/A"}</strong></div>
-                <div>Exam Date: <strong>{formatDate(patient.examDate)}</strong></div>
-                <div>Opened: <strong>{new Date().toLocaleString()}</strong></div>
+              <div className="ts-report-banner-meta">
+                <div><span>Doctor</span><strong>{patient.Doctor || "N/A"}</strong></div>
+                <div><span>Sex</span><strong>{patient.patientSex || "N/A"}</strong></div>
+                <div><span>DOB</span><strong>{formatDate(patient.patientDOB)}</strong></div>
               </div>
             </header>
 
             <section className="ts-report-section">
-              <h2>Patient Information</h2>
-              <FieldGrid
+              <div className="ts-report-section-head">
+                <h2>Patient Information</h2>
+              </div>
+              <InfoTable
                 rows={[
                   ["Meeting ID", patient.patientid || "N/A"],
                   ["Name", patient.Name || "N/A"],
@@ -256,70 +303,52 @@ const EMRReportView = () => {
 
             {bedsideRows.length > 0 ? (
               <section className="ts-report-section">
-                <h2>Bedside Examination</h2>
-                <div className="ts-table-wrap">
-                  <table className="ts-table">
-                    <thead>
-                      <tr>
-                        <th>Examination Parameter</th>
-                        <th>Findings</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {bedsideRows.map(([label, value]) => (
-                        <tr key={label}>
-                          <td><strong>{label}</strong></td>
-                          <td>{value}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="ts-report-section-head">
+                  <h2>Bedside Examination</h2>
                 </div>
+                <ExamTable rows={bedsideRows} />
               </section>
             ) : null}
 
             {telestrokeRows.length > 0 ? (
               <section className="ts-report-section">
-                <h2>Telestroke Examination</h2>
-                <div className="ts-table-wrap">
-                  <table className="ts-table">
-                    <thead>
-                      <tr>
-                        <th>Examination Parameter</th>
-                        <th>Findings</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {telestrokeRows.map(([label, value]) => (
-                        <tr key={label}>
-                          <td><strong>{label}</strong></td>
-                          <td>{value}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="ts-report-section-head">
+                  <h2>Telestroke Examination</h2>
                 </div>
+                <ExamTable rows={telestrokeRows} />
               </section>
             ) : null}
 
             <section className="ts-report-section">
-              <h2>Tracking Sessions</h2>
+              <div className="ts-report-section-head">
+                <h2>Tracking Sessions</h2>
+                <span className="ts-panel-meta">
+                  {(exam.trackingSessions || []).length} session(s)
+                </span>
+              </div>
+
               {(exam.trackingSessions || []).length === 0 ? (
-                <p className="ts-muted">No tracking sessions recorded.</p>
+                <p className="ts-muted ts-report-empty-note">No tracking sessions recorded.</p>
               ) : (
                 (exam.trackingSessions || []).map((session, index) => {
                   const charts = sessionCharts[index];
                   return (
                     <div key={session._id || index} className="ts-report-session">
                       <div className="ts-report-session-head">
-                        <strong>Session #{index + 1}</strong>
-                        <span className="ts-muted">
-                          {session.stimulusType === "none"
-                            ? "Eye Only"
-                            : `Stimulus ${session.stimulusType || "N/A"}`}
+                        <div>
+                          <strong>Session #{index + 1}</strong>
+                          <p className="ts-muted" style={{ margin: "0.2rem 0 0" }}>
+                            {session.stimulusType === "none"
+                              ? "Eye only tracking"
+                              : `Stimulus type ${session.stimulusType || "N/A"}`}
+                          </p>
+                        </div>
+                        <span className="ts-badge ts-badge-accent">
+                          {session.selectedEye || "eye n/a"}
                         </span>
                       </div>
-                      <FieldGrid
+
+                      <InfoTable
                         rows={[
                           ["Start", formatDateTime(session.sessionStart)],
                           ["End", formatDateTime(session.sessionEnd)],
@@ -329,13 +358,14 @@ const EMRReportView = () => {
                           ["Data Points", String(session.dataPoints?.length || 0)],
                         ]}
                       />
+
                       {charts ? (
                         <div className="ts-report-charts">
                           <div className="ts-report-chart">
                             <Line
                               data={charts.horizontal}
                               options={chartOptions(
-                                `Horizontal Movement - Session ${index + 1}`,
+                                `Horizontal Movement · Session ${index + 1}`,
                                 "Horizontal Position"
                               )}
                             />
@@ -344,23 +374,29 @@ const EMRReportView = () => {
                             <Line
                               data={charts.vertical}
                               options={chartOptions(
-                                `Vertical Movement - Session ${index + 1}`,
+                                `Vertical Movement · Session ${index + 1}`,
                                 "Vertical Position"
                               )}
                             />
                           </div>
                         </div>
                       ) : (
-                        <p className="ts-muted">No chart data for this session.</p>
+                        <p className="ts-muted ts-report-empty-note">
+                          No chart data for this session.
+                        </p>
                       )}
                     </div>
                   );
                 })
               )}
             </section>
+
+            <footer className="ts-report-footer">
+              Generated {new Date().toLocaleString()} · TeleStroke EMR
+            </footer>
           </>
         )}
-      </div>
+      </article>
     </div>
   );
 };
