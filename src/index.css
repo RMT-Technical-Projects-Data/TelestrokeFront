@@ -732,14 +732,22 @@ code {
 
 .ts-btn-ghost {
   background: var(--ts-surface);
-  color: var(--ts-text-muted);
+  color: var(--ts-text);
   border-color: var(--ts-border);
 }
 
 .ts-btn-ghost:hover {
   color: var(--ts-text);
-  border-color: var(--ts-border-strong);
+  border-color: var(--ts-border);
   background: var(--ts-surface-muted);
+}
+
+.ts-modal-actions .ts-btn-ghost {
+  color: var(--ts-text);
+}
+
+.ts-modal-actions .ts-btn-ghost:hover {
+  background: var(--ts-hover);
 }
 
 .ts-btn-danger {
