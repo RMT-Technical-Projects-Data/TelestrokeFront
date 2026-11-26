@@ -2189,3 +2189,165 @@ code {
     flex: none;
   }
 }
+
+/* ── EMR Report View page ───────────────────────────── */
+.ts-report-page {
+  min-height: 100vh;
+  background: var(--ts-bg-atmosphere);
+  padding: 1.25rem;
+}
+
+.ts-report-toolbar {
+  max-width: 980px;
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ts-report-sheet {
+  max-width: 980px;
+  margin: 0 auto;
+  background: var(--ts-surface);
+  border: 1px solid var(--ts-border);
+  border-radius: 12px;
+  padding: 1.75rem;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.ts-report-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding-bottom: 1.1rem;
+  margin-bottom: 1.4rem;
+  border-bottom: 1px solid var(--ts-border);
+}
+
+.ts-report-header h1 {
+  margin: 0.15rem 0 0;
+  font-size: 1.55rem;
+  line-height: 1.25;
+}
+
+.ts-report-kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ts-accent);
+}
+
+.ts-report-meta {
+  text-align: right;
+  font-size: 0.875rem;
+  color: var(--ts-text-muted);
+  line-height: 1.55;
+}
+
+.ts-report-section {
+  margin-bottom: 1.6rem;
+}
+
+.ts-report-section h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  color: var(--ts-text);
+}
+
+.ts-report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.ts-report-field {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--ts-border);
+  border-radius: 8px;
+  background: var(--ts-surface-muted);
+}
+
+.ts-report-field-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ts-text-muted);
+}
+
+.ts-report-field-value {
+  font-size: 0.92rem;
+  color: var(--ts-text);
+  font-weight: 600;
+}
+
+.ts-report-session {
+  border: 1px solid var(--ts-border);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: var(--ts-surface);
+}
+
+.ts-report-session-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.ts-report-charts {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.ts-report-chart {
+  height: 280px;
+  border: 1px solid var(--ts-border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #fff;
+}
+
+[data-theme="dark"] .ts-report-chart {
+  background: var(--ts-surface-muted);
+}
+
+@media (max-width: 760px) {
+  .ts-report-header,
+  .ts-report-meta {
+    text-align: left;
+  }
+
+  .ts-report-header {
+    flex-direction: column;
+  }
+
+  .ts-report-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .ts-report-page {
+    background: #fff;
+    padding: 0;
+  }
+
+  .ts-report-sheet {
+    border: none;
+    box-shadow: none;
+    max-width: none;
+    padding: 0;
+  }
+}

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import useAuth from './components/useAuth'; // Import useAuth
 import EMRpage from "./pages/EMR";
 import EMRReportpage from "./pages/EMR_Report";
+import EMRReportView from "./pages/EMR_ReportView";
 import MeetingPage from "./pages/MeetingPage";
 import Appointments from "./pages/Appointmets";
 import Login from "./pages/Login";
@@ -70,6 +71,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
         <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+        <Route path="/emr-report/:id" element={<RequireAuth><EMRReportView /></RequireAuth>} />
         <Route path="/emr/:patientid/:meetingid" element={<RequireAuth><EMRpage /></RequireAuth>} />
         <Route path="/emr/:patientid/" element={<RequireAuth><EMRpage /></RequireAuth>} />
         <Route path="/emr" element={<RequireAuth><EMRReportpage /></RequireAuth>} />

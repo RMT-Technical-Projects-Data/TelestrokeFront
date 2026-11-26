@@ -25,7 +25,6 @@ const EMRReportpage = () => {
   const [stimulusTemplates, setStimulusTemplates] = useState({});
   const [loading, setLoading] = useState(true);
   const [generatingPDFs, setGeneratingPDFs] = useState({}); // Track generating state per row
-  const [viewingReports, setViewingReports] = useState({});
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const entriesOptions = [10, 25, 50, 100];
 
@@ -691,250 +690,16 @@ const EMRReportpage = () => {
     }
   };
 
-  const handleShowReport = async (examSummary) => {
-    if (!examSummary) {
-      console.error(`No patient data provided`);
-      toast.error("Patient data not found");
+  const handleShowReport = (examSummary) => {
+    const reportId = examSummary?._id;
+    if (!reportId) {
+      toast.error("Report id not found");
       return;
     }
-
-    const reportKey = examSummary._id || examSummary.patientData?.patientid;
-    setViewingReports((prev) => ({ ...prev, [reportKey]: true }));
-
-    const reportWindow = window.open("", "_blank");
-    if (!reportWindow) {
-      setViewingReports((prev) => ({ ...prev, [reportKey]: false }));
+    const reportUrl = `${window.location.origin}/emr-report/${reportId}`;
+    const opened = window.open(reportUrl, "_blank", "noopener,noreferrer");
+    if (!opened) {
       toast.error("Please allow popups to view the report");
-      return;
-    }
-
-    reportWindow.document.write(`
-      <html>
-        <head>
-          <title>Loading Report...</title>
-          <style>
-            body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f8fafc; }
-            .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-          </style>
-        </head>
-        <body>
-          <div style="text-align: center;">
-            <div class="loader" style="margin: 0 auto 20px;"></div>
-            <p>Opening report...</p>
-          </div>
-        </body>
-      </html>
-    `);
-
-    try {
-    const patientData = await fetchFullExam(examSummary);
-
-    const sessionCharts = await Promise.all(
-      (patientData.trackingSessions || []).map(async (session, i) => {
-        const isEyeOnly = session.stimulusType === "none";
-        const chartData = generateChartData(session, isEyeOnly, 400);
-        if (!chartData) return null;
-        const [x, y] = await Promise.all([
-          generateChartImage(chartData, `Horizontal Movement - Session ${i + 1}`, isEyeOnly, "horizontal", true),
-          generateChartImage(chartData, `Vertical Movement - Session ${i + 1}`, isEyeOnly, "vertical", true),
-        ]);
-        return { x, y };
-      })
-    );
-
-    const reportHtml = `
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <title>Medical Report - ${patientData.patientData.patientid}</title>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-            body { 
-              font-family: 'Inter', sans-serif; 
-              margin: 0; 
-              padding: 40px; 
-              background-color: #f1f5f9;
-              color: #1e293b;
-            }
-            .report-container {
-              max-width: 1000px;
-              margin: 0 auto;
-              background: white;
-              padding: 60px;
-              border-radius: 24px;
-              shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
-              box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-            }
-            .header { 
-              border-bottom: 2px solid #e2e8f0;
-              padding-bottom: 30px;
-              margin-bottom: 40px;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-            }
-            .header h1 { margin: 0; color: #4f46e5; font-size: 28px; font-weight: 800; letter-spacing: -0.025em; }
-            .header-meta { text-align: right; color: #64748b; font-size: 14px; }
-            
-            .section { margin-bottom: 50px; }
-            .section-title { 
-              font-size: 18px; 
-              font-weight: 700; 
-              color: #0f172a;
-              margin-bottom: 20px;
-              padding-bottom: 8px;
-              border-bottom: 2px solid #f1f5f9;
-              display: flex;
-              align-items: center;
-            }
-            .section-title::before {
-              content: '';
-              display: inline-block;
-              width: 4px;
-              height: 18px;
-              background: #4f46e5;
-              margin-right: 12px;
-              border-radius: 2px;
-            }
-            
-            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-            .field { padding: 12px 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9; }
-            .field-label { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-            .field-value { font-size: 15px; font-weight: 500; color: #334155; }
-            
-            .session-card {
-              border: 1px solid #e2e8f0;
-              border-radius: 20px;
-              padding: 30px;
-              margin-bottom: 30px;
-              background: #ffffff;
-            }
-            .session-header { font-weight: 700; font-size: 18px; margin-bottom: 20px; color: #4f46e5; display: flex; justify-content: space-between; }
-            
-            .chart-grid { display: grid; grid-template-columns: 1fr; gap: 30px; margin-top: 20px; }
-            .chart-container { background: #fff; padding: 20px; border-radius: 16px; border: 1px solid #f1f5f9; }
-            .chart-container h4 { margin: 0 0 15px 0; color: #64748b; font-size: 14px; text-align: center; }
-            .chart-image { width: 100%; height: auto; border-radius: 8px; }
-            
-            .print-btn {
-              position: fixed;
-              bottom: 40px;
-              right: 40px;
-              background: #4f46e5;
-              color: white;
-              border: none;
-              padding: 16px 32px;
-              border-radius: 50px;
-              font-weight: 700;
-              cursor: pointer;
-              box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
-              transition: all 0.2s;
-              z-index: 100;
-              display: flex;
-              align-items: center;
-              gap: 8px;
-            }
-            .print-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(79, 70, 229, 0.5); }
-            
-            @media print {
-              .print-btn { display: none; }
-              body { background: white; padding: 0; }
-              .report-container { box-shadow: none; padding: 0; margin: 0; max-width: none; border: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="report-container">
-            <div class="header">
-              <div>
-                <h1 style="color: #4f46e5; font-size: 24px;">${patientData.patientData.Name || "Examination Report"}</h1>
-                <div style="color: #64748b; font-weight: 600; margin-top: 4px;">Meeting ID: ${patientData.patientData.patientid || "N/A"}</div>
-              </div>
-              <div class="header-meta">
-                <div>Doctor: <strong>${patientData.patientData.Doctor || 'N/A'}</strong></div>
-                <div>Generated: ${new Date().toLocaleString()}</div>
-              </div>
-            </div>
-
-            <div class="section">
-              <div class="section-title">Patient Demographics</div>
-              <div class="grid">
-                <div class="field"><div class="field-label">Name</div><div class="field-value">${patientData.patientData.Name || 'N/A'}</div></div>
-                <div class="field"><div class="field-label">DOB</div><div class="field-value">${patientData.patientData.patientDOB ? new Date(patientData.patientData.patientDOB).toLocaleDateString() : 'N/A'}</div></div>
-                <div class="field"><div class="field-label">Sex</div><div class="field-value">${patientData.patientData.patientSex || 'N/A'}</div></div>
-                <div class="field"><div class="field-label">Exam Date</div><div class="field-value">${patientData.patientData.examDate ? new Date(patientData.patientData.examDate).toLocaleDateString() : 'N/A'}</div></div>
-              </div>
-            </div>
-
-            <div class="section">
-              <div class="section-title">Clinical Findings</div>
-              <div class="grid">
-                <div class="field"><div class="field-label">Visual Activity OD</div><div class="field-value">${patientData.patientData.visualActivityOD || 'N/A'}</div></div>
-                <div class="field"><div class="field-label">Visual Activity OS</div><div class="field-value">${patientData.patientData.visualActivityOS || 'N/A'}</div></div>
-                <div class="field" style="grid-column: span 2;"><div class="field-label">Neurological Findings</div><div class="field-value">${patientData.patientData.neuroFindings || 'N/A'}</div></div>
-                <div class="field"><div class="field-label">Aphasia</div><div class="field-value">${patientData.patientData.hasAphasia || 'No'}</div></div>
-                <div class="field"><div class="field-label">Aphasia Detail</div><div class="field-value">${patientData.patientData.aphasiaDescription || 'N/A'}</div></div>
-              </div>
-            </div>
-
-            <div class="section">
-              <div class="section-title">Tracking Data & Charts</div>
-              ${patientData.trackingSessions && patientData.trackingSessions.length > 0 ?
-        patientData.trackingSessions.map((session, index) => `
-                  <div class="session-card">
-                    <div class="session-header">
-                      <span>SESSION #${index + 1}</span>
-                      <span style="font-size: 12px; color: #64748b; font-weight: 500;">
-                        ${session.stimulusType !== 'none' ? `${session.stimulusShape} Shape (${session.speed})` : 'Eye Only'}
-                      </span>
-                    </div>
-                    <div class="grid" style="margin-bottom: 25px;">
-                      <div class="field"><div class="field-label">Start</div><div class="field-value">${session.sessionStart ? new Date(session.sessionStart).toLocaleTimeString() : 'N/A'}</div></div>
-                      <div class="field"><div class="field-label">Eye</div><div class="field-value" style="text-transform: capitalize;">${session.selectedEye || 'N/A'}</div></div>
-                    </div>
-                    
-                    ${sessionCharts[index] ? `
-                      <div class="chart-grid">
-                        <div class="chart-container">
-                          <h4>HORIZONTAL TRACKING</h4>
-                          <img src="${sessionCharts[index].x}" class="chart-image" alt="Horizontal Chart">
-                        </div>
-                        <div class="chart-container">
-                          <h4>VERTICAL TRACKING</h4>
-                          <img src="${sessionCharts[index].y}" class="chart-image" alt="Vertical Chart">
-                        </div>
-                      </div>
-                    ` : '<div style="color: #94a3b8; font-style: italic; text-align: center;">No chart available for this session</div>'}
-                  </div>
-                `).join('') :
-        '<div style="text-align: center; color: #94a3b8; padding: 40px;">No tracking sessions recorded.</div>'
-      }
-            </div>
-          </div>
-
-          <button class="print-btn" onclick="window.print()">
-            <svg style="width: 20px; height: 20px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-            Print Full Report
-          </button>
-        </body>
-      </html>
-    `;
-
-    reportWindow.document.open();
-    reportWindow.document.write(reportHtml);
-    reportWindow.document.close();
-    } catch (error) {
-      console.error("Error opening report:", error);
-      toast.error("Failed to open report");
-      if (reportWindow && !reportWindow.closed) {
-        reportWindow.document.open();
-        reportWindow.document.write("<p style='font-family:sans-serif;padding:40px;'>Failed to load report.</p>");
-        reportWindow.document.close();
-      }
-    } finally {
-      setViewingReports((prev) => ({ ...prev, [reportKey]: false }));
     }
   };
 
@@ -1042,7 +807,6 @@ const EMRReportpage = () => {
                   const patientId = exam.patientData?.patientid || "N/A";
                   const reportId = exam.reportId || "N/A";
                   const isGenerating = isGeneratingPDF(patientId, index);
-                  const isViewing = Boolean(viewingReports[exam._id] || viewingReports[patientId]);
                   const avatarText = String(exam.patientData?.Name || patientId || "?").charAt(0).toUpperCase();
 
                   return (
@@ -1061,11 +825,10 @@ const EMRReportpage = () => {
                           <button
                             type="button"
                             onClick={() => handleShowReport(exam)}
-                            disabled={isViewing}
                             className="ts-btn ts-btn-ghost"
                           >
                             <FontAwesomeIcon icon={faEye} className="mr-1" />
-                            {isViewing ? "Opening..." : "View"}
+                            View
                           </button>
                           <button
                             type="button"
