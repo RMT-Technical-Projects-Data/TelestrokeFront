@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Bell, Lock, Moon, Shield, Sun } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Bell, Lock, Shield } from "lucide-react";
 import { toast } from "react-toastify";
 import AppShell from "../components/AppShell";
 import { getApiBaseUrl } from "../api/client";
-import { applyTheme, getStoredTheme } from "../components/ThemeToggle";
 
 const Settings = () => {
   const displayName = localStorage.getItem("Doctor") || "User";
@@ -15,15 +14,6 @@ const Settings = () => {
   const [overdueAlerts, setOverdueAlerts] = useState(
     localStorage.getItem("tsOverdueAlerts") !== "off"
   );
-  const [theme, setTheme] = useState(getStoredTheme);
-
-  useEffect(() => {
-    const onTheme = (event) => {
-      if (event.detail === "dark" || event.detail === "light") setTheme(event.detail);
-    };
-    window.addEventListener("ts-theme", onTheme);
-    return () => window.removeEventListener("ts-theme", onTheme);
-  }, []);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -36,11 +26,6 @@ const Settings = () => {
     setOverdueAlerts(next);
     localStorage.setItem("tsOverdueAlerts", next ? "on" : "off");
     toast.success(next ? "Overdue reminders enabled." : "Overdue reminders disabled.");
-  };
-
-  const toggleTheme = () => {
-    const next = applyTheme(theme === "dark" ? "light" : "dark");
-    setTheme(next);
   };
 
   const handlePassword = async (e) => {
@@ -120,17 +105,6 @@ const Settings = () => {
                 </div>
                 <button type="button" className="ts-btn ts-btn-ghost" onClick={toggleAlerts}>
                   {overdueAlerts ? "On" : "Off"}
-                </button>
-              </div>
-              <div className="ts-settings-row" style={{ marginTop: "1rem" }}>
-                <div>
-                  <div className="ts-settings-row-title">
-                    {theme === "dark" ? <Moon size={15} /> : <Sun size={15} />} Appearance
-                  </div>
-                  <p className="ts-settings-row-sub">Switch between light and dark workspace theme.</p>
-                </div>
-                <button type="button" className="ts-btn ts-btn-ghost" onClick={toggleTheme}>
-                  {theme === "dark" ? "Dark" : "Light"}
                 </button>
               </div>
             </div>
