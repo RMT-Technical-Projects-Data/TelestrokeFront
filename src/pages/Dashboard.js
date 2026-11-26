@@ -6,6 +6,11 @@ import "react-toastify/dist/ReactToastify.css";
 import AppShell from "../components/AppShell";
 import { getAllAppointments, parseAppointmentList } from "../utils/auth";
 import { buildAppointmentInsights } from "../utils/overviewInsights";
+import {
+  getAppointmentStatusBadgeClass,
+  getAppointmentStatusLabel,
+  isAppointmentOverdue,
+} from "../utils/appointmentStatus";
 
 const EmptyState = ({ icon: Icon, title, text, to, action }) => (
   <div className="ts-empty-state">
@@ -33,17 +38,6 @@ const MetricSkeleton = ({ count = 6 }) => (
     ))}
   </div>
 );
-
-const isOverdue = (dateStr, timeStr) => {
-  if (!dateStr || !timeStr) return false;
-  try {
-    const today = new Date();
-    const cleanDate = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
-    return new Date(`${cleanDate}T${timeStr}`) < today;
-  } catch {
-    return false;
-  }
-};
 
 const formatTime = (time) => {
   if (!time) return "N/A";
@@ -83,9 +77,7 @@ function Dashboard() {
         const data = parseAppointmentList(result);
         setAppointments(data);
 
-        const overdue = data.filter(
-          (a) => a.Checkup_Status !== "Complete" && isOverdue(a.AppointmentDate, a.AppointmentTime)
-        );
+        const overdue = data.filter((a) => isAppointmentOverdue(a));
         const alreadyShown = sessionStorage.getItem("tsOverdueToastShown") === "1";
         if (
           overdue.length > 0 &&
@@ -228,10 +220,7 @@ function Dashboard() {
                     <td colSpan="4" className="ts-empty">Loading today’s sessions…</td>
                   </tr>
                 ) : (
-                  insights.today.map((a) => {
-                    const overdue = isOverdue(a.AppointmentDate, a.AppointmentTime);
-                    const done = a.Checkup_Status === "Complete";
-                    return (
+                    insights.today.map((a) => (
                       <tr key={`today-${a.ID || a._id}`}>
                         <td>
                           <strong>{String(a.ID ?? "—").padStart(5, "0")}</strong>
@@ -239,13 +228,12 @@ function Dashboard() {
                         <td>{formatTime(a.AppointmentTime)}</td>
                         <td className="ts-muted">{a.DeviceID || "—"}</td>
                         <td className="ts-col-center">
-                          <span className={`ts-badge ${done ? "ts-badge-ok" : overdue ? "ts-badge-warn" : "ts-badge-accent"}`}>
-                            {done ? "Complete" : overdue ? "Overdue" : a.Checkup_Status || "Pending"}
+                          <span className={`ts-badge ${getAppointmentStatusBadgeClass(a)}`}>
+                            {getAppointmentStatusLabel(a)}
                           </span>
                         </td>
                       </tr>
-                    );
-                  })
+                    ))
                 )}
               </tbody>
             </table>
@@ -287,9 +275,7 @@ function Dashboard() {
                       <td colSpan="6" className="ts-empty">Loading appointments…</td>
                     </tr>
                   ) : (
-                    insights.upcoming.map((a) => {
-                      const overdue = isOverdue(a.AppointmentDate, a.AppointmentTime);
-                      return (
+                    insights.upcoming.map((a) => (
                         <tr key={a.ID || a._id}>
                           <td>
                             <div className="ts-user-cell">
@@ -303,8 +289,8 @@ function Dashboard() {
                           <td>{formatDate(a.AppointmentDate)}</td>
                           <td>{formatTime(a.AppointmentTime)}</td>
                           <td className="ts-col-center">
-                            <span className={`ts-badge ${overdue ? "ts-badge-warn" : "ts-badge-accent"}`}>
-                              {overdue ? "Overdue" : a.Checkup_Status || "Pending"}
+                            <span className={`ts-badge ${getAppointmentStatusBadgeClass(a)}`}>
+                              {getAppointmentStatusLabel(a)}
                             </span>
                           </td>
                           <td className="ts-col-center">
@@ -317,8 +303,7 @@ function Dashboard() {
                             )}
                           </td>
                         </tr>
-                      );
-                    })
+                    ))
                   )}
                 </tbody>
               </table>

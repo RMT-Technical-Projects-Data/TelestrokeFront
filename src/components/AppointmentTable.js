@@ -4,7 +4,11 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaTrash, FaEdit, FaChevronLeft, FaChevronRight, FaSort, FaSortUp, FaSortDown, FaPhoneAlt } from "react-icons/fa"; 
 import { Search } from "lucide-react"; 
-import { deleteAppointment, UpdateAppointment, getAllAppointments, parseAppointmentList } from "../utils/auth"; 
+import { deleteAppointment, UpdateAppointment, getAllAppointments, parseAppointmentList } from "../utils/auth";
+import {
+  getAppointmentStatusBadgeClass,
+  getAppointmentStatusLabel,
+} from "../utils/appointmentStatus"; 
 
 const AppointmentTable = ({ addAppointment, hideHeader = false, reloadKey = 0 }) => {
   const [appointments_data, setAppointmentsData] = useState([]);
@@ -342,8 +346,8 @@ const AppointmentTable = ({ addAppointment, hideHeader = false, reloadKey = 0 })
                   <td>{formatDate(appointment?.AppointmentDate)}</td>
                   <td>{formatTime(appointment?.AppointmentTime)}</td>
                   <td>
-                    <span className={`ts-badge ${appointment?.Checkup_Status === "Complete" ? "ts-badge-ok" : "ts-badge-warn"}`}>
-                      {appointment?.Checkup_Status}
+                    <span className={`ts-badge ${getAppointmentStatusBadgeClass(appointment)}`}>
+                      {getAppointmentStatusLabel(appointment)}
                     </span>
                   </td>
                   <td className="ts-col-center">

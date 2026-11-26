@@ -1,3 +1,8 @@
+import {
+  isAppointmentOverdue,
+  parseAppointmentDateTime,
+} from "./appointmentStatus";
+
 const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
 const localDateKey = (d) => {
@@ -7,16 +12,8 @@ const localDateKey = (d) => {
   return `${y}-${m}-${day}`;
 };
 
-const parseAppointmentDate = (dateStr, timeStr) => {
-  if (!dateStr) return null;
-  try {
-    const cleanDate = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
-    if (timeStr) return new Date(`${cleanDate}T${timeStr}`);
-    return new Date(`${cleanDate}T00:00:00`);
-  } catch {
-    return null;
-  }
-};
+const parseAppointmentDate = (dateStr, timeStr) =>
+  parseAppointmentDateTime(dateStr, timeStr);
 
 export const buildAppointmentInsights = (appointments = []) => {
   const now = new Date();
@@ -24,13 +21,8 @@ export const buildAppointmentInsights = (appointments = []) => {
   const list = Array.isArray(appointments) ? appointments : [];
 
   const complete = list.filter((a) => a.Checkup_Status === "Complete").length;
-  const pending = list.length - complete;
-
-  const overdue = list.filter((a) => {
-    if (a.Checkup_Status === "Complete") return false;
-    const dt = parseAppointmentDate(a.AppointmentDate, a.AppointmentTime);
-    return dt && dt < now;
-  }).length;
+  const overdue = list.filter((a) => isAppointmentOverdue(a, now)).length;
+  const pending = Math.max(0, list.length - complete - overdue);
 
   const days = 14;
   const volume = Array.from({ length: days }, (_, i) => {
