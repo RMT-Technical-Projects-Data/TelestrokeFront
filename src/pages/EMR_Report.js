@@ -3,6 +3,7 @@ import AppShell from "../components/AppShell";
 import { Search } from "lucide-react";
 import client from "../api/client";
 import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faDownload, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { Line } from 'react-chartjs-2';
@@ -269,78 +270,91 @@ const EMRReportpage = () => {
 
   // Helper function to format field names for display
   const formatFieldName = (fieldName) => {
-    return fieldName
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, str => str.toUpperCase())
-      .replace(/Tele /gi, '')
-      .replace(/O d/gi, 'OD')
-      .replace(/O s/gi, 'OS')
-      .replace(/R u q/gi, 'RUQ')
-      .replace(/R l q/gi, 'RLQ')
-      .replace(/L u q/gi, 'LUQ')
-      .replace(/L l q/gi, 'LLQ');
+    return String(fieldName || "")
+      .replace(/^tele_/i, "")
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, (str) => str.toUpperCase())
+      .replace(/\bO d\b/gi, "OD")
+      .replace(/\bO s\b/gi, "OS")
+      .replace(/\bR u q\b/gi, "RUQ")
+      .replace(/\bR l q\b/gi, "RLQ")
+      .replace(/\bL u q\b/gi, "LUQ")
+      .replace(/\bL l q\b/gi, "LLQ")
+      .replace(/\s+/g, " ")
+      .trim();
   };
 
-  // Helper function to create tables manually
-  const createTable = (doc, headers, data, startY, margins, columnWidths) => {
-    const pageWidth = doc.internal.pageSize.width;
-    const leftMargin = margins.left;
-    const rightMargin = margins.right;
-    const tableWidth = pageWidth - leftMargin - rightMargin;
+  const isDisplayableExamValue = (key, value) => {
+    if (key === "_id" || key === "__v" || key === "id") return false;
+    if (value === null || value === undefined) return false;
+    if (typeof value === "object") return false;
+    const text = String(value).trim();
+    return text !== "" && text !== "N/A";
+  };
 
-    const rowHeight = 8;
-    const headerHeight = 10;
-    let currentY = startY;
+  const toExamRows = (examObject, keyTransform) =>
+    Object.entries(examObject || {})
+      .filter(([key, value]) => isDisplayableExamValue(key, value))
+      .map(([key, value]) => [
+        formatFieldName(keyTransform ? keyTransform(key) : key),
+        String(value),
+      ]);
 
-    // Draw table headers with background
-    doc.setFillColor(44, 90, 160); // Primary blue
-    doc.rect(leftMargin, currentY, tableWidth, headerHeight, 'F');
+  const ensureSpace = (doc, y, needed, margin, pageHeight) => {
+    if (y + needed <= pageHeight - margin) return y;
+    doc.addPage();
+    return margin;
+  };
 
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
+  const drawSectionTitle = (doc, title, y, margin, colors) => {
     doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(...colors.primary);
+    doc.text(title, margin, y);
+    doc.setDrawColor(...colors.primary);
+    doc.setLineWidth(0.6);
+    doc.line(margin, y + 2.5, margin + 48, y + 2.5);
+    return y + 8;
+  };
 
-    let xPosition = leftMargin;
-    headers.forEach((header, index) => {
-      const width = columnWidths[index] * tableWidth;
-      doc.text(header, xPosition + 2, currentY + 6);
-      xPosition += width;
+  const createPdfTable = (doc, headers, rows, startY, margin, columnStyles = {}) => {
+    autoTable(doc, {
+      startY,
+      head: [headers],
+      body: rows,
+      margin: { left: margin, right: margin, top: margin, bottom: margin + 8 },
+      theme: "grid",
+      styles: {
+        font: "helvetica",
+        fontSize: 9,
+        cellPadding: { top: 3.2, right: 4, bottom: 3.2, left: 4 },
+        textColor: [30, 41, 59],
+        lineColor: [203, 213, 225],
+        lineWidth: 0.2,
+        valign: "middle",
+        overflow: "linebreak",
+        minCellHeight: 8,
+      },
+      headStyles: {
+        fillColor: [44, 90, 160],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 9.5,
+        cellPadding: { top: 4, right: 4, bottom: 4, left: 4 },
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252],
+      },
+      columnStyles,
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 0) {
+          data.cell.styles.fontStyle = "bold";
+          data.cell.styles.textColor = [51, 65, 85];
+        }
+      },
     });
 
-    currentY += headerHeight;
-
-    // Draw table rows
-    doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-
-    data.forEach((row, rowIndex) => {
-      // Alternate row colors
-      if (rowIndex % 2 === 0) {
-        doc.setFillColor(245, 245, 245);
-        doc.rect(leftMargin, currentY, tableWidth, rowHeight, 'F');
-      }
-
-      xPosition = leftMargin;
-      row.forEach((cell, cellIndex) => {
-        const width = columnWidths[cellIndex] * tableWidth;
-
-        // Draw cell border
-        doc.setDrawColor(200, 200, 200);
-        doc.rect(xPosition, currentY, width, rowHeight);
-
-        // Add cell text
-        const text = String(cell || 'N/A');
-        const lines = doc.splitTextToSize(text, width - 4);
-        doc.text(lines, xPosition + 2, currentY + 5);
-
-        xPosition += width;
-      });
-
-      currentY += rowHeight;
-    });
-
-    return currentY;
+    return (doc.lastAutoTable?.finalY || startY) + 12;
   };
 
   const generateChartImage = async (chartData, title, isEyeOnly, chartType, preview = false) => {
@@ -430,278 +444,250 @@ const EMRReportpage = () => {
   };
 
   const generatePDF = async (examSummary, patientId, rowIndex) => {
-    // Create a unique key for this specific row
     const rowKey = `${patientId}-${rowIndex}`;
-
-    // Set generating state for this specific row
-    setGeneratingPDFs(prev => ({ ...prev, [rowKey]: true }));
+    setGeneratingPDFs((prev) => ({ ...prev, [rowKey]: true }));
 
     try {
       const patientData = await fetchFullExam(examSummary);
-      const doc = new jsPDF();
-      const margin = 15;
-      const pageWidth = doc.internal.pageSize.width;
-      const pageHeight = doc.internal.pageSize.height;
-      let yPosition = 20;
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const margin = 14;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const colors = {
+        primary: [44, 90, 160],
+        muted: [100, 116, 139],
+        text: [30, 41, 59],
+        line: [226, 232, 240],
+      };
 
-      // Set professional colors
-      const primaryColor = [44, 90, 160]; // Dark blue
+      const reportId = patientData.reportId || examSummary.reportId || "N/A";
+      const examDateText = patientData.patientData?.examDate
+        ? new Date(patientData.patientData.examDate).toLocaleDateString()
+        : new Date().toLocaleDateString();
+      const patientName = patientData.patientData?.Name || "N/A";
 
-      // Title Section with professional styling
-      doc.setFillColor(...primaryColor);
-      doc.rect(0, 0, pageWidth, 50, 'F');
+      // Header banner
+      doc.setFillColor(...colors.primary);
+      doc.rect(0, 0, pageWidth, 42, "F");
+      doc.setFillColor(30, 64, 130);
+      doc.rect(0, 42, pageWidth, 4, "F");
 
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
-      doc.text("OCULOMOTOR EXAMINATION REPORT", pageWidth / 2, 25, { align: "center" });
+      doc.setFontSize(18);
+      doc.text("Oculomotor Examination Report", pageWidth / 2, 16, { align: "center" });
 
-      doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
-      doc.text(`Meeting ID: ${patientId || "N/A"}`, pageWidth / 2, 35, { align: "center" });
-      doc.text(`Exam Date: ${new Date().toLocaleDateString()}`, pageWidth / 2, 49, { align: "center" });
+      doc.setFontSize(10);
+      doc.text(`Report ID: ${reportId}`, margin, 28);
+      doc.text(`Meeting ID: ${patientId || "N/A"}`, margin, 35);
+      doc.text(`Patient: ${patientName}`, pageWidth - margin, 28, { align: "right" });
+      doc.text(`Exam Date: ${examDateText}`, pageWidth - margin, 35, { align: "right" });
 
-      yPosition = 65;
+      let yPosition = 56;
 
-      // Patient Information Section
-      doc.setFontSize(16);
-      doc.setTextColor(...primaryColor);
-      doc.setFont("helvetica", "bold");
-      doc.text("PATIENT INFORMATION", margin, yPosition);
-      yPosition += 10;
-
+      // Patient Information
+      yPosition = drawSectionTitle(doc, "PATIENT INFORMATION", yPosition, margin, colors);
       const patientInfoData = [
-        ['Meeting ID', patientData.patientData.patientid || 'N/A'],
-        ['Name', patientData.patientData.Name || 'N/A'],
-        ['Date of Birth', patientData.patientData.patientDOB ? new Date(patientData.patientData.patientDOB).toLocaleDateString() : 'N/A'],
-        ['Sex', patientData.patientData.patientSex || 'N/A'],
-        ['Exam Date', patientData.patientData.examDate ? new Date(patientData.patientData.examDate).toLocaleDateString() : 'N/A'],
-        ['Doctor', patientData.patientData.Doctor || 'N/A'],
-        ['Visual Activity OD', patientData.patientData.visualActivityOD || 'N/A'],
-        ['Visual Activity OS', patientData.patientData.visualActivityOS || 'N/A'],
-        ['Neurological Findings', patientData.patientData.neuroFindings || 'N/A'],
-        ['Aphasia', patientData.patientData.hasAphasia || 'N/A'],
-        ['Aphasia Description', patientData.patientData.aphasiaDescription || 'N/A']
+        ["Meeting ID", patientData.patientData?.patientid || "N/A"],
+        ["Name", patientName],
+        [
+          "Date of Birth",
+          patientData.patientData?.patientDOB
+            ? new Date(patientData.patientData.patientDOB).toLocaleDateString()
+            : "N/A",
+        ],
+        ["Sex", patientData.patientData?.patientSex || "N/A"],
+        ["Exam Date", examDateText],
+        ["Doctor", patientData.patientData?.Doctor || "N/A"],
+        ["Visual Activity OD", patientData.patientData?.visualActivityOD || "N/A"],
+        ["Visual Activity OS", patientData.patientData?.visualActivityOS || "N/A"],
+        ["Neurological Findings", patientData.patientData?.neuroFindings || "N/A"],
+        ["Aphasia", patientData.patientData?.hasAphasia || "N/A"],
+        ["Aphasia Description", patientData.patientData?.aphasiaDescription || "N/A"],
       ];
+      yPosition = createPdfTable(doc, ["Field", "Value"], patientInfoData, yPosition, margin, {
+        0: { cellWidth: 58 },
+        1: { cellWidth: "auto" },
+      });
 
-      yPosition = createTable(
-        doc,
-        ['Field', 'Value'],
-        patientInfoData,
-        yPosition,
-        { left: margin, right: margin },
-        [0.3, 0.7]
-      ) + 15;
-
-      // Bedside Exam Section
-      if (patientData.bedsideExamData) {
-        if (yPosition > pageHeight - 100) {
-          doc.addPage();
-          yPosition = 20;
-        }
-
-        doc.setFontSize(16);
-        doc.setTextColor(...primaryColor);
-        doc.setFont("helvetica", "bold");
-        doc.text("BEDSIDE EXAMINATION", margin, yPosition);
-        yPosition += 10;
-
-        const bedsideData = Object.entries(patientData.bedsideExamData)
-          .filter(([key, value]) => value && value !== 'N/A' && value !== '')
-          .map(([key, value]) => [formatFieldName(key), value]);
-
-        if (bedsideData.length > 0) {
-          yPosition = createTable(
-            doc,
-            ['Examination Parameter', 'Findings'],
-            bedsideData,
-            yPosition,
-            { left: margin, right: margin },
-            [0.4, 0.6]
-          ) + 15;
-        }
-      }
-
-      // Telestroke Exam Section
-      if (patientData.teleStrokeExamData) {
-        if (yPosition > pageHeight - 100) {
-          doc.addPage();
-          yPosition = 20;
-        }
-
-        doc.setFontSize(16);
-        doc.setTextColor(...primaryColor);
-        doc.setFont("helvetica", "bold");
-        doc.text("TELESTROKE EXAMINATION", margin, yPosition);
-        yPosition += 10;
-
-        const telestrokeData = Object.entries(patientData.teleStrokeExamData)
-          .filter(([key, value]) => value && value !== 'N/A' && value !== '')
-          .map(([key, value]) => [formatFieldName(key.replace('tele_', '')), value]);
-
-        if (telestrokeData.length > 0) {
-          yPosition = createTable(
-            doc,
-            ['Examination Parameter', 'Findings'],
-            telestrokeData,
-            yPosition,
-            { left: margin, right: margin },
-            [0.4, 0.6]
-          ) + 15;
-        }
-      }
-
-      // Tracking Sessions Section
-      if (patientData.trackingSessions && patientData.trackingSessions.length > 0) {
-        // Group sessions by stimulusType
-        const sessionsByStimulusType = patientData.trackingSessions.reduce((acc, session, index) => {
-          const key = session.stimulusType === "none" ? "Eye Only" : `Stimulus Type ${session.stimulusType || 'Unknown'}`;
-          if (!acc[key]) {
-            acc[key] = [];
+      // Bedside Exam
+      const bedsideData = toExamRows(patientData.bedsideExamData);
+      if (bedsideData.length > 0) {
+        yPosition = ensureSpace(doc, yPosition, 28, margin, pageHeight);
+        yPosition = drawSectionTitle(doc, "BEDSIDE EXAMINATION", yPosition, margin, colors);
+        yPosition = createPdfTable(
+          doc,
+          ["Examination Parameter", "Findings"],
+          bedsideData,
+          yPosition,
+          margin,
+          {
+            0: { cellWidth: 78 },
+            1: { cellWidth: "auto" },
           }
+        );
+      }
+
+      // Telestroke Exam
+      const telestrokeData = toExamRows(patientData.teleStrokeExamData, (key) =>
+        String(key).replace(/^tele_/i, "")
+      );
+      if (telestrokeData.length > 0) {
+        yPosition = ensureSpace(doc, yPosition, 28, margin, pageHeight);
+        yPosition = drawSectionTitle(doc, "TELESTROKE EXAMINATION", yPosition, margin, colors);
+        yPosition = createPdfTable(
+          doc,
+          ["Examination Parameter", "Findings"],
+          telestrokeData,
+          yPosition,
+          margin,
+          {
+            0: { cellWidth: 78 },
+            1: { cellWidth: "auto" },
+          }
+        );
+      }
+
+      // Tracking Sessions
+      if (patientData.trackingSessions?.length > 0) {
+        const sessionsByStimulusType = patientData.trackingSessions.reduce((acc, session, index) => {
+          const key =
+            session.stimulusType === "none"
+              ? "Eye Only"
+              : `Stimulus Type ${session.stimulusType || "Unknown"}`;
+          if (!acc[key]) acc[key] = [];
           acc[key].push({ ...session, originalIndex: index + 1 });
           return acc;
         }, {});
 
         let sessionCount = 0;
-
         try {
           for (const [groupName, sessions] of Object.entries(sessionsByStimulusType)) {
-            if (yPosition > pageHeight - 100) {
-              doc.addPage();
-              yPosition = 20;
-            }
-
-            // Session Group Header
-            doc.setFontSize(14);
-            doc.setTextColor(...primaryColor);
-            doc.setFont("helvetica", "bold");
-            doc.text(`${groupName.toUpperCase()} SESSIONS`, margin, yPosition);
-            yPosition += 8;
+            yPosition = ensureSpace(doc, yPosition, 30, margin, pageHeight);
+            yPosition = drawSectionTitle(
+              doc,
+              `${groupName.toUpperCase()} SESSIONS`,
+              yPosition,
+              margin,
+              colors
+            );
 
             for (const session of sessions) {
-              sessionCount++;
+              sessionCount += 1;
+              yPosition = ensureSpace(doc, yPosition, 40, margin, pageHeight);
 
-              if (yPosition > pageHeight - 150) {
-                doc.addPage();
-                yPosition = 20;
-              }
-
-              // Session Metadata Table
               const sessionInfoData = [
-                ['Session Number', `Session ${sessionCount} (Original: ${session.originalIndex})`],
-                ['Start Time', session.sessionStart ? new Date(session.sessionStart).toLocaleString() : 'N/A'],
-                ['End Time', session.sessionEnd ? new Date(session.sessionEnd).toLocaleString() : 'N/A'],
-                ['Selected Eye', session.selectedEye || 'N/A'],
-                ['Stimulus Type', session.stimulusType || 'N/A'],
-                ['Stimulus Shape', session.stimulusShape || 'N/A'],
-                ['Exam Mode', session.examMode || 'N/A'],
-                ['Data Points', session.dataPoints ? session.dataPoints.length : 0]
+                ["Session Number", `Session ${sessionCount}`],
+                [
+                  "Start Time",
+                  session.sessionStart ? new Date(session.sessionStart).toLocaleString() : "N/A",
+                ],
+                [
+                  "End Time",
+                  session.sessionEnd ? new Date(session.sessionEnd).toLocaleString() : "N/A",
+                ],
+                ["Selected Eye", session.selectedEye || "N/A"],
+                ["Stimulus Type", session.stimulusType || "N/A"],
+                ["Stimulus Shape", session.stimulusShape || "N/A"],
+                ["Exam Mode", session.examMode || "N/A"],
+                ["Data Points", String(session.dataPoints?.length || 0)],
               ];
 
-              yPosition = createTable(
+              yPosition = createPdfTable(
                 doc,
-                ['Parameter', 'Value'],
+                ["Parameter", "Value"],
                 sessionInfoData,
                 yPosition,
-                { left: margin, right: margin },
-                [0.3, 0.7]
-              ) + 10;
+                margin,
+                {
+                  0: { cellWidth: 58 },
+                  1: { cellWidth: "auto" },
+                }
+              );
 
               const isEyeOnly = session.stimulusType === "none";
               const chartData = generateChartData(session, isEyeOnly);
+              const chartWidth = pageWidth - 2 * margin;
+              const chartHeight = chartWidth * 0.45;
 
               if (chartData) {
-                // Generate high-quality X Chart
                 const xChartImage = await generateChartImage(
                   chartData,
                   `Horizontal Eye Movement - Session ${sessionCount}`,
                   isEyeOnly,
-                  'horizontal'
+                  "horizontal"
                 );
-
-                if (yPosition > pageHeight - 160) {
-                  doc.addPage();
-                  yPosition = 20;
-                }
-
+                yPosition = ensureSpace(doc, yPosition, chartHeight + 16, margin, pageHeight);
+                doc.setFont("helvetica", "bold");
                 doc.setFontSize(10);
-                doc.setTextColor(100, 100, 100);
-                doc.text(`Horizontal Movement Chart - Session ${sessionCount}`, margin, yPosition);
-                yPosition += 6;
-
-                // Add high-quality image with better dimensions
-                const chartWidth = pageWidth - (2 * margin);
-                const chartHeight = (chartWidth * 600) / 1200; // Maintain 2:1 aspect ratio
-                doc.addImage(xChartImage, 'PNG', margin, yPosition, chartWidth, chartHeight);
+                doc.setTextColor(...colors.text);
+                doc.text(`Horizontal Movement - Session ${sessionCount}`, margin, yPosition);
+                yPosition += 4;
+                doc.addImage(xChartImage, "PNG", margin, yPosition, chartWidth, chartHeight);
                 yPosition += chartHeight + 10;
 
-                // Generate high-quality Y Chart
                 const yChartImage = await generateChartImage(
                   chartData,
                   `Vertical Eye Movement - Session ${sessionCount}`,
                   isEyeOnly,
-                  'vertical'
+                  "vertical"
                 );
-
-                if (yPosition > pageHeight - 160) {
-                  doc.addPage();
-                  yPosition = 20;
-                }
-
+                yPosition = ensureSpace(doc, yPosition, chartHeight + 16, margin, pageHeight);
+                doc.setFont("helvetica", "bold");
                 doc.setFontSize(10);
-                doc.setTextColor(100, 100, 100);
-                doc.text(`Vertical Movement Chart - Session ${sessionCount}`, margin, yPosition);
-                yPosition += 6;
-
-                // Add high-quality image with better dimensions
-                doc.addImage(yChartImage, 'PNG', margin, yPosition, chartWidth, chartHeight);
-                yPosition += chartHeight + 10;
+                doc.setTextColor(...colors.text);
+                doc.text(`Vertical Movement - Session ${sessionCount}`, margin, yPosition);
+                yPosition += 4;
+                doc.addImage(yChartImage, "PNG", margin, yPosition, chartWidth, chartHeight);
+                yPosition += chartHeight + 12;
               } else {
-                if (yPosition > pageHeight - 20) {
-                  doc.addPage();
-                  yPosition = 20;
-                }
-                doc.setFontSize(10);
-                doc.setTextColor(100, 100, 100);
-                doc.text("No chart data available for this session", margin, yPosition);
-                yPosition += 15;
+                yPosition = ensureSpace(doc, yPosition, 14, margin, pageHeight);
+                doc.setFont("helvetica", "italic");
+                doc.setFontSize(9);
+                doc.setTextColor(...colors.muted);
+                doc.text("No chart data available for this session.", margin, yPosition);
+                yPosition += 12;
               }
-
-              yPosition += 10;
             }
           }
         } catch (error) {
           console.error("Error generating charts:", error);
         }
       } else {
-        if (yPosition > pageHeight - 20) {
-          doc.addPage();
-          yPosition = 20;
-        }
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text("No tracking sessions available", margin, yPosition);
+        yPosition = ensureSpace(doc, yPosition, 14, margin, pageHeight);
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.muted);
+        doc.text("No tracking sessions available.", margin, yPosition);
       }
 
-      // Add page numbers
+      // Footer on every page
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
+        doc.setDrawColor(...colors.line);
+        doc.setLineWidth(0.3);
+        doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
+        doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Page ${i} of ${pageCount}`, pageWidth - 25, pageHeight - 10);
+        doc.setTextColor(...colors.muted);
+        doc.text(`Report ${reportId}`, margin, pageHeight - 7);
+        doc.text(`Generated ${new Date().toLocaleString()}`, pageWidth / 2, pageHeight - 7, {
+          align: "center",
+        });
+        doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, pageHeight - 7, {
+          align: "right",
+        });
       }
 
       doc.save(`Patient_${patientId}_Report.pdf`);
       toast.success("PDF report generated successfully");
-
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error("Failed to generate PDF report");
     } finally {
-      // Clear generating state for this specific row
-      setGeneratingPDFs(prev => ({ ...prev, [rowKey]: false }));
+      setGeneratingPDFs((prev) => ({ ...prev, [rowKey]: false }));
     }
   };
 
