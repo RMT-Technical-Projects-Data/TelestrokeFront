@@ -25,7 +25,8 @@ const EMRReportpage = () => {
   const [loading, setLoading] = useState(true);
   const [generatingPDFs, setGeneratingPDFs] = useState({}); // Track generating state per row
   const [viewingReports, setViewingReports] = useState({});
-  const rowsPerPage = 6;
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const entriesOptions = [10, 25, 50, 100];
 
   useEffect(() => {
     const fetchExamData = async () => {
@@ -981,6 +982,22 @@ const EMRReportpage = () => {
     }
   };
 
+  const handleEntriesChange = (event) => {
+    const nextSize = Number(event.target.value) || 10;
+    setRowsPerPage(nextSize);
+    setCurrentPage(1);
+  };
+
+  const formatExamDate = (value) => {
+    if (!value) return "N/A";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "N/A";
+    return date.toLocaleDateString();
+  };
+
+  const showingFrom = filteredExamData.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
+  const showingTo = Math.min(currentPage * rowsPerPage, filteredExamData.length);
+
   // Check if a specific row's PDF is being generated
   const isGeneratingPDF = (patientId, rowIndex) => {
     const rowKey = `${patientId}-${rowIndex}`;
@@ -1026,8 +1043,10 @@ const EMRReportpage = () => {
           <table className="ts-table">
             <thead>
               <tr>
+                <th>Report ID</th>
                 <th>Meeting ID</th>
                 <th>Patient</th>
+                <th>Exam Date</th>
                 <th className="ts-col-center">Actions</th>
               </tr>
             </thead>
@@ -1035,12 +1054,14 @@ const EMRReportpage = () => {
               {currentRows.length > 0 ? (
                 currentRows.map((exam, index) => {
                   const patientId = exam.patientData?.patientid || "N/A";
+                  const reportId = exam.reportId || "N/A";
                   const isGenerating = isGeneratingPDF(patientId, index);
                   const isViewing = Boolean(viewingReports[exam._id] || viewingReports[patientId]);
                   const avatarText = String(exam.patientData?.Name || patientId || "?").charAt(0).toUpperCase();
 
                   return (
                     <tr key={exam._id || `${patientId}-${index}`}>
+                      <td><strong>{reportId}</strong></td>
                       <td>
                         <div className="ts-user-cell">
                           <div className="ts-avatar">{avatarText}</div>
@@ -1048,6 +1069,7 @@ const EMRReportpage = () => {
                         </div>
                       </td>
                       <td>{exam.patientData?.Name || "N/A"}</td>
+                      <td>{formatExamDate(exam.patientData?.examDate)}</td>
                       <td className="ts-col-center">
                         <div className="ts-actions">
                           <button
@@ -1075,7 +1097,7 @@ const EMRReportpage = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan="3" className="ts-empty">
+                  <td colSpan="5" className="ts-empty">
                     {examData.length === 0 ? "No exam data found" : "No reports match your search"}
                   </td>
                 </tr>
@@ -1084,33 +1106,46 @@ const EMRReportpage = () => {
           </table>
         </div>
 
-        {filteredExamData.length > rowsPerPage && (
-          <div className="ts-toolbar" style={{ borderTop: "1px solid var(--ts-border)", borderBottom: "none" }}>
-            <p className="ts-muted" style={{ margin: 0, fontSize: "0.8125rem" }}>
-              Showing {(currentPage - 1) * rowsPerPage + 1}–
-              {Math.min(currentPage * rowsPerPage, filteredExamData.length)} of {filteredExamData.length}
-            </p>
-            <div className="ts-actions">
-              <button
-                type="button"
-                className="ts-btn ts-btn-ghost"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
+        <div className="ts-toolbar ts-table-footer">
+          <div className="ts-entries">
+            <label htmlFor="emr-entries">
+              Show
+              <select
+                id="emr-entries"
+                className="ts-entries-select"
+                value={rowsPerPage}
+                onChange={handleEntriesChange}
               >
-                <FontAwesomeIcon icon={faChevronLeft} /> Previous
-              </button>
-              <span className="ts-panel-meta">Page {currentPage} of {totalPages}</span>
-              <button
-                type="button"
-                className="ts-btn ts-btn-ghost"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next <FontAwesomeIcon icon={faChevronRight} />
-              </button>
-            </div>
+                {entriesOptions.map((size) => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+              entries
+            </label>
+            <span className="ts-muted ts-entries-range">
+              {showingFrom}–{showingTo} of {filteredExamData.length}
+            </span>
           </div>
-        )}
+          <div className="ts-actions">
+            <button
+              type="button"
+              className="ts-btn ts-btn-ghost"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage <= 1 || totalPages === 0}
+            >
+              <FontAwesomeIcon icon={faChevronLeft} /> Previous
+            </button>
+            <span className="ts-panel-meta">Page {totalPages === 0 ? 0 : currentPage} of {totalPages}</span>
+            <button
+              type="button"
+              className="ts-btn ts-btn-ghost"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages || totalPages === 0}
+            >
+              Next <FontAwesomeIcon icon={faChevronRight} />
+            </button>
+          </div>
+        </div>
       </div>
     </AppShell>
   );
